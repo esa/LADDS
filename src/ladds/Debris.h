@@ -9,6 +9,7 @@
 #include <autopas/particles/Particle.h>
 
 #include <array>
+#include <ostream>
 /**
  * Class describing an arbitrary debris object used for the n-body simulation.
  * Based on the Particle class of AutoPas which used 64bit precision.
