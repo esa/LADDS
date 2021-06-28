@@ -38,15 +38,13 @@ class Logger {
    * Wrapper around spdlog::get().
    * @return Shared pointer to the actual logger.
    */
-  auto get() {
-    return spdlog::get(_name);
-  }
+  [[nodiscard]] auto get() const;
 
   /**
    * Getter for the logger name.
    * @return Logger name as std::string.
    */
-  const std::string &getName() const;
+  [[nodiscard]] const std::string &getName() const;
 
  private:
   std::string _name;

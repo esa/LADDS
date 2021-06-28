@@ -14,6 +14,6 @@ Logger::Logger(std::string name, std::ostream &ostream) : _name(std::move(name))
 
 Logger::~Logger() { spdlog::drop(_name); }
 
-const std::string &Logger::getName() const {
-  return _name;
-}
+auto Logger::get() const { return spdlog::get(_name); }
+
+const std::string &Logger::getName() const { return _name; }

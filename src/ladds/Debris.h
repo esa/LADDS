@@ -38,7 +38,7 @@ class Debris final : public autopas::ParticleFP64 {
    * @return Value of the requested attribute.
    */
   template <AttributeNames attribute>
-  constexpr auto get() {
+  [[nodiscard]] constexpr auto get() {
     if constexpr (attribute == AttributeNames::ptr) {
       return this;
     } else if constexpr (attribute == AttributeNames::id) {
