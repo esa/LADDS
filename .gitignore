@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+# IDE Stuff
+*.idea
+*build*
