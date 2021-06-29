@@ -22,7 +22,7 @@ set(Eigen3_ForceBundled ON CACHE BOOL "" FORCE)
 FetchContent_Declare(
         autopasfetch
         GIT_REPOSITORY ${autopasRepoPath}
-        GIT_TAG 7691cc8eb9315f28f0e0523373ae1fa144dbef5e
+        GIT_TAG 2ee1dd2b89f73b8a9271d8b504ed3db686ba8eb0
 )
 
 # Get autopas source and binary directories from CMake project
