@@ -6,6 +6,11 @@ Codebase for the ARIADNA Study between TU Munich and ESA's Advanced Concepts Tea
 * CMake >= 3.14
 * make (build-essentials, or equivalent)
 * A C++17 Compiler (recommended: gcc >=7 or clang >=8)
+* git (for fetching dependencies)
+
+### Optional
+* Doxygen
+* clang-format-9
 
 ## Building
 ```bash
