@@ -29,6 +29,7 @@ target_link_libraries(
     ${TEST_EXECUTABLE_NAME}
     gmock_main
     autopas
+    autopasTools
 )
 
 target_include_directories(
