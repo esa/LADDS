@@ -17,6 +17,11 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 # Disable actual installation of gtest
 option(INSTALL_GTEST "" OFF)
+# Hide variables that should not be touched by te user
+mark_as_advanced(
+    BUILD_GMOCK
+    INSTALL_GTEST
+)
 FetchContent_MakeAvailable(googletest)
 
 # also add the gtest cmake module for cmake functions
