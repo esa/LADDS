@@ -6,7 +6,7 @@ if (NOT LADDS_BUILD_TESTS)
     return()
 endif ()
 
-# includes the gtest modules
+# download gtest and includes the gtest modules
 include(ladds_gtest)
 
 set(TEST_EXECUTABLE_NAME ladds_tests)
