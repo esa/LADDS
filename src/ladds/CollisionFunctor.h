@@ -58,6 +58,6 @@ class CollisionFunctor final : public autopas::Functor<Debris, CollisionFunctor>
                  bool newton3);
 
   // TODO make this thread-safe, false sharing, etc...
-  std::vector<std::pair<Debris *, Debris *>> _collisions;
+  std::vector<std::pair<Debris *, Debris *>> _collisions{};
   const double _cutoffSquare;
 };
