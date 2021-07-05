@@ -4,6 +4,8 @@ file(
         "*.cpp"
         "*.h"
 )
+# Create cache entry for this var so it is accessible from everywhere
+set(EXECUTABLE_SRC ${EXECUTABLE_SRC} CACHE INTERNAL "Source files for the main executable")
 
 add_executable(${EXECUTABLE_NAME} ${EXECUTABLE_SRC})
 
