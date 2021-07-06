@@ -22,6 +22,7 @@ int main() {
   // TODO Read input
   constexpr size_t numDebris = 2;
   constexpr double cutoff = 2;
+  const size_t iterations = 1;
 
   // initialization of autopas
   autopas::AutoPas<Debris> autopas;
@@ -40,12 +41,19 @@ int main() {
     logger.log(Logger::Level::info, d.toString());
   }
 
-  // pairwise interaction
-  CollisionFunctor collisionFunctor(cutoff);
-  autopas.iteratePairwise(&collisionFunctor);
+  // main-loop skeleton
+  for (size_t i = 0; i < iterations; ++i) {
+    // update positions
+    // TODO insert propagator code here
+    // TODO MPI: handle particle exchange between ranks
 
-  // print result
-  logger.log(Logger::Level::info, "Close encounters: {}", collisionFunctor.getCollisions().size());
+    // pairwise interaction
+    CollisionFunctor collisionFunctor(cutoff);
+    autopas.iteratePairwise(&collisionFunctor);
+    logger.log(Logger::Level::info, "Close encounters: {}", collisionFunctor.getCollisions().size());
+
+    // TODO insert breakup model here
+  }
 
   return 0;
 }

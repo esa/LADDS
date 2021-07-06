@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14) #at least 3.8.2 bc target_compile_features(${EXECUTABLE_NAME} PUBLIC cxx_std_17)
+cmake_minimum_required(VERSION 3.14) #at least 3.14 for FetchContent_MakeAvailable
 project(LADDS)
 
 set(EXECUTABLE_NAME ladds)
@@ -26,9 +26,13 @@ option(GIT_SUBMODULES_SSH "Use SSH for git submodules instead of HTTPS" OFF)
 # add custom modules directory
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/)
 
+# modules that do NOT need the main target
 include(ladds_clang-format)
 include(ladds_doxygen)
 
 include(autopas)
 
 add_subdirectory(src)
+
+# modules that need the main target
+include(ladds_compilerWarnings)
