@@ -12,6 +12,8 @@
 #include "Debris.h"
 #include "Logger.h"
 
+#include <satellitePropagator/physics/Integrator.h>
+
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
 extern template class autopas::AutoPas<Debris>;
 
