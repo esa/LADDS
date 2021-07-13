@@ -30,5 +30,6 @@ include(ladds_clang-format)
 include(ladds_doxygen)
 
 include(autopas)
+include(propagator)
 
 add_subdirectory(src)
