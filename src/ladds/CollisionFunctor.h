@@ -59,6 +59,6 @@ class CollisionFunctor final : public autopas::Functor<Debris, CollisionFunctor>
 
   // TODO make this thread-safe, false sharing, etc...
   // key = particle with the smaller id
-  std::unordered_map<Debris *, Debris *> _collisions;
+  std::unordered_map<Debris *, Debris *> _collisions{};
   const double _cutoffSquare;
 };

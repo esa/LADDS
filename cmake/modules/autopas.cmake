@@ -10,26 +10,16 @@ if (GIT_SUBMODULES_SSH)
     set(autopasRepoPath git@github.com:AutoPas/AutoPas.git)
 endif ()
 
-# Configure AutoPas to not build anything but the library
-set(AUTOPAS_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(AUTOPAS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(AUTOPAS_BUILD_TARGET_DOC OFF CACHE BOOL "" FORCE)
-set(AUTOPAS_FORMATTING_TARGETS OFF CACHE BOOL "" FORCE)
-set(AUTOPAS_OPENMP ON CACHE BOOL "" FORCE)
-set(spdlog_ForceBundled ON CACHE BOOL "" FORCE)
-set(Eigen3_ForceBundled ON CACHE BOOL "" FORCE)
-
 FetchContent_Declare(
         autopasfetch
         GIT_REPOSITORY ${autopasRepoPath}
-        GIT_TAG 2ee1dd2b89f73b8a9271d8b504ed3db686ba8eb0
+        GIT_TAG 427939164532052d8155cd0c5bff7dfc7d4cb77c
 )
+# Populate dependency
+FetchContent_MakeAvailable(autopasfetch)
 
-# Get autopas source and binary directories from CMake project
-FetchContent_GetProperties(autopasfetch)
-
-if (NOT autopasfetch_POPULATED)
-    FetchContent_Populate(autopasfetch)
-
-    add_subdirectory(${autopasfetch_SOURCE_DIR} ${autopasfetch_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif ()
+# Disable warnings from the library target
+target_compile_options(autopas PRIVATE -w)
+# Disable warnings from included headers
+get_target_property(propval autopas INTERFACE_INCLUDE_DIRECTORIES)
+target_include_directories(autopas SYSTEM PUBLIC "${propval}")
