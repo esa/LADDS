@@ -6,7 +6,11 @@
 
 #include "CollisionFunctor.h"
 
-CollisionFunctor::CollisionFunctor(double cutoff) : Functor(cutoff), _cutoffSquare(cutoff * cutoff) {}
+#include <autopas/utils/WrapOpenMP.h>
+
+CollisionFunctor::CollisionFunctor(double cutoff) : Functor(cutoff), _cutoffSquare(cutoff * cutoff) {
+  _threadData.resize(autopas::autopas_get_max_threads());
+}
 
 const std::unordered_map<Debris *, Debris *> &CollisionFunctor::getCollisions() const { return _collisions; }
 
@@ -27,9 +31,11 @@ void CollisionFunctor::AoSFunctor(Debris &i, Debris &j, bool newton3) {
 
   // store pointers to colliding pair
   if (i.getID() < j.getID()) {
-    _collisions[i.get<Debris::AttributeNames::ptr>()] = j.get<Debris::AttributeNames::ptr>();
+    _threadData[autopas::autopas_get_thread_num()].collisions[i.get<Debris::AttributeNames::ptr>()] =
+        j.get<Debris::AttributeNames::ptr>();
   } else {
-    _collisions[j.get<Debris::AttributeNames::ptr>()] = i.get<Debris::AttributeNames::ptr>();
+    _threadData[autopas::autopas_get_thread_num()].collisions[j.get<Debris::AttributeNames::ptr>()] =
+        i.get<Debris::AttributeNames::ptr>();
   }
 }
 
@@ -52,10 +58,11 @@ void CollisionFunctor::SoAFunctorPair(autopas::SoAView<SoAArraysType> soa1, auto
     }
 
     // inner loop over SoA2
-    // TODO this one should be vectorized
-#pragma omp declare reduction(vecMerge : std::vector<std::pair<Debris *, Debris *>> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
+    //custom reduction for unordered maps
 #pragma omp declare reduction(mapMerge : std::unordered_map<Debris *, Debris *> : omp_out.insert(omp_in.begin(), omp_in.end()))
-#pragma omp simd reduction(mapMerge : _collisions)
+    // alias because OpenMP needs it
+    auto &thisCollisions = _threadData[autopas::autopas_get_thread_num()].collisions;
+#pragma omp simd reduction(mapMerge : thisCollisions)
     for (size_t j = 0; j < soa2.getNumParticles(); ++j) {
       SoAKernel(i, j, soa1, soa2, newton3);
     }
@@ -115,8 +122,16 @@ void CollisionFunctor::SoAKernel(size_t i, size_t j, autopas::SoAView<SoAArraysT
 
   // store pointers to colliding pair
   if (id1ptr[i] < id2ptr[j]) {
-    _collisions[ptr1ptr[i]] = ptr2ptr[j];
+    _threadData[autopas::autopas_get_thread_num()].collisions[ptr1ptr[i]] = ptr2ptr[j];
   } else {
-    _collisions[ptr2ptr[j]] = ptr1ptr[i];
+    _threadData[autopas::autopas_get_thread_num()].collisions[ptr2ptr[j]] = ptr1ptr[i];
+  }
+}
+void CollisionFunctor::initTraversal() { _collisions.clear(); }
+
+void CollisionFunctor::endTraversal(bool newton3) {
+  for (auto &data : _threadData) {
+    _collisions.insert(data.collisions.begin(), data.collisions.end());
+    data.collisions.clear();
   }
 }
