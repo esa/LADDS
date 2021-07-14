@@ -42,7 +42,7 @@ class CollisionFunctor final : public autopas::Functor<Debris, CollisionFunctor>
 
   void endTraversal(bool newton3) final{};
 
-  [[nodiscard]] const std::vector<std::pair<Debris *, Debris *>> &getCollisions() const;
+  [[nodiscard]] const std::unordered_map<Debris *, Debris *> &getCollisions() const;
 
   void AoSFunctor(Debris &i, Debris &j, bool newton3) final;
 
@@ -58,6 +58,7 @@ class CollisionFunctor final : public autopas::Functor<Debris, CollisionFunctor>
                  bool newton3);
 
   // TODO make this thread-safe, false sharing, etc...
-  std::vector<std::pair<Debris *, Debris *>> _collisions;
+  // key = particle with the smaller id
+  std::unordered_map<Debris *, Debris *> _collisions;
   const double _cutoffSquare;
 };

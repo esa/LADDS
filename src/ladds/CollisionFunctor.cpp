@@ -8,7 +8,7 @@
 
 CollisionFunctor::CollisionFunctor(double cutoff) : Functor(cutoff), _cutoffSquare(cutoff * cutoff) {}
 
-const std::vector<std::pair<Debris *, Debris *>> &CollisionFunctor::getCollisions() const { return _collisions; }
+const std::unordered_map<Debris *, Debris *> &CollisionFunctor::getCollisions() const { return _collisions; }
 
 void CollisionFunctor::AoSFunctor(Debris &i, Debris &j, bool newton3) {
   // skip interaction with deleted particles
@@ -26,9 +26,10 @@ void CollisionFunctor::AoSFunctor(Debris &i, Debris &j, bool newton3) {
   }
 
   // store pointers to colliding pair
-  _collisions.emplace_back(i.get<Debris::AttributeNames::ptr>(), j.get<Debris::AttributeNames::ptr>());
-  if (newton3) {
-    _collisions.emplace_back(j.get<Debris::AttributeNames::ptr>(), i.get<Debris::AttributeNames::ptr>());
+  if (i.getID() < j.getID()) {
+    _collisions[i.get<Debris::AttributeNames::ptr>()] = j.get<Debris::AttributeNames::ptr>();
+  } else {
+    _collisions[j.get<Debris::AttributeNames::ptr>()] = i.get<Debris::AttributeNames::ptr>();
   }
 }
 
@@ -53,7 +54,8 @@ void CollisionFunctor::SoAFunctorPair(autopas::SoAView<SoAArraysType> soa1, auto
     // inner loop over SoA2
     // TODO this one should be vectorized
 #pragma omp declare reduction(vecMerge : std::vector<std::pair<Debris *, Debris *>> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
-#pragma omp simd reduction(vecMerge : _collisions)
+#pragma omp declare reduction(mapMerge : std::unordered_map<Debris *, Debris *> : omp_out.insert(omp_in.begin(), omp_in.end()))
+#pragma omp simd reduction(mapMerge : _collisions)
     for (size_t j = 0; j < soa2.getNumParticles(); ++j) {
       SoAKernel(i, j, soa1, soa2, newton3);
     }
@@ -111,8 +113,10 @@ void CollisionFunctor::SoAKernel(size_t i, size_t j, autopas::SoAView<SoAArraysT
     return;
   }
 
-  _collisions.emplace_back(ptr1ptr[i], ptr2ptr[j]);
-  if (newton3) {
-    _collisions.emplace_back(ptr2ptr[j], ptr1ptr[i]);
+  // store pointers to colliding pair
+  if (id1ptr[i] < id2ptr[j]) {
+    _collisions[ptr1ptr[i]] = ptr2ptr[j];
+  } else {
+    _collisions[ptr2ptr[j]] = ptr1ptr[i];
   }
 }
