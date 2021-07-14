@@ -40,15 +40,17 @@ void CollisionFunctorIntegrationTest::SetUpTestSuite() {
   for (auto &i : _debris) {
     for (auto &j : _debris) {
       // compare pointer since we are looking at the same vector
+      // stop the inner loop as soon as we hit identity so we avoid self interaction and duplicates
       if (&i == &j) {
-        continue;
+        break;
       }
 
       auto dr = autopas::utils::ArrayMath::sub(i.getR(), j.getR());
       auto distanceSquare = autopas::utils::ArrayMath::dot(dr, dr);
 
       if (distanceSquare < _cutoff) {
-        _reference.emplace_back(i.getID(), j.getID());
+        // first i then j because j has the smaller id
+        _reference.emplace_back(j.getID(), i.getID());
       }
     }
   }
