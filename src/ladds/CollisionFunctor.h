@@ -62,7 +62,7 @@ class CollisionFunctor final : public autopas::Functor<Debris, CollisionFunctor>
     std::unordered_map<Debris *, Debris *> collisions{};
   } __attribute__((aligned(64)));
 
-  // make sure of the size of ThreadData is correct
+  // make sure that the size of ThreadData is correct
   static_assert(sizeof(ThreadData) % 64 == 0, "ThreadData has wrong size");
 
   // Buffer per thread
