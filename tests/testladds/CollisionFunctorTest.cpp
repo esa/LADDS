@@ -17,6 +17,7 @@
  */
 TEST(CollisionFunctorTest, ThreeParticles) {
   constexpr double cutoff{1.5};
+  constexpr bool newton3{false};
   constexpr size_t numDebris{3};
 
   std::vector<Debris> debris;
@@ -34,17 +35,18 @@ TEST(CollisionFunctorTest, ThreeParticles) {
       if (di == dj) {
         continue;
       }
-      collisionFunctor.AoSFunctor(di, dj, false);
+      collisionFunctor.AoSFunctor(di, dj, newton3);
     }
   }
+
+  // needed to merge the functor's internal thread buffers
+  collisionFunctor.endTraversal(newton3);
 
   auto collisions = collisionFunctor.getCollisions();
 
   decltype(collisions) expected{
       {&debris[0], &debris[1]},
-      {&debris[1], &debris[0]},
       {&debris[1], &debris[2]},
-      {&debris[2], &debris[1]},
   };
 
   EXPECT_THAT(collisionFunctor.getCollisions(), ::testing::UnorderedElementsAreArray(expected));
