@@ -30,6 +30,10 @@ void CollisionFunctorIntegrationTest::SetUpTestSuite() {
                          },
                          0};
   _debris.reserve(numDebris);
+
+  // fix seed for randomPosition()
+  srand(42);
+
   for (int i = 0; i < numDebris; ++i) {
     defaultParticle.setR(autopasTools::generators::RandomGenerator::randomPosition(_boxMin, _boxMax));
     defaultParticle.setID(i);
