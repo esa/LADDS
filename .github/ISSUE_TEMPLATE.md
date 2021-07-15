@@ -1,3 +1,8 @@
-#USE JIRA FOR ISSUES
+# Issue
+## The problem
 
-https://torchquad.atlassian.net/browse/LADDS
+## Expected behavior
+
+## What needs to be done
+
+## How it can be tested or reproduced
