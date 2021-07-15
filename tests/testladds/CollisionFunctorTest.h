@@ -8,4 +8,7 @@
 
 #include <gtest/gtest.h>
 
+/**
+ * Simple test for basic functionalities of the CollisionFunctor.
+ */
 class CollisionFunctorTest : public testing::Test {};
