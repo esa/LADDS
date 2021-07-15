@@ -15,11 +15,21 @@
 #include "tuple"
 #include "vector"
 
+/**
+ * Tuple for the type-parametrized tests
+ */
 using ParameterTuple =
     std::tuple<autopas::TraversalOption, autopas::DataLayoutOption, autopas::Newton3Option, double /*cellSizeFactor*/>;
 
+/**
+ * This set of tests checks that the collision functor works correctly when called with AutoPas.
+ */
 class CollisionFunctorIntegrationTest : public testing::TestWithParam<ParameterTuple> {
  public:
+  /**
+   * Generates a given number of random particles and evaluates via an O(N^2) double for loop which are sufficiently
+   * close. The IDs of these close particles are stored in `_reference`.
+   */
   static void SetUpTestSuite();
 
   /**

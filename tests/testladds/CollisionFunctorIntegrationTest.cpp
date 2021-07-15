@@ -56,6 +56,11 @@ void CollisionFunctorIntegrationTest::SetUpTestSuite() {
   }
 }
 
+/**
+ * Tests the Collision functor with every algorithm configuration in AutoPas.
+ * The functor is applied, the colliding id's gathered and compared to the reference that was
+ * computed in SetUpTestSuite().
+ */
 TEST_P(CollisionFunctorIntegrationTest, testAutoPasAlgorithm) {
   // This test does not really make sense if there are no close encounters in the dataset
   ASSERT_THAT(_reference, testing::Not(testing::IsEmpty()));
