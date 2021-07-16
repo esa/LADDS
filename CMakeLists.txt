@@ -34,5 +34,9 @@ include(autopas)
 
 add_subdirectory(src)
 
+# needs to be in the root directory
+enable_testing()
+add_subdirectory(tests/testladds)
+
 # modules that need the main target
 include(ladds_compilerWarnings)

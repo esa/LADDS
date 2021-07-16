@@ -21,4 +21,9 @@ make -j12                       # choose number according to your CPU
 ```
 
 ## Testing
-TODO
+Testing is done with help of [GoogleTest](https://github.com/google/googletest), which is downloaded by CMake.
+```bash
+cmake -DLADDS_BUILD_TESTS=ON .. # Should be enabled by default
+make ladds_tests -j12
+ctest -j12
+```
