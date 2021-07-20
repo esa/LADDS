@@ -1,0 +1,39 @@
+# This workflow will install dependencies, run tests
+
+name: Running tests
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+  workflow_dispatch:
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.CTEST_TOKEN }}
+    - name: Set up Clang
+      uses: egor-tensin/setup-clang@v1
+      with:
+        version: latest
+        platform: x64
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install git
+        sudo apt-get install cmake
+        sudo apt-get install openmp
+    - name: Build project
+      run: |
+        mkdir build
+        cd build
+        CC=clang CXX=clang++ cmake ..
+        make -j4
+    - name: Test with pytest
+      run: |
+        ctest -j12
