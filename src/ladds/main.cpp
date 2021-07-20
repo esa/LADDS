@@ -32,6 +32,9 @@ int main() {
   autopas.setCutoff(cutoff);
   autopas.init();
 
+  // initialization of the integrator
+  auto integrator = std::make_shared<Integrator<autopas::AutoPas<Particle>,Particle>>(autopas);
+
   // initialization of the scenario
   for (size_t i = 0; i < numDebris; ++i) {
     autopas.addParticle(Particle{{static_cast<double>(i), 0, 0}, {0., 0., 0.}, i});

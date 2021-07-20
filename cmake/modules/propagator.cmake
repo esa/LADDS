@@ -16,7 +16,7 @@ endif ()
 FetchContent_Declare(
         Propagatorfetch
         GIT_REPOSITORY ${PropagatorRepoPath}
-        GIT_TAG origin/autopas-compatibility
+        GIT_TAG origin/GenericDebris
 )
 
 # Get Propagator source and binary directories from CMake project
