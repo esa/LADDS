@@ -91,14 +91,6 @@ class Particle final : public autopas::ParticleFP64 {
     }
   }
 
-  /**
-   * @brief String representation
-   *
-   * Creates a std::string representation of the state of the debris
-   *
-   * @return The string "Debris: X:#position v:#velocity a0:#acc_t0 a1:#acc_t1"
-   */
-  [[nodiscard]] std::string toString() const;
 
   /**
    * @brief Calculates distance from the origin of the coordinate frame
@@ -216,4 +208,23 @@ class Particle final : public autopas::ParticleFP64 {
    */
   void setBcInv(double bcInv);
  private:
+
+  /**
+   *  3D vector representation of the debris acceleration at the last time step.
+   */
+  std::array<double, 3> acc_t0 {}; 
+  /**
+   * 3D vector representation of the debris acceleration at the current time step
+   */
+  std::array<double, 3> acc_t1 {}; 
+  /**
+   * Area to mass ration.
+   */
+  double aom = 0; 
+  /**
+   * C_cA)/m is the inverse of the ballistic coefficient. 
+   * Used for Acceleration::DragComponent::apply().
+   */
+  double bc_inv = 0; 
+
 };

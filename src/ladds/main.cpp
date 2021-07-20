@@ -13,6 +13,8 @@
 #include "Logger.h"
 
 #include <satellitePropagator/physics/Integrator.h>
+#include <satellitePropagator/physics/AccelerationAccumulator.h>
+#include <satellitePropagator/io/FileOutput.h>
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
 extern template class autopas::AutoPas<Particle>;
@@ -25,15 +27,21 @@ int main() {
   constexpr size_t numDebris = 2;
   constexpr double cutoff = 2;
 
+  using AutoPas_t = autopas::AutoPas<Particle>;
+
   // initialization of autopas
-  autopas::AutoPas<Particle> autopas;
+  AutoPas_t autopas;
   autopas.setBoxMin({0., 0., 0.});
   autopas.setBoxMax({10., 10., 10.});
   autopas.setCutoff(cutoff);
   autopas.init();
 
   // initialization of the integrator
-  auto integrator = std::make_shared<Integrator<autopas::AutoPas<Particle>,Particle>>(autopas);
+  std::array<bool,8> selectedPropagatorComponents{true, false, false, false, false, false, false, false};
+  auto fo = std::make_shared<FileOutput<AutoPas_t,Particle>>(autopas, "output.csv",OutputFile::CSV, selectedPropagatorComponents);
+  auto accumulator = std::make_shared<Acceleration::AccelerationAccumulator<AutoPas_t,Particle>>(selectedPropagatorComponents,autopas,0.0,*fo);
+  auto integrator = std::make_shared<Integrator<AutoPas_t,Particle>>(autopas,*accumulator,1e-8);
+
 
   // initialization of the scenario
   for (size_t i = 0; i < numDebris; ++i) {
