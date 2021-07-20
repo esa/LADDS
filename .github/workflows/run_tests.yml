@@ -27,7 +27,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install git
         sudo apt-get install cmake
-        sudo apt-get install openmp
+        sudo apt-get install libomp-dev
     - name: Build project
       run: |
         mkdir build
