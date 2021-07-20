@@ -11,6 +11,8 @@ Codebase for the ARIADNA Study between TU Munich and ESA's Advanced Concepts Tea
 
 ### Optional
 * Doxygen
+* sphinx_rtd_theme
+* breathe
 * clang-format-9
 
 ## Building

@@ -33,6 +33,7 @@ include(ladds_doxygen)
 include(autopas)
 
 add_subdirectory(src)
+add_subdirectory ("docs")
 
 # needs to be in the root directory
 enable_testing()
