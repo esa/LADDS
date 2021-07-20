@@ -1,4 +1,4 @@
-# LADDS - Large-scale Deterministic Debris Simulation
+# LADDS - Large-scale Deterministic Particle Simulation
 
 Codebase for the ARIADNA Study between TU Munich and ESA's Advanced Concepts Team.
 

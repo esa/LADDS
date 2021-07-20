@@ -9,13 +9,13 @@
 #include <iostream>
 
 #include "CollisionFunctor.h"
-#include "Debris.h"
+#include "Particle.h"
 #include "Logger.h"
 
 #include <satellitePropagator/physics/Integrator.h>
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
-extern template class autopas::AutoPas<Debris>;
+extern template class autopas::AutoPas<Particle>;
 
 int main() {
   Logger logger;
@@ -26,7 +26,7 @@ int main() {
   constexpr double cutoff = 2;
 
   // initialization of autopas
-  autopas::AutoPas<Debris> autopas;
+  autopas::AutoPas<Particle> autopas;
   autopas.setBoxMin({0., 0., 0.});
   autopas.setBoxMax({10., 10., 10.});
   autopas.setCutoff(cutoff);
@@ -34,7 +34,7 @@ int main() {
 
   // initialization of the scenario
   for (size_t i = 0; i < numDebris; ++i) {
-    autopas.addParticle(Debris{{static_cast<double>(i), 0, 0}, {0., 0., 0.}, i});
+    autopas.addParticle(Particle{{static_cast<double>(i), 0, 0}, {0., 0., 0.}, i});
   }
 
   // just for fun: print particles

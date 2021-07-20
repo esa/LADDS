@@ -1,5 +1,5 @@
 /**
- * @file Debris.h
+ * @file Particle.h
  * @author F. Gratl
  * @date 28.06.21
  */
@@ -14,12 +14,12 @@
  * Class describing an arbitrary debris object used for the n-body simulation.
  * Based on the Particle class of AutoPas which used 64bit precision.
  */
-class Debris final : public autopas::ParticleFP64 {
+class Particle final : public autopas::ParticleFP64 {
  public:
-  explicit Debris(std::array<double, 3> pos, std::array<double, 3> v, size_t debrisId)
+  explicit Particle(std::array<double, 3> pos, std::array<double, 3> v, size_t debrisId)
       : autopas::ParticleFP64(pos, v, debrisId) {}
 
-  ~Debris() final = default;
+  ~Particle() final = default;
 
   /**
    * Enums used as ids for accessing and creating a dynamically sized SoA.
@@ -30,7 +30,7 @@ class Debris final : public autopas::ParticleFP64 {
    * The type for the SoA storage.
    */
   using SoAArraysType =
-      typename autopas::utils::SoAType<Debris *, size_t /*id*/, double /*x*/, double /*y*/, double /*z*/, double /*fx*/,
+      typename autopas::utils::SoAType<Particle *, size_t /*id*/, double /*x*/, double /*y*/, double /*z*/, double /*fx*/,
                                        double /*fy*/, double /*fz*/, autopas::OwnershipState /*ownershipState*/>::Type;
 
   /**
@@ -59,7 +59,7 @@ class Debris final : public autopas::ParticleFP64 {
     } else if constexpr (attribute == AttributeNames::ownershipState) {
       return this->_ownershipState;
     } else {
-      autopas::utils::ExceptionHandler::exception("Debris::get() unknown attribute {}", attribute);
+      autopas::utils::ExceptionHandler::exception("Particle::get() unknown attribute {}", attribute);
     }
   }
 
@@ -87,7 +87,7 @@ class Debris final : public autopas::ParticleFP64 {
     } else if constexpr (attribute == AttributeNames::ownershipState) {
       this->_ownershipState = value;
     } else {
-      autopas::utils::ExceptionHandler::exception("Debris::set() unknown attribute {}", attribute);
+      autopas::utils::ExceptionHandler::exception("Particle::set() unknown attribute {}", attribute);
     }
   }
 

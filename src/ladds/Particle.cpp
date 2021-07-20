@@ -1,7 +1,7 @@
 /**
- * @file Debris.cpp
+ * @file Particle.cpp
  * @author F. Gratl
  * @date 28.06.21
  */
 
-#include "Debris.h"
+#include "Particle.h"
