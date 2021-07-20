@@ -25,7 +25,7 @@ int main() {
   // initialization of the simulation setup
   // TODO Read input
   constexpr size_t numDebris = 2;
-  constexpr double cutoff = 2;
+  constexpr double cutoff = 500;
   const size_t iterations = 1;
 
   using AutoPas_t = autopas::AutoPas<Particle>;
@@ -33,7 +33,7 @@ int main() {
   // initialization of autopas
   AutoPas_t autopas;
   autopas.setBoxMin({0., 0., 0.});
-  autopas.setBoxMax({10., 10., 10.});
+  autopas.setBoxMax({10000., 10000., 10000.});
   autopas.setCutoff(cutoff);
   autopas.init();
 
@@ -46,7 +46,7 @@ int main() {
 
   // initialization of the scenario
   for (size_t i = 0; i < numDebris; ++i) {
-    autopas.addParticle(Particle{{static_cast<double>(i), 0, 0}, {0., 0., 0.}, i});
+    autopas.addParticle(Particle{{static_cast<double>(i+1)*1000., 0, 0}, {0., 0., 0.}, i});
   }
 
   // just for fun: print particles
@@ -57,7 +57,8 @@ int main() {
   // main-loop skeleton
   for (size_t i = 0; i < iterations; ++i) {
     // update positions
-    // TODO insert propagator code here
+    integrator->integrate(false);
+
     // TODO MPI: handle particle exchange between ranks
 
     // pairwise interaction
@@ -66,6 +67,11 @@ int main() {
     logger.log(Logger::Level::info, "Close encounters: {}", collisionFunctor.getCollisions().size());
 
     // TODO insert breakup model here
+  }
+
+  // just for fun: print particles
+  for (const auto &d : autopas) {
+    logger.log(Logger::Level::info, d.toString());
   }
 
   return 0;

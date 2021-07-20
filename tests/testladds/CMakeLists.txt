@@ -30,6 +30,7 @@ target_link_libraries(
     gmock_main
     autopas
     autopasTools
+    debris_sim_lib
 )
 
 target_include_directories(
