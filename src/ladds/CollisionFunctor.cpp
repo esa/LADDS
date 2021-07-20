@@ -6,9 +6,13 @@
 
 #include "CollisionFunctor.h"
 
-CollisionFunctor::CollisionFunctor(double cutoff) : Functor(cutoff), _cutoffSquare(cutoff * cutoff) {}
+#include <autopas/utils/WrapOpenMP.h>
 
-const std::vector<std::pair<Particle *, Particle *>> &CollisionFunctor::getCollisions() const { return _collisions; }
+CollisionFunctor::CollisionFunctor(double cutoff) : Functor(cutoff), _cutoffSquare(cutoff * cutoff) {
+  _threadData.resize(autopas::autopas_get_max_threads());
+}
+
+const std::unordered_map<Particle *, Particle *> &CollisionFunctor::getCollisions() const { return _collisions; }
 
 void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   // skip interaction with deleted particles
@@ -26,9 +30,12 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   }
 
   // store pointers to colliding pair
-  _collisions.emplace_back(i.get<Particle::AttributeNames::ptr>(), j.get<Particle::AttributeNames::ptr>());
-  if (newton3) {
-    _collisions.emplace_back(j.get<Particle::AttributeNames::ptr>(), i.get<Particle::AttributeNames::ptr>());
+  if (i.getID() < j.getID()) {
+    _threadData[autopas::autopas_get_thread_num()].collisions[i.get<Particle::AttributeNames::ptr>()] =
+        j.get<Particle::AttributeNames::ptr>();
+  } else {
+    _threadData[autopas::autopas_get_thread_num()].collisions[j.get<Particle::AttributeNames::ptr>()] =
+        i.get<Particle::AttributeNames::ptr>();
   }
 }
 
@@ -51,9 +58,11 @@ void CollisionFunctor::SoAFunctorPair(autopas::SoAView<SoAArraysType> soa1, auto
     }
 
     // inner loop over SoA2
-    // TODO this one should be vectorized
-#pragma omp declare reduction(vecMerge : std::vector<std::pair<Particle *, Particle *>> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
-#pragma omp simd reduction(vecMerge : _collisions)
+    //custom reduction for unordered maps
+#pragma omp declare reduction(mapMerge : std::unordered_map<Particle *, Particle *> : omp_out.insert(omp_in.begin(), omp_in.end()))
+    // alias because OpenMP needs it
+    auto &thisCollisions = _threadData[autopas::autopas_get_thread_num()].collisions;
+#pragma omp simd reduction(mapMerge : thisCollisions)
     for (size_t j = 0; j < soa2.getNumParticles(); ++j) {
       SoAKernel(i, j, soa1, soa2, newton3);
     }
@@ -111,8 +120,18 @@ void CollisionFunctor::SoAKernel(size_t i, size_t j, autopas::SoAView<SoAArraysT
     return;
   }
 
-  _collisions.emplace_back(ptr1ptr[i], ptr2ptr[j]);
-  if (newton3) {
-    _collisions.emplace_back(ptr2ptr[j], ptr1ptr[i]);
+  // store pointers to colliding pair
+  if (id1ptr[i] < id2ptr[j]) {
+    _threadData[autopas::autopas_get_thread_num()].collisions[ptr1ptr[i]] = ptr2ptr[j];
+  } else {
+    _threadData[autopas::autopas_get_thread_num()].collisions[ptr2ptr[j]] = ptr1ptr[i];
+  }
+}
+void CollisionFunctor::initTraversal() { _collisions.clear(); }
+
+void CollisionFunctor::endTraversal(bool newton3) {
+  for (auto &data : _threadData) {
+    _collisions.insert(data.collisions.begin(), data.collisions.end());
+    data.collisions.clear();
   }
 }

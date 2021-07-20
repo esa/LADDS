@@ -38,11 +38,11 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
     return std::array<typename Particle::AttributeNames, 0>{/*Nothing*/};
   };
 
-  void initTraversal() final{};
+  void initTraversal() final;
 
-  void endTraversal(bool newton3) final{};
+  void endTraversal(bool newton3) final;
 
-  [[nodiscard]] const std::vector<std::pair<Particle *, Particle *>> &getCollisions() const;
+  [[nodiscard]] const std::unordered_map<Particle *, Particle *> &getCollisions() const;
 
   void AoSFunctor(Particle &i, Particle &j, bool newton3) final;
 
@@ -57,7 +57,17 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
   void SoAKernel(size_t i, size_t j, autopas::SoAView<SoAArraysType> &soa1, autopas::SoAView<SoAArraysType> &soa2,
                  bool newton3);
 
-  // TODO make this thread-safe, false sharing, etc...
-  std::vector<std::pair<Particle *, Particle *>> _collisions;
+  // Buffer struct that is safe against false sharing
+  struct ThreadData {
+    std::unordered_map<Particle *, Particle *> collisions{};
+  } __attribute__((aligned(64)));
+
+  // make sure that the size of ThreadData is correct
+  static_assert(sizeof(ThreadData) % 64 == 0, "ThreadData has wrong size");
+
+  // Buffer per thread
+  std::vector<ThreadData> _threadData;
+  // key = particle with the smaller id
+  std::unordered_map<Particle *, Particle *> _collisions{};
   const double _cutoffSquare;
 };

@@ -1,6 +1,6 @@
 # LADDS - Large-scale Deterministic Particle Simulation
 
-Codebase for the ARIADNA Study between TU Munich and ESA's Advanced Concepts Team.
+Codebase for the ARIADNA Study between TU Munich and ESA's Advanced Concepts Team. A more detailed project description can be found on the [Advanced Concept Team's webpage](https://www.esa.int/gsp/ACT/projects/debris_hpc/).
 
 ## Requirements
 * CMake >= 3.14
@@ -21,4 +21,9 @@ make -j12                       # choose number according to your CPU
 ```
 
 ## Testing
-TODO
+Testing is done with help of [GoogleTest](https://github.com/google/googletest), which is downloaded by CMake.
+```bash
+cmake -DLADDS_BUILD_TESTS=ON .. # Should be enabled by default
+make ladds_tests -j12
+ctest -j12
+```
