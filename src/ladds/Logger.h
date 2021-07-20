@@ -29,11 +29,12 @@ class Logger {
    * @param fmt
    * @param args
    */
+  //! @cond Doxygen_Suppress
   template <class... Args>
   void log(const Level &lvl, spdlog::string_view_t fmt, const Args &... args) const {
     spdlog::get(_name)->log(lvl, fmt, args...);
   }
-
+  //! @endcond
   /**
    * Wrapper around spdlog::get().
    * @return Shared pointer to the actual logger.

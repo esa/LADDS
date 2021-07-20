@@ -26,15 +26,15 @@ class CollisionFunctor final : public autopas::Functor<Debris, CollisionFunctor>
 
   [[nodiscard]] bool allowsNonNewton3() final { return true; }
 
-  [[nodiscard]] constexpr static auto getNeededAttr() {
+  [[nodiscard]] static constexpr auto getNeededAttr() {
     return std::array<typename Debris::AttributeNames, 6>{
         Debris::AttributeNames::ptr,  Debris::AttributeNames::id,   Debris::AttributeNames::ownershipState,
         Debris::AttributeNames::posX, Debris::AttributeNames::posY, Debris::AttributeNames::posZ};
   }
 
-  [[nodiscard]] constexpr static auto getNeededAttr(std::false_type) { return getNeededAttr(); }
+  [[nodiscard]] static constexpr auto getNeededAttr(std::false_type) { return getNeededAttr(); }
 
-  [[nodiscard]] constexpr static std::array<typename Debris::AttributeNames, 0> getComputedAttr() {
+  [[nodiscard]] static constexpr std::array<typename Debris::AttributeNames, 0> getComputedAttr() {
     return std::array<typename Debris::AttributeNames, 0>{/*Nothing*/};
   };
 
@@ -58,12 +58,14 @@ class CollisionFunctor final : public autopas::Functor<Debris, CollisionFunctor>
                  bool newton3);
 
   // Buffer struct that is safe against false sharing
+  //! @cond Doxygen_Suppress
   struct ThreadData {
     std::unordered_map<Debris *, Debris *> collisions{};
   } __attribute__((aligned(64)));
 
   // make sure that the size of ThreadData is correct
   static_assert(sizeof(ThreadData) % 64 == 0, "ThreadData has wrong size");
+  //! @endcond
 
   // Buffer per thread
   std::vector<ThreadData> _threadData;
