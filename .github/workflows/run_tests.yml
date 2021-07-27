@@ -16,15 +16,10 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Add SSH key
-      env:
-          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
       run: |
-          mkdir -p /home/runner/.ssh
-          ssh-keyscan github.com >> /home/runner/.ssh/known_hosts
-          echo "${{ secrets.CTEST_KEY }}" > /home/runner/.ssh/github_actions
-          chmod 600 /home/runner/.ssh/github_actions
-          ssh-agent -a $SSH_AUTH_SOCK > /dev/null   
-          ssh-add /home/runner/.ssh/github_actions
+          ssh-keyscan github.com >> /home/.ssh/known_hosts
+          echo "${{ secrets.CTEST_KEY }}" > /home/.ssh/github_action
+          ssh-add /home/.ssh/github_action
     - name: Install dependencies
       run: |
         sudo apt-get update
