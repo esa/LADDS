@@ -15,12 +15,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Add SSH key
-      run: |
-        ssh-agent /bin/sh
-        mkdir tmp && cd tmp
-        echo "${{ secrets.CTEST_KEY }}" > github_action_key
-        ssh-add github_action_key
     - name: Install dependencies
       run: |
         sudo apt-get update
@@ -30,6 +24,12 @@ jobs:
         sudo apt-get install libomp-dev
         sudo apt-get install doxygen
         sudo apt-get install graphviz
+    - name: Add SSH key
+      run: |
+        mkdir tmp
+        cd tmp
+        echo "${{ secrets.CTEST_KEY }}" > github_action_key
+        ssh-add github_action_key
     - name: Build project
       run: |
         mkdir build
