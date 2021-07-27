@@ -16,4 +16,5 @@ target_include_directories(${EXECUTABLE_NAME} PUBLIC ${LADDS_SOURCE_DIR}/src/)
 target_link_libraries(${EXECUTABLE_NAME}
                       autopas
                       debris_sim_lib
+                      breakupModel_lib
                       )
