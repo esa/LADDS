@@ -10,8 +10,9 @@ if (GIT_SUBMODULES_SSH)
     set(PropagatorRepoPath git@github.com:Wombatwarrior/BA_space_debris.git)
 endif ()
 
-# set(BUILD_GMOCK OFF)
-# set(INSTALL_GTEST OFF)
+# disable stuff we do not need
+set(DebrisSim_Thesis OFF CACHE INTERNAL "")
+set(DebrisSim_Tests OFF CACHE INTERNAL "")
 
 FetchContent_Declare(
         Propagatorfetch
