@@ -27,11 +27,6 @@ const std::array<double,3>& Particle::getPosition() const {
     return _r;
 }
 
-// std::array<double, 3>& Particle::getPosition()
-// {
-//     return _r;
-// }
-
 void Particle::setPosition(const std::array<double, 3>& position)
 {
     Particle::_r = position;
@@ -41,11 +36,6 @@ const std::array<double, 3>& Particle::getVelocity() const
 {
     return _v;
 }
-
-// std::array<double, 3>& Particle::getVelocity()
-// {
-//     return _v;
-// }
 
 void Particle::setVelocity(const std::array<double, 3>& velocity)
 {
@@ -57,11 +47,6 @@ const std::array<double, 3>& Particle::getAccT0() const
     return acc_t0;
 }
 
-// std::array<double, 3>& Particle::getAccT0()
-// {
-//     return acc_t0;
-// }
-
 void Particle::setAccT0(const std::array<double, 3>& accT0)
 {
     acc_t0 = accT0;
@@ -71,11 +56,6 @@ const std::array<double, 3>& Particle::getAccT1() const
 {
     return acc_t1;
 }
-
-// std::array<double, 3>& Particle::getAccT1()
-// {
-//     return acc_t1;
-// }
 
 void Particle::setAccT1(const std::array<double, 3>& accT1)
 {

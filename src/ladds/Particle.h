@@ -126,7 +126,6 @@ class Particle final : public autopas::ParticleFP64 {
    * @return 3D vector representation of the debris #position
    */
   [[nodiscard]] const std::array<double, 3>& getPosition() const;
-  //std::array<double, 3>& getPosition();
 
   /**
    * @brief Setter function for #position vector
@@ -141,7 +140,6 @@ class Particle final : public autopas::ParticleFP64 {
    * @return 3D vector representation of the debris #velocity
    */
   [[nodiscard]] const std::array<double, 3>& getVelocity() const;
-  //std::array<double, 3>& getVelocity();
 
   /**
    * @brief Setter function for #velocity vector
@@ -156,7 +154,6 @@ class Particle final : public autopas::ParticleFP64 {
    * @return 3D vector representation of the debris #acc_t0
    */
   [[nodiscard]] const std::array<double, 3>& getAccT0() const;
-  //std::array<double, 3>& getAccT0();
 
   /**
    * @brief Setter function for #acc_t0 vector
@@ -171,7 +168,6 @@ class Particle final : public autopas::ParticleFP64 {
    * @return 3D vector representation of the debris #acc_t1
    */
   [[nodiscard]] const std::array<double, 3>& getAccT1() const;
-  //std::array<double, 3>& getAccT1();
 
   /**
    * @brief Setter function for #acc_t1 vector
@@ -220,11 +216,11 @@ class Particle final : public autopas::ParticleFP64 {
   /**
    * Area to mass ration.
    */
-  double aom = 0; 
+  double aom {0.}; 
   /**
    * C_cA)/m is the inverse of the ballistic coefficient. 
    * Used for Acceleration::DragComponent::apply().
    */
-  double bc_inv = 0; 
+  double bc_inv {0.}; 
 
 };

@@ -25,7 +25,7 @@ int main() {
   // initialization of the simulation setup
   // TODO Read input
   constexpr size_t numDebris = 2;
-  constexpr double cutoff = 500;
+  constexpr double cutoff = 500.;
   const size_t iterations = 1;
 
   using AutoPas_t = autopas::AutoPas<Particle>;

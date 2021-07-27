@@ -1,4 +1,4 @@
-# LADDS - Large-scale Deterministic Particle Simulation
+# LADDS - Large-scale Deterministic Debris Simulation
 
 Codebase for the ARIADNA Study between TU Munich and ESA's Advanced Concepts Team. A more detailed project description can be found on the [Advanced Concept Team's webpage](https://www.esa.int/gsp/ACT/projects/debris_hpc/).
 

@@ -9,7 +9,7 @@
 #include <gmock/gmock-matchers.h>
 
 #include "ladds/CollisionFunctor.h"
-#include <ladds/Particle.h>
+#include "ladds/Particle.h"
 
 /**
  * Set up three particles in a row.
