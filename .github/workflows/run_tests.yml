@@ -17,7 +17,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Add SSH key
       run: |
-          mkdir /home/.ssh/actions/github_action
+          mkdir /home/.ssh/actions/
           touch /home/.ssh/actions/github_action
           echo "${{ secrets.CTEST_KEY }}" > /home/.ssh/actions/github_action
           ssh-add /home/.ssh/actions/github_action
