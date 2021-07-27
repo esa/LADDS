@@ -10,13 +10,13 @@
 #include <autopas/utils/SoA.h>
 #include <autopas/utils/SoAView.h>
 
-#include "Debris.h"
+#include "Particle.h"
 
 /**
  * Class describing the pairwise particle computation for determining whether a collision occured.
  * This functor is passed to autopas::AutoPas::iteratePairwise() as the primary pairwise interaction.
  */
-class CollisionFunctor final : public autopas::Functor<Debris, CollisionFunctor> {
+class CollisionFunctor final : public autopas::Functor<Particle, CollisionFunctor> {
  public:
   explicit CollisionFunctor(double cutoff);
 
@@ -27,24 +27,24 @@ class CollisionFunctor final : public autopas::Functor<Debris, CollisionFunctor>
   [[nodiscard]] bool allowsNonNewton3() final { return true; }
 
   [[nodiscard]] constexpr static auto getNeededAttr() {
-    return std::array<typename Debris::AttributeNames, 6>{
-        Debris::AttributeNames::ptr,  Debris::AttributeNames::id,   Debris::AttributeNames::ownershipState,
-        Debris::AttributeNames::posX, Debris::AttributeNames::posY, Debris::AttributeNames::posZ};
+    return std::array<typename Particle::AttributeNames, 6>{
+        Particle::AttributeNames::ptr,  Particle::AttributeNames::id,   Particle::AttributeNames::ownershipState,
+        Particle::AttributeNames::posX, Particle::AttributeNames::posY, Particle::AttributeNames::posZ};
   }
 
   [[nodiscard]] constexpr static auto getNeededAttr(std::false_type) { return getNeededAttr(); }
 
-  [[nodiscard]] constexpr static std::array<typename Debris::AttributeNames, 0> getComputedAttr() {
-    return std::array<typename Debris::AttributeNames, 0>{/*Nothing*/};
+  [[nodiscard]] constexpr static std::array<typename Particle::AttributeNames, 0> getComputedAttr() {
+    return std::array<typename Particle::AttributeNames, 0>{/*Nothing*/};
   };
 
   void initTraversal() final;
 
   void endTraversal(bool newton3) final;
 
-  [[nodiscard]] const std::unordered_map<Debris *, Debris *> &getCollisions() const;
+  [[nodiscard]] const std::unordered_map<Particle *, Particle *> &getCollisions() const;
 
-  void AoSFunctor(Debris &i, Debris &j, bool newton3) final;
+  void AoSFunctor(Particle &i, Particle &j, bool newton3) final;
 
   void SoAFunctorSingle(autopas::SoAView<SoAArraysType> soa, bool newton3) final;
 
@@ -59,7 +59,7 @@ class CollisionFunctor final : public autopas::Functor<Debris, CollisionFunctor>
 
   // Buffer struct that is safe against false sharing
   struct ThreadData {
-    std::unordered_map<Debris *, Debris *> collisions{};
+    std::unordered_map<Particle *, Particle *> collisions{};
   } __attribute__((aligned(64)));
 
   // make sure that the size of ThreadData is correct
@@ -68,6 +68,6 @@ class CollisionFunctor final : public autopas::Functor<Debris, CollisionFunctor>
   // Buffer per thread
   std::vector<ThreadData> _threadData;
   // key = particle with the smaller id
-  std::unordered_map<Debris *, Debris *> _collisions{};
+  std::unordered_map<Particle *, Particle *> _collisions{};
   const double _cutoffSquare;
 };

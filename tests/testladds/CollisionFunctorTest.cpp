@@ -9,7 +9,7 @@
 #include <gmock/gmock-matchers.h>
 
 #include "ladds/CollisionFunctor.h"
-#include "ladds/Debris.h"
+#include "ladds/Particle.h"
 
 /**
  * Set up three particles in a row.
@@ -20,7 +20,7 @@ TEST(CollisionFunctorTest, ThreeParticles) {
   constexpr bool newton3{false};
   constexpr size_t numDebris{3};
 
-  std::vector<Debris> debris;
+  std::vector<Particle> debris;
   debris.reserve(numDebris);
 
   // Add three particles in a row on the X axis separated by 1

@@ -34,3 +34,5 @@
 # IDE Stuff
 *.idea
 *build*
+.cache
+.vscode

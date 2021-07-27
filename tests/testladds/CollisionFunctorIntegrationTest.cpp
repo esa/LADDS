@@ -12,13 +12,13 @@
 #include <gmock/gmock-more-matchers.h>
 #include <ladds/CollisionFunctor.h>
 
-extern template class autopas::AutoPas<Debris>;
-extern template bool autopas::AutoPas<Debris>::iteratePairwise(CollisionFunctor *);
+extern template class autopas::AutoPas<Particle>;
+extern template bool autopas::AutoPas<Particle>::iteratePairwise(CollisionFunctor *);
 
 void CollisionFunctorIntegrationTest::SetUpTestSuite() {
   using autopasTools::generators::RandomGenerator;
   constexpr size_t numDebris = 15;
-  Debris defaultParticle{{
+  Particle defaultParticle{{
                              0.,
                              0.,
                              0.,
@@ -74,7 +74,7 @@ TEST_P(CollisionFunctorIntegrationTest, testAutoPasAlgorithm) {
   CollisionFunctor functor(_cutoff);
 
   // configure the AutoPas container
-  autopas::AutoPas<Debris> autopas;
+  autopas::AutoPas<Particle> autopas;
   // allow all container options since the traversal determines it uniquely
   autopas.setAllowedContainers({autopas::ContainerOption::getAllOptions()});
   autopas.setAllowedTraversals({traversal});
