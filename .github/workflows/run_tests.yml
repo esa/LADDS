@@ -28,8 +28,9 @@ jobs:
       run: |
         mkdir tmp
         cd tmp
-        # echo "${{ secrets.CTEST_KEY }}" > github_action_key
-        # ssh-add github_action_key
+        exec ssh-agent bash
+        echo "${{ secrets.CTEST_KEY }}" > github_action_key
+        ssh-add github_action_key
     - name: Build project
       run: |
         mkdir build
