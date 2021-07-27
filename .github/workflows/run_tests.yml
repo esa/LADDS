@@ -26,6 +26,8 @@ jobs:
         sudo apt-get install graphviz
     - name: Add SSH key
       run: |
+        mkdir -p /home/runner/.ssh
+        ssh-keyscan github.com >> /home/runner/.ssh/known_hosts
         mkdir tmp
         cd tmp
         exec ssh-agent bash
