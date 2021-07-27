@@ -17,8 +17,9 @@ jobs:
     - uses: actions/checkout@v2
     - name: Add SSH key
       run: |
-          echo "${{ secrets.CTEST_KEY }}" > /home/github_action_key
-          ssh-add /home/github_action_key
+          mkdir tmp && cd tmp
+          echo "${{ secrets.CTEST_KEY }}" > github_action_key
+          ssh-add github_action_key
     - name: Install dependencies
       run: |
         sudo apt-get update
