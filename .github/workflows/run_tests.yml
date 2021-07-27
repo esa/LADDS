@@ -17,7 +17,6 @@ jobs:
     - uses: actions/checkout@v2
     - name: Add SSH key
       run: |
-          ssh-keyscan github.com >> /home/.ssh/known_hosts
           echo "${{ secrets.CTEST_KEY }}" > /home/.ssh/github_action
           ssh-add /home/.ssh/github_action
     - name: Install dependencies
