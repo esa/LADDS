@@ -25,5 +25,5 @@ FetchContent_MakeAvailable(Propagatorfetch)
 # Disable warnings from the library target
 target_compile_options(debris_sim_lib PRIVATE -w)
 # Disable warnings from included headers
-target_include_directories(debris_sim_lib SYSTEM PUBLIC "${propval}")
 get_target_property(propval debris_sim_lib INTERFACE_INCLUDE_DIRECTORIES)
+target_include_directories(debris_sim_lib SYSTEM PUBLIC "${propval}")
