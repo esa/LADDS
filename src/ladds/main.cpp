@@ -91,6 +91,17 @@ int main() {
     logger.log(Logger::Level::info, "Close encounters: {}", collisionFunctor.getCollisions().size());
 
     // TODO insert breakup model here
+
+    // Visualization:
+    if (i % vtkWriteFrequency == 0) {
+      VTKWriter vtkWriter("output_" + std::to_string(i) + ".vtu");
+      std::vector<Satellite> allParticles;
+      allParticles.reserve(autopas.getNumberOfParticles());
+      for (const auto &p : autopas) {
+        allParticles.push_back(SatelliteToParticleConverter::convertParticleToSatellite(p));
+      }
+      vtkWriter.printResult(allParticles);
+    }
   }
 
   // just for fun: print particles
