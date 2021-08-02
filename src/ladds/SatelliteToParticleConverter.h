@@ -8,7 +8,7 @@
 #include "Particle.h"
 
 namespace SatelliteToParticleConverter {
-    
+
     /**
      * This function is used to convert the satellite data into particles.
      * @param  satellite: Satellite to convert.
@@ -18,7 +18,7 @@ namespace SatelliteToParticleConverter {
         //Convert all entries from meters to kilometers
         const auto& position = autopas::utils::ArrayMath::mulScalar(satellite.getPosition(), 1./1000.0);
         const auto& velocity = autopas::utils::ArrayMath::mulScalar(satellite.getVelocity(), 1./1000.0);
-        
+
         return Particle(position,velocity, satellite.getId());
     }
 
@@ -28,6 +28,14 @@ namespace SatelliteToParticleConverter {
      * @retval Converted satellites.
      */
     [[nodiscard]] inline Satellite convertParticleToSatellite(const Particle& particle) {
-        throw std::runtime_error("Not implemented. Ask Future Fabio about this.");
+
+      SatelliteBuilder satelliteBuilder;
+
+      satelliteBuilder.setID(particle.getID())
+                      .setPosition(particle.getPosition())
+                      .setVelocity(particle.getVelocity())
+                      .setMass(1);
+
+      return satelliteBuilder.getResult();
     }
 }
