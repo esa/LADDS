@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - uses: actions/checkout@v2
     - name: Install dependencies
       run: |
         sudo apt-get update
@@ -27,9 +28,6 @@ jobs:
       run: |
         mkdir build
         cd build
-        ls
-        cd ..
-        ls
         CC=clang CXX=clang++ cmake -DGIT_SUBMODULES_SSH=ON ..
         make -j4
     - name: Test with ctest
