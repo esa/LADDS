@@ -18,6 +18,7 @@ set(DebrisSim_Simulation OFF CACHE INTERNAL "")
 FetchContent_Declare(
         Propagatorfetch
         GIT_REPOSITORY ${PropagatorRepoPath}
+        # branch tmp (=GenericDebris + main)
         GIT_TAG 9ad61f25686d34aa4be6642998a157c0f7cb3a5c
 )
 
