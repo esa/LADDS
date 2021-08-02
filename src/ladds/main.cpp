@@ -4,6 +4,12 @@
  * @date 28.06.21
  */
 
+#include <satellitePropagator/physics/Integrator.h>
+#include <satellitePropagator/physics/AccelerationAccumulator.h>
+#include <satellitePropagator/io/FileOutput.h>
+
+#include <input/TLESatcatDataReader.h>
+
 #include <autopas/AutoPasDecl.h>
 
 #include <iostream>
@@ -11,10 +17,7 @@
 #include "CollisionFunctor.h"
 #include "Particle.h"
 #include "Logger.h"
-
-#include <satellitePropagator/physics/Integrator.h>
-#include <satellitePropagator/physics/AccelerationAccumulator.h>
-#include <satellitePropagator/io/FileOutput.h>
+#include "SatelliteToParticleConverter.h"
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
 extern template class autopas::AutoPas<Particle>;
@@ -44,9 +47,13 @@ int main() {
   auto integrator = std::make_shared<Integrator<AutoPas_t,Particle>>(autopas,*accumulator,1e-8);
 
 
-  // initialization of the scenario
-  for (size_t i = 0; i < numDebris; ++i) {
-    autopas.addParticle(Particle{{static_cast<double>(i+1)*1000., 0, 0}, {0., 0., 0.}, i});
+  // Read in scenario
+  TLESatcatDataReader tleSatcatDataReader{"/home/pablo/Code/LADDS/build/_deps/breakupmodelfetch-src/satcat.csv", "/home/pablo/Code/LADDS/data/tle.txt"};
+  auto actualSatellites = tleSatcatDataReader.getSatelliteCollection();
+
+  // Convert satellites to particles
+  for (const auto &satellite : actualSatellites) {
+    autopas.addParticle(SatelliteToParticleConverter::convertSatelliteToParticle(satellite));
   }
 
   // just for fun: print particles
