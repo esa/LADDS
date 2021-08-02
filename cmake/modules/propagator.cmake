@@ -10,13 +10,15 @@ if (GIT_SUBMODULES_SSH)
     set(PropagatorRepoPath git@github.com:Wombatwarrior/BA_space_debris.git)
 endif ()
 
-# set(BUILD_GMOCK OFF)
-# set(INSTALL_GTEST OFF)
+# disable stuff we do not need
+set(DebrisSim_Thesis OFF CACHE INTERNAL "")
+set(DebrisSim_Tests OFF CACHE INTERNAL "")
+set(DebrisSim_Simulation OFF CACHE INTERNAL "")
 
 FetchContent_Declare(
         Propagatorfetch
         GIT_REPOSITORY ${PropagatorRepoPath}
-        GIT_TAG origin/GenericDebris
+        GIT_TAG 9ad61f25686d34aa4be6642998a157c0f7cb3a5c
 )
 
 # Get Propagator source and binary directories from CMake project
