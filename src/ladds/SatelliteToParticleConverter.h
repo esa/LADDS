@@ -32,8 +32,8 @@ namespace SatelliteToParticleConverter {
       SatelliteBuilder satelliteBuilder;
 
       satelliteBuilder.setID(particle.getID())
-                      .setPosition(particle.getPosition())
-                      .setVelocity(particle.getVelocity())
+                      .setPosition(autopas::utils::ArrayMath::mulScalar(particle.getPosition(), 1000.0))
+                      .setVelocity(autopas::utils::ArrayMath::mulScalar(particle.getVelocity(), 1000.0))
                       .setMass(1);
 
       return satelliteBuilder.getResult();
