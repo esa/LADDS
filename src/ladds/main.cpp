@@ -47,11 +47,12 @@ int main() {
   autopas.init();
 
   // initialization of the integrator
-  std::array<bool,8> selectedPropagatorComponents{true, false, false, false, false, false, false, false};
-  auto fo = std::make_shared<FileOutput<AutoPas_t,Particle>>(autopas, "output.csv",OutputFile::CSV, selectedPropagatorComponents);
-  auto accumulator = std::make_shared<Acceleration::AccelerationAccumulator<AutoPas_t,Particle>>(selectedPropagatorComponents,autopas,0.0,*fo);
-  auto integrator = std::make_shared<Integrator<AutoPas_t,Particle>>(autopas,*accumulator,1e-4);
-
+  std::array<bool, 8> selectedPropagatorComponents{true, false, false, false, false, false, false, false};
+  auto fo = std::make_shared<FileOutput<AutoPas_t, Particle>>(autopas, "output.csv", OutputFile::CSV,
+                                                              selectedPropagatorComponents);
+  auto accumulator = std::make_shared<Acceleration::AccelerationAccumulator<AutoPas_t, Particle>>(
+      selectedPropagatorComponents, autopas, 0.0, *fo);
+  auto integrator = std::make_shared<Integrator<AutoPas_t, Particle>>(autopas, *accumulator, 1e-1);
 
   // Read in scenario
   TLESatcatDataReader tleSatcatDataReader{"/home/pablo/Code/LADDS/build/_deps/breakupmodelfetch-src/satcat.csv", "/home/pablo/Code/LADDS/data/tle.txt"};
