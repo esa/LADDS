@@ -8,7 +8,8 @@
 #include <satellitePropagator/physics/AccelerationAccumulator.h>
 #include <satellitePropagator/io/FileOutput.h>
 
-#include <input/TLESatcatDataReader.h>
+#include <breakupModel/input/TLESatcatDataReader.h>
+
 
 #include <autopas/AutoPasDecl.h>
 
