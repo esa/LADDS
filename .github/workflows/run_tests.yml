@@ -27,6 +27,9 @@ jobs:
       run: |
         mkdir build
         cd build
+        ls
+        cd ..
+        ls
         CC=clang CXX=clang++ cmake -DGIT_SUBMODULES_SSH=ON ..
         make -j4
     - name: Test with ctest
