@@ -31,6 +31,7 @@ target_link_libraries(
     autopas
     autopasTools
     debris_sim_lib
+    breakupModel_lib
 )
 
 target_include_directories(

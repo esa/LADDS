@@ -36,3 +36,4 @@
 *build*
 .cache
 .vscode
+data/tle.txt
