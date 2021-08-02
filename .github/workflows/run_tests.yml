@@ -14,17 +14,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Add SSH key
-      run: |
-        mkdir -p /home/runner/.ssh
-        ssh-keyscan github.com >> /home/runner/.ssh/known_hosts
-        mkdir tmp
-        cd tmp
-        exec ssh-agent bash
-        echo "${{ secrets.CTEST_KEY }}" > github_action_key
-        ssh-add github_action_key
-        
     - name: Install dependencies
       run: |
         sudo apt-get update
