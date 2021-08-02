@@ -38,7 +38,7 @@ class Logger {
    * Wrapper around spdlog::get().
    * @return Shared pointer to the actual logger.
    */
-  [[nodiscard]] auto get() const;
+  [[nodiscard]] std::shared_ptr<spdlog::logger> get() const;
 
   /**
    * Getter for the logger name.
