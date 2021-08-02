@@ -22,12 +22,19 @@
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
 extern template class autopas::AutoPas<Particle>;
 
-int main() {
+int main(int argc, char **argv) {
   Logger logger;
   logger.get()->set_level(spdlog::level::debug);
 
   // initialization of the simulation setup
   // TODO Read input
+  std::string tleFilePath;
+  if(argc > 1) {
+    tleFilePath = argv[1];
+  }
+  if(tleFilePath.empty()){
+    logger.log(Logger::Level::critical, "No TLE file given!");
+  }
   constexpr double cutoff = 0.02;
   const size_t iterations = 3;
   const double max_altitude = 85000.;
@@ -55,7 +62,7 @@ int main() {
   auto integrator = std::make_shared<Integrator<AutoPas_t, Particle>>(autopas, *accumulator, 1e-1);
 
   // Read in scenario
-  TLESatcatDataReader tleSatcatDataReader{"/home/pablo/Code/LADDS/build/_deps/breakupmodelfetch-src/satcat.csv", "/home/pablo/Code/LADDS/data/tle.txt"};
+  TLESatcatDataReader tleSatcatDataReader{std::string(DATADIR) + "satcat_breakupModel.csv", tleFilePath};
   auto actualSatellites = tleSatcatDataReader.getSatelliteCollection();
   logger.log(Logger::Level::debug, "Parsed {} satellites", actualSatellites.size());
 
@@ -86,7 +93,7 @@ int main() {
     const auto [escapedParticles, containerUpdated] = autopas.updateContainer();
 
     if (not escapedParticles.empty()) {
-      logger.log(Logger::Level::critical, "Particles are escaping! \n{}", escapedParticles);
+      logger.log(Logger::Level::err, "Particles are escaping! \n{}", escapedParticles);
     }
 
     // pairwise interaction

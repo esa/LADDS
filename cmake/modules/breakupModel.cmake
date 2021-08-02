@@ -24,6 +24,10 @@ FetchContent_Declare(
 # Get Breakup Model source and binary directories from CMake project
 FetchContent_MakeAvailable(BreakupModelfetch)
 
+# fetch the satcat file from the breakup repository to our data directory
+file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/data)
+configure_file(${breakupmodelfetch_SOURCE_DIR}/satcat.csv ${PROJECT_SOURCE_DIR}/data/satcat_breakupModel.csv COPYONLY)
+
 # Disable warnings from the library target
 target_compile_options(breakupModel_lib PRIVATE -w)
 # Disable warnings from included headers
