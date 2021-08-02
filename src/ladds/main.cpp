@@ -4,36 +4,35 @@
  * @date 28.06.21
  */
 
-#include <autopas/utils/ArrayUtils.h>
-#include <satellitePropagator/physics/Integrator.h>
-#include <satellitePropagator/physics/AccelerationAccumulator.h>
-#include <satellitePropagator/io/FileOutput.h>
-
-#include <breakupModel/input/TLESatcatDataReader.h>
-
-
 #include <autopas/AutoPasDecl.h>
+#include <breakupModel/input/TLESatcatDataReader.h>
+#include <breakupModel/output/VTKWriter.h>
+#include <satellitePropagator/io/FileOutput.h>
+#include <satellitePropagator/physics/AccelerationAccumulator.h>
+#include <satellitePropagator/physics/Integrator.h>
 
 #include <iostream>
 
 #include "CollisionFunctor.h"
-#include "Particle.h"
 #include "Logger.h"
+#include "Particle.h"
 #include "SatelliteToParticleConverter.h"
+#include "spdlog/fmt/ostr.h"
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
 extern template class autopas::AutoPas<Particle>;
 
 int main() {
   Logger logger;
+  logger.get()->set_level(spdlog::level::debug);
 
   // initialization of the simulation setup
   // TODO Read input
-  constexpr size_t numDebris = 2;
   constexpr double cutoff = 0.02;
-  const size_t iterations = 1000;
-  const double max_altitude = 8500.;
-  double min_altitude = 1.e9;
+  const size_t iterations = 3;
+  const double max_altitude = 85000.;
+  const double desiredCellsPerDimension = 50;
+  const size_t vtkWriteFrequency = 10;
 
   using AutoPas_t = autopas::AutoPas<Particle>;
 
@@ -42,7 +41,9 @@ int main() {
   autopas.setBoxMin({-max_altitude, -max_altitude, -max_altitude});
   autopas.setBoxMax({max_altitude, max_altitude, max_altitude});
   autopas.setCutoff(cutoff);
-  autopas.setCellSizeFactor(20000);
+  autopas.setCellSizeFactor((max_altitude * 2.) / (cutoff * desiredCellsPerDimension));
+  autopas.setAllowedDataLayouts({autopas::DataLayoutOption::aos});
+  autopas.setAllowedContainers({autopas::ContainerOption::verletListsCells});
   autopas.init();
 
   // initialization of the integrator
@@ -55,25 +56,24 @@ int main() {
   // Read in scenario
   TLESatcatDataReader tleSatcatDataReader{"/home/pablo/Code/LADDS/build/_deps/breakupmodelfetch-src/satcat.csv", "/home/pablo/Code/LADDS/data/tle.txt"};
   auto actualSatellites = tleSatcatDataReader.getSatelliteCollection();
+  logger.log(Logger::Level::debug, "Parsed {} satellites", actualSatellites.size());
 
+  double minAltitudeFound{std::numeric_limits<double>::max()};
+  double maxAltitudeFound{0.};
   // Convert satellites to particles
   for (const auto &satellite : actualSatellites) {
     auto particle = SatelliteToParticleConverter::convertSatelliteToParticle(satellite);
     auto pos = particle.getPosition();
-    double altitude = sqrt(pos[0]*pos[0] + pos[1]*pos[1] + pos[2]*pos[2]);
-    if (altitude < min_altitude) {
-      min_altitude = altitude;
-    }
+    double altitude = sqrt(pos[0] * pos[0] + pos[1] * pos[1] + pos[2] * pos[2]);
+    minAltitudeFound = std::max(minAltitudeFound, altitude);
+    maxAltitudeFound = std::max(maxAltitudeFound, altitude);
     if (altitude < max_altitude) {
       autopas.addParticle(particle);
     }
   }
-  logger.log(Logger::Level::info, "Min_altitude was {}", min_altitude);
+  logger.log(Logger::Level::info, "Min altitude is {}", minAltitudeFound);
+  logger.log(Logger::Level::info, "Max altitude is {}", maxAltitudeFound);
 
-  // just for fun: print particles
-  // for (const auto &d : autopas) {
-  //   logger.log(Logger::Level::info, d.toString());
-  // }
   logger.log(Logger::Level::info, "Number of particles: {}", autopas.getNumberOfParticles());
 
   // main-loop skeleton
@@ -81,14 +81,21 @@ int main() {
     // update positions
     integrator->integrate(false);
 
-    std::cout << autopas::utils::ArrayUtils::to_string(autopas.begin()->getPosition()) << std::endl;
-
     // TODO MPI: handle particle exchange between ranks
+    const auto [escapedParticles, containerUpdated] = autopas.updateContainer();
+
+    if (not escapedParticles.empty()) {
+      logger.log(Logger::Level::critical, "Particles are escaping! \n{}", escapedParticles);
+    }
 
     // pairwise interaction
     CollisionFunctor collisionFunctor(cutoff);
     autopas.iteratePairwise(&collisionFunctor);
-    logger.log(Logger::Level::info, "Close encounters: {}", collisionFunctor.getCollisions().size());
+    auto collisions = collisionFunctor.getCollisions();
+    logger.log(Logger::Level::info, "Close encounters: {}", collisions.size());
+    for (const auto &[p1, p2] : collisions) {
+      logger.log(Logger::Level::debug, "{} | {}", p1->getID(), p2->getID());
+    }
 
     // TODO insert breakup model here
 
@@ -103,11 +110,6 @@ int main() {
       vtkWriter.printResult(allParticles);
     }
   }
-
-  // just for fun: print particles
-  // for (const auto &d : autopas) {
-  //   logger.log(Logger::Level::info, d.toString());
-  // }
 
   return 0;
 }
