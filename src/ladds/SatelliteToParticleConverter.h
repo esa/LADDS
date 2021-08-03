@@ -32,6 +32,7 @@ namespace SatelliteToParticleConverter {
       SatelliteBuilder satelliteBuilder;
 
       satelliteBuilder.setID(particle.getID())
+                      // Converting from km to meters
                       .setPosition(autopas::utils::ArrayMath::mulScalar(particle.getPosition(), 1000.0))
                       .setVelocity(autopas::utils::ArrayMath::mulScalar(particle.getVelocity(), 1000.0))
                       .setMass(1);
