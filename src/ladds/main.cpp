@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
     if (not escapedParticles.empty()) {
       logger.log(Logger::Level::err, "Particles are escaping! \n{}", escapedParticles);
     }
-
+//TODO Check for particles that burn up
     // pairwise interaction
     CollisionFunctor collisionFunctor(cutoff);
     autopas.iteratePairwise(&collisionFunctor);
