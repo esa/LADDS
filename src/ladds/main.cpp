@@ -29,10 +29,10 @@ int main(int argc, char **argv) {
   // initialization of the simulation setup
   // TODO Read input
   std::string tleFilePath;
-  if(argc > 1) {
+  if (argc > 1) {
     tleFilePath = argv[1];
   }
-  if(tleFilePath.empty()){
+  if (tleFilePath.empty()) {
     logger.log(Logger::Level::critical, "No TLE file given!");
   }
   constexpr double cutoff = 0.02;
@@ -48,13 +48,23 @@ int main(int argc, char **argv) {
   autopas.setBoxMin({-max_altitude, -max_altitude, -max_altitude});
   autopas.setBoxMax({max_altitude, max_altitude, max_altitude});
   autopas.setCutoff(cutoff);
+  // Set the size (relative to cutoff) of the cells so that roughly the desired number of cells per dimension is reached
   autopas.setCellSizeFactor((max_altitude * 2.) / (cutoff * desiredCellsPerDimension));
   autopas.setAllowedDataLayouts({autopas::DataLayoutOption::aos});
   autopas.setAllowedContainers({autopas::ContainerOption::verletListsCells});
   autopas.init();
 
   // initialization of the integrator
-  std::array<bool, 8> selectedPropagatorComponents{true, false, false, false, false, false, false, false};
+  constexpr bool useKEPComponent = true, useJ2Component = false, useC22Component = false, useS22Component = false,
+                 useSOLComponent = false, useLUNComponent = false, useSRPComponent = false, useDRAGComponent = false;
+  std::array<bool, 8> selectedPropagatorComponents{useKEPComponent,
+                                                   useJ2Component,
+                                                   useC22Component,
+                                                   useS22Component,
+                                                   useSOLComponent,
+                                                   useLUNComponent,
+                                                   useSRPComponent,
+                                                   useDRAGComponent};
   auto fo = std::make_shared<FileOutput<AutoPas_t, Particle>>(autopas, "output.csv", OutputFile::CSV,
                                                               selectedPropagatorComponents);
   auto accumulator = std::make_shared<Acceleration::AccelerationAccumulator<AutoPas_t, Particle>>(
@@ -90,12 +100,13 @@ int main(int argc, char **argv) {
     integrator->integrate(false);
 
     // TODO MPI: handle particle exchange between ranks
+    // (potentially) update the internal data structure and collect particles which are leaving the container.
     const auto [escapedParticles, containerUpdated] = autopas.updateContainer();
 
     if (not escapedParticles.empty()) {
       logger.log(Logger::Level::err, "Particles are escaping! \n{}", escapedParticles);
     }
-//TODO Check for particles that burn up
+    // TODO Check for particles that burn up
     // pairwise interaction
     CollisionFunctor collisionFunctor(cutoff);
     autopas.iteratePairwise(&collisionFunctor);
