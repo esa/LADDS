@@ -66,7 +66,7 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
   static_assert(sizeof(ThreadData) % 64 == 0, "ThreadData has wrong size");
 
   // Buffer per thread
-  std::vector<ThreadData> _threadData;
+  std::vector<ThreadData> _threadData{};
   // key = particle with the smaller id
   std::unordered_map<Particle *, Particle *> _collisions{};
   const double _cutoffSquare;

@@ -81,3 +81,8 @@ void Particle::setBcInv(const double bcInv)
 {
     bc_inv = bcInv;
 }
+
+std::ostream &operator<<(std::ostream &os, const Particle &particle) {
+  os << particle.toString();
+  return os;
+}

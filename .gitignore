@@ -36,3 +36,6 @@
 *build*
 .cache
 .vscode
+
+# Data folder
+data/

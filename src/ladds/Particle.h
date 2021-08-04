@@ -203,6 +203,14 @@ class Particle final : public autopas::ParticleFP64 {
    * @param bcInv New value of#bc_inv
    */
   void setBcInv(double bcInv);
+
+  /**
+   * Stream operator
+   * @param os
+   * @param particle
+   * @return
+   */
+  friend std::ostream &operator<<(std::ostream &os, const Particle &particle);
  private:
 
   /**
@@ -216,11 +224,10 @@ class Particle final : public autopas::ParticleFP64 {
   /**
    * Area to mass ration.
    */
-  double aom {0.}; 
+  double aom {0.};
   /**
    * C_cA)/m is the inverse of the ballistic coefficient. 
    * Used for Acceleration::DragComponent::apply().
    */
-  double bc_inv {0.}; 
-
+  double bc_inv {0.};
 };

@@ -18,3 +18,8 @@ target_link_libraries(${EXECUTABLE_NAME}
                       debris_sim_lib
                       breakupModel_lib
                       )
+
+target_compile_definitions(${EXECUTABLE_NAME}
+                           PUBLIC
+                           DATADIR=\"${PROJECT_SOURCE_DIR}/data/\"
+)
