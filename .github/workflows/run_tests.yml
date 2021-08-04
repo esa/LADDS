@@ -18,12 +18,13 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install git
-        sudo apt-get install clang
-        sudo apt-get install cmake
-        sudo apt-get install libomp-dev
-        sudo apt-get install doxygen
-        sudo apt-get install graphviz
+        sudo apt-get install \
+            git \
+            clang \
+            cmake \
+            libomp-dev \
+            doxygen \
+            graphviz
     - name: Build project
       run: |
         mkdir build
