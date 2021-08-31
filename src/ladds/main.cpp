@@ -10,7 +10,6 @@
 #include <satellitePropagator/io/FileOutput.h>
 #include <satellitePropagator/physics/AccelerationAccumulator.h>
 #include <satellitePropagator/physics/Integrator.h>
-#include <yaml-cpp/yaml.h>
 
 #include <iostream>
 
@@ -19,38 +18,22 @@
 #include "Particle.h"
 #include "SatelliteToParticleConverter.h"
 #include "spdlog/fmt/ostr.h"
+#include "LoadConfig.h"
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
 extern template class autopas::AutoPas<Particle>;
 
-/**
- *  Loads the config file, falls back to default cfg if not found.
- */
-[[nodiscard]] const YAML::Node load_config(const std::string cfgFilePath, const Logger &logger) {
-  YAML::Node config;
-  try {
-    config = YAML::LoadFile(cfgFilePath);
-  } catch (YAML::Exception &e) {
-    logger.log(Logger::Level::info, "No cfg file given, loading default config.");
-    try {
-      config = YAML::LoadFile("cfg/default_cfg.yaml");
-    } catch (YAML::Exception &e) {
-      logger.log(Logger::Level::err, "No default config file found. Should be cfg/default_cfg.yaml. Exiting...");
-      exit(1);
-    }
-  }
-  return config;
-}
 
 int main(int argc, char **argv) {
   Logger logger;
   logger.get()->set_level(spdlog::level::debug);
 
   // Default config path
-  std::string cfgFilePath = "cfg/default_cfg.yaml";
+  std::string cfgFilePath = LoadConfig::defaultCfgPath;
+  
   // Read in config if given
   if (argc > 1) cfgFilePath = argv[1];
-  const auto config = load_config(cfgFilePath, logger);
+  const auto config = LoadConfig::loadConfig(cfgFilePath, logger);
   logger.log(Logger::Level::info, "Config loaded.");
 
   const size_t iterations = config["sim"]["iterations"].as<size_t>();
