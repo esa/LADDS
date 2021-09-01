@@ -27,7 +27,9 @@ jobs:
       run: |
         mkdir build
         cd build
+        export TSAN_OPTIONS='ignore_noninstrumented_modules=1'
         CC=clang CXX=clang++ cmake \
+          -DCMAKE_BUILD_TYPE=Debug \
           -DLADDS_DOXYGEN=OFF \
           -DLADDS_ENABLE_ADDRESS_SANITIZER=ON \
           ..
