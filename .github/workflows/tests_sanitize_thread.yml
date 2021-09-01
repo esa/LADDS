@@ -12,6 +12,8 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    container:
+        image: autopas/autopas-build-archer
 
     env:
         TSAN_OPTIONS: ignore_noninstrumented_modules=1
@@ -26,6 +28,14 @@ jobs:
             clang \
             cmake \
             libomp-dev \
+    - name: gather info
+      run: |
+        pwd
+        echo "--------------------"
+        ls
+        echo "--------------------"
+        clang --version
+        echo "--------------------"
     - name: Build project
       run: |
         mkdir build
