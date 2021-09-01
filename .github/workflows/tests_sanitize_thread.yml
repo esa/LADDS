@@ -20,14 +20,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install \
-            git \
-            clang \
-            cmake \
-            libomp-dev \
+    # - name: Install dependencies
+    #   run: |
+    #     sudo apt-get update
+    #     sudo apt-get install \
+    #         git \
+    #         clang \
+    #         cmake \
+    #         libomp-dev \
     - name: gather info
       run: |
         pwd
