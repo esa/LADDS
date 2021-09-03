@@ -14,23 +14,22 @@
 #include <iostream>
 
 #include "CollisionFunctor.h"
+#include "LoadConfig.h"
 #include "Logger.h"
 #include "Particle.h"
 #include "SatelliteToParticleConverter.h"
 #include "spdlog/fmt/ostr.h"
-#include "LoadConfig.h"
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
 extern template class autopas::AutoPas<Particle>;
-
 
 int main(int argc, char **argv) {
   Logger logger;
   logger.get()->set_level(spdlog::level::debug);
 
   // Default config path
-  std::string cfgFilePath = LoadConfig::defaultCfgPath;
-  
+  auto cfgFilePath = LoadConfig::defaultCfgPath;
+
   // Read in config if given
   if (argc > 1) cfgFilePath = argv[1];
   const auto config = LoadConfig::loadConfig(cfgFilePath, logger);
