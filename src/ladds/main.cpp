@@ -5,7 +5,6 @@
  */
 
 #include <autopas/AutoPasDecl.h>
-#include <breakupModel/input/TLESatcatDataReader.h>
 #include <breakupModel/output/VTKWriter.h>
 #include <satellitePropagator/io/FileOutput.h>
 #include <satellitePropagator/physics/AccelerationAccumulator.h>
@@ -14,6 +13,7 @@
 #include <iostream>
 
 #include "CollisionFunctor.h"
+#include "DatasetReader.h"
 #include "Logger.h"
 #include "Particle.h"
 #include "SatelliteToParticleConverter.h"
@@ -57,14 +57,8 @@ int main(int argc, char **argv) {
   // initialization of the integrator
   constexpr bool useKEPComponent = true, useJ2Component = false, useC22Component = false, useS22Component = false,
                  useSOLComponent = false, useLUNComponent = false, useSRPComponent = false, useDRAGComponent = false;
-  std::array<bool, 8> selectedPropagatorComponents{useKEPComponent,
-                                                   useJ2Component,
-                                                   useC22Component,
-                                                   useS22Component,
-                                                   useSOLComponent,
-                                                   useLUNComponent,
-                                                   useSRPComponent,
-                                                   useDRAGComponent};
+  std::array<bool, 8> selectedPropagatorComponents{useKEPComponent, useJ2Component,  useC22Component, useS22Component,
+                                                   useSOLComponent, useLUNComponent, useSRPComponent, useDRAGComponent};
   auto fo = std::make_shared<FileOutput<AutoPas_t, Particle>>(autopas, "output.csv", OutputFile::CSV,
                                                               selectedPropagatorComponents);
   auto accumulator = std::make_shared<Acceleration::AccelerationAccumulator<AutoPas_t, Particle>>(
@@ -72,15 +66,14 @@ int main(int argc, char **argv) {
   auto integrator = std::make_shared<Integrator<AutoPas_t, Particle>>(autopas, *accumulator, 1e-1);
 
   // Read in scenario
-  TLESatcatDataReader tleSatcatDataReader{std::string(DATADIR) + "satcat_breakupModel.csv", tleFilePath};
-  auto actualSatellites = tleSatcatDataReader.getSatelliteCollection();
+  auto actualSatellites =
+      DatasetReader::readDataset(std::string(DATADIR) + "pos_test.csv", std::string(DATADIR) + "v_test.csv");
   logger.log(Logger::Level::debug, "Parsed {} satellites", actualSatellites.size());
 
   double minAltitudeFound{std::numeric_limits<double>::max()};
   double maxAltitudeFound{0.};
   // Convert satellites to particles
-  for (const auto &satellite : actualSatellites) {
-    auto particle = SatelliteToParticleConverter::convertSatelliteToParticle(satellite);
+  for (const auto &particle : actualSatellites) {
     auto pos = particle.getPosition();
     double altitude = sqrt(pos[0] * pos[0] + pos[1] * pos[1] + pos[2] * pos[2]);
     minAltitudeFound = std::max(minAltitudeFound, altitude);
