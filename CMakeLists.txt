@@ -27,6 +27,7 @@ option(GIT_SUBMODULES_SSH "Use SSH for git submodules instead of HTTPS" OFF)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/)
 
 # modules that do NOT need the main target
+include(ladds_sanitizers)
 include(ladds_clang-format)
 include(ladds_doxygen)
 
