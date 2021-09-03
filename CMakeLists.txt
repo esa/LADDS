@@ -42,3 +42,7 @@ add_subdirectory(tests/testladds)
 
 # modules that need the main target
 include(ladds_compilerWarnings)
+
+# fetch the default configuration file from the cfg folder
+file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/cfg)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cfg/default_cfg.yaml ${CMAKE_CURRENT_BINARY_DIR}/cfg/default_cfg.yaml COPYONLY)

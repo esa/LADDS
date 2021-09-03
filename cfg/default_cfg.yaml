@@ -1,0 +1,22 @@
+sim:
+  iterations: 3 # Number of simulation iterations
+  maxAltitude: 85000 # Maximum satellite altitude [km]
+
+  prop: # Which propagation model components should be applied
+    useKEPComponent: true # Keplerian propagation
+    useJ2Component: false # J2 spherical harmonic approximation
+    useC22Component: false # C22 spherical harmonic approximation
+    useS22Component: false # S22 spherical harmonic approximation
+    useSOLComponent: false # Solar gravitational pull
+    useLUNComponent: false # Lunar gravitational pull
+    useSRPComponent: false # Solar radiation pressure
+    useDRAGComponent: false # Atmospheric drag
+                   
+io:
+  output_file: output.csv # Output file name
+  tleFilePath: ../data/tle.txt # Path to TLE file with scenario
+  vtkWriteFrequency: 10 # Frequency of writing to vtk file [iterations]
+
+autopas:
+  cutoff: 0.02 # Cutoff for autopas force interaction
+  desiredCellsPerDimension: 50 # Desired number of cells per dimension

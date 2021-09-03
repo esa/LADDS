@@ -14,6 +14,7 @@
 #include <iostream>
 
 #include "CollisionFunctor.h"
+#include "LoadConfig.h"
 #include "Logger.h"
 #include "Particle.h"
 #include "SatelliteToParticleConverter.h"
@@ -26,53 +27,50 @@ int main(int argc, char **argv) {
   Logger logger;
   logger.get()->set_level(spdlog::level::debug);
 
-  // initialization of the simulation setup
-  // TODO Read input
-  std::string tleFilePath;
-  if (argc > 1) {
-    tleFilePath = argv[1];
-  }
-  if (tleFilePath.empty()) {
-    logger.log(Logger::Level::critical, "No TLE file given!");
-  }
-  constexpr double cutoff = 0.02;
-  const size_t iterations = 3;
-  const double max_altitude = 85000.;
-  const double desiredCellsPerDimension = 50;
-  const size_t vtkWriteFrequency = 10;
+  // Default config path
+  auto cfgFilePath = LoadConfig::defaultCfgPath;
+
+  // Read in config if given
+  if (argc > 1) cfgFilePath = argv[1];
+  const auto config = LoadConfig::loadConfig(cfgFilePath, logger);
+  logger.log(Logger::Level::info, "Config loaded.");
+
+  const size_t iterations = config["sim"]["iterations"].as<size_t>();
+  const size_t vtkWriteFrequency = config["io"]["vtkWriteFrequency"].as<size_t>();
 
   using AutoPas_t = autopas::AutoPas<Particle>;
 
   // initialization of autopas
   AutoPas_t autopas;
-  autopas.setBoxMin({-max_altitude, -max_altitude, -max_altitude});
-  autopas.setBoxMax({max_altitude, max_altitude, max_altitude});
+  const double maxAltitude = config["sim"]["maxAltitude"].as<double>();
+  const double cutoff = config["autopas"]["cutoff"].as<double>();
+  const double desiredCellsPerDimension = config["autopas"]["desiredCellsPerDimension"].as<double>();
+
+  autopas.setBoxMin({-maxAltitude, -maxAltitude, -maxAltitude});
+  autopas.setBoxMax({maxAltitude, maxAltitude, maxAltitude});
   autopas.setCutoff(cutoff);
   // Set the size (relative to cutoff) of the cells so that roughly the desired number of cells per dimension is reached
-  autopas.setCellSizeFactor((max_altitude * 2.) / (cutoff * desiredCellsPerDimension));
+  autopas.setCellSizeFactor((maxAltitude * 2.) / (cutoff * desiredCellsPerDimension));
   autopas.setAllowedDataLayouts({autopas::DataLayoutOption::aos});
   autopas.setAllowedContainers({autopas::ContainerOption::verletListsCells});
   autopas.init();
 
   // initialization of the integrator
-  constexpr bool useKEPComponent = true, useJ2Component = false, useC22Component = false, useS22Component = false,
-                 useSOLComponent = false, useLUNComponent = false, useSRPComponent = false, useDRAGComponent = false;
-  std::array<bool, 8> selectedPropagatorComponents{useKEPComponent,
-                                                   useJ2Component,
-                                                   useC22Component,
-                                                   useS22Component,
-                                                   useSOLComponent,
-                                                   useLUNComponent,
-                                                   useSRPComponent,
-                                                   useDRAGComponent};
-  auto fo = std::make_shared<FileOutput<AutoPas_t, Particle>>(autopas, "output.csv", OutputFile::CSV,
-                                                              selectedPropagatorComponents);
+  std::array<bool, 8> selectedPropagatorComponents{
+      config["sim"]["prop"]["useKEPComponent"].as<bool>(), config["sim"]["prop"]["useJ2Component"].as<bool>(),
+      config["sim"]["prop"]["useC22Component"].as<bool>(), config["sim"]["prop"]["useS22Component"].as<bool>(),
+      config["sim"]["prop"]["useSOLComponent"].as<bool>(), config["sim"]["prop"]["useLUNComponent"].as<bool>(),
+      config["sim"]["prop"]["useSRPComponent"].as<bool>(), config["sim"]["prop"]["useDRAGComponent"].as<bool>()};
+
+  auto fo = std::make_shared<FileOutput<AutoPas_t, Particle>>(autopas, config["io"]["output_file"].as<std::string>(),
+                                                              OutputFile::CSV, selectedPropagatorComponents);
   auto accumulator = std::make_shared<Acceleration::AccelerationAccumulator<AutoPas_t, Particle>>(
       selectedPropagatorComponents, autopas, 0.0, *fo);
   auto integrator = std::make_shared<Integrator<AutoPas_t, Particle>>(autopas, *accumulator, 1e-1);
 
   // Read in scenario
-  TLESatcatDataReader tleSatcatDataReader{std::string(DATADIR) + "satcat_breakupModel.csv", tleFilePath};
+  TLESatcatDataReader tleSatcatDataReader{std::string(DATADIR) + "satcat_breakupModel.csv",
+                                          config["io"]["tleFilePath"].as<std::string>()};
   auto actualSatellites = tleSatcatDataReader.getSatelliteCollection();
   logger.log(Logger::Level::debug, "Parsed {} satellites", actualSatellites.size());
 
@@ -85,7 +83,7 @@ int main(int argc, char **argv) {
     double altitude = sqrt(pos[0] * pos[0] + pos[1] * pos[1] + pos[2] * pos[2]);
     minAltitudeFound = std::max(minAltitudeFound, altitude);
     maxAltitudeFound = std::max(maxAltitudeFound, altitude);
-    if (altitude < max_altitude) {
+    if (altitude < maxAltitude) {
       autopas.addParticle(particle);
     }
   }
