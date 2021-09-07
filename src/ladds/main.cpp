@@ -65,8 +65,8 @@ int main(int argc, char **argv) {
                                                    useLUNComponent,
                                                    useSRPComponent,
                                                    useDRAGComponent};
-  auto fo = std::make_shared<FileOutput<AutoPas_t, Particle>>(autopas, "output.csv", OutputFile::CSV,
-                                                              selectedPropagatorComponents);
+  auto fo = std::make_shared<FileOutput<AutoPas_t, Particle>>(
+      autopas, "output.csv", OutputFile::CSV, selectedPropagatorComponents);
   auto accumulator = std::make_shared<Acceleration::AccelerationAccumulator<AutoPas_t, Particle>>(
       selectedPropagatorComponents, autopas, 0.0, *fo);
   auto integrator = std::make_shared<Integrator<AutoPas_t, Particle>>(autopas, *accumulator, 1e-1);

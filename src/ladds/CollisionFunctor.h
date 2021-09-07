@@ -20,19 +20,30 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
  public:
   explicit CollisionFunctor(double cutoff);
 
-  [[nodiscard]] bool isRelevantForTuning() final { return true; }
-
-  [[nodiscard]] bool allowsNewton3() final { return true; }
-
-  [[nodiscard]] bool allowsNonNewton3() final { return true; }
-
-  [[nodiscard]] constexpr static auto getNeededAttr() {
-    return std::array<typename Particle::AttributeNames, 6>{
-        Particle::AttributeNames::ptr,  Particle::AttributeNames::id,   Particle::AttributeNames::ownershipState,
-        Particle::AttributeNames::posX, Particle::AttributeNames::posY, Particle::AttributeNames::posZ};
+  [[nodiscard]] bool isRelevantForTuning() final {
+    return true;
   }
 
-  [[nodiscard]] constexpr static auto getNeededAttr(std::false_type) { return getNeededAttr(); }
+  [[nodiscard]] bool allowsNewton3() final {
+    return true;
+  }
+
+  [[nodiscard]] bool allowsNonNewton3() final {
+    return true;
+  }
+
+  [[nodiscard]] constexpr static auto getNeededAttr() {
+    return std::array<typename Particle::AttributeNames, 6>{Particle::AttributeNames::ptr,
+                                                            Particle::AttributeNames::id,
+                                                            Particle::AttributeNames::ownershipState,
+                                                            Particle::AttributeNames::posX,
+                                                            Particle::AttributeNames::posY,
+                                                            Particle::AttributeNames::posZ};
+  }
+
+  [[nodiscard]] constexpr static auto getNeededAttr(std::false_type) {
+    return getNeededAttr();
+  }
 
   [[nodiscard]] constexpr static std::array<typename Particle::AttributeNames, 0> getComputedAttr() {
     return std::array<typename Particle::AttributeNames, 0>{/*Nothing*/};
@@ -50,12 +61,14 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
 
   void SoAFunctorPair(autopas::SoAView<SoAArraysType> soa1, autopas::SoAView<SoAArraysType> soa2, bool newton3) final;
 
-  void SoAFunctorVerlet(autopas::SoAView<SoAArraysType> soa, const size_t indexFirst,
-                        const std::vector<size_t, autopas::AlignedAllocator<size_t>> &neighborList, bool newton3) final;
+  void SoAFunctorVerlet(autopas::SoAView<SoAArraysType> soa,
+                        const size_t indexFirst,
+                        const std::vector<size_t, autopas::AlignedAllocator<size_t>> &neighborList,
+                        bool newton3) final;
 
  private:
-  void SoAKernel(size_t i, size_t j, autopas::SoAView<SoAArraysType> &soa1, autopas::SoAView<SoAArraysType> &soa2,
-                 bool newton3);
+  void SoAKernel(
+      size_t i, size_t j, autopas::SoAView<SoAArraysType> &soa1, autopas::SoAView<SoAArraysType> &soa2, bool newton3);
 
   // Buffer struct that is safe against false sharing
   struct ThreadData {

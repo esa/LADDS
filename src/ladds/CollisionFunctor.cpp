@@ -12,7 +12,9 @@ CollisionFunctor::CollisionFunctor(double cutoff) : Functor(cutoff), _cutoffSqua
   _threadData.resize(autopas::autopas_get_max_threads());
 }
 
-const std::unordered_map<Particle *, Particle *> &CollisionFunctor::getCollisions() const { return _collisions; }
+const std::unordered_map<Particle *, Particle *> &CollisionFunctor::getCollisions() const {
+  return _collisions;
+}
 
 void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   // skip interaction with deleted particles
@@ -43,7 +45,8 @@ void CollisionFunctor::SoAFunctorSingle(autopas::SoAView<SoAArraysType> soa, boo
   SoAFunctorPair(soa, soa, newton3);
 }
 
-void CollisionFunctor::SoAFunctorPair(autopas::SoAView<SoAArraysType> soa1, autopas::SoAView<SoAArraysType> soa2,
+void CollisionFunctor::SoAFunctorPair(autopas::SoAView<SoAArraysType> soa1,
+                                      autopas::SoAView<SoAArraysType> soa2,
                                       bool newton3) {
   if (soa1.getNumParticles() == 0 or soa2.getNumParticles() == 0) return;
 
@@ -58,7 +61,7 @@ void CollisionFunctor::SoAFunctorPair(autopas::SoAView<SoAArraysType> soa1, auto
     }
 
     // inner loop over SoA2
-    //custom reduction for unordered maps
+    // custom reduction for unordered maps
 #pragma omp declare reduction(mapMerge : std::unordered_map<Particle *, Particle *> : omp_out.insert(omp_in.begin(), omp_in.end()))
     // alias because OpenMP needs it
     auto &thisCollisions = _threadData[autopas::autopas_get_thread_num()].collisions;
@@ -69,7 +72,8 @@ void CollisionFunctor::SoAFunctorPair(autopas::SoAView<SoAArraysType> soa1, auto
   }
 }
 
-void CollisionFunctor::SoAFunctorVerlet(autopas::SoAView<SoAArraysType> soa, const size_t indexFirst,
+void CollisionFunctor::SoAFunctorVerlet(autopas::SoAView<SoAArraysType> soa,
+                                        const size_t indexFirst,
                                         const std::vector<size_t, autopas::AlignedAllocator<size_t>> &neighborList,
                                         bool newton3) {
   const auto *const __restrict ownedStatePtr = soa.template begin<Particle::AttributeNames::ownershipState>();
@@ -84,8 +88,8 @@ void CollisionFunctor::SoAFunctorVerlet(autopas::SoAView<SoAArraysType> soa, con
   }
 }
 
-void CollisionFunctor::SoAKernel(size_t i, size_t j, autopas::SoAView<SoAArraysType> &soa1,
-                                 autopas::SoAView<SoAArraysType> &soa2, bool newton3) {
+void CollisionFunctor::SoAKernel(
+    size_t i, size_t j, autopas::SoAView<SoAArraysType> &soa1, autopas::SoAView<SoAArraysType> &soa2, bool newton3) {
   // get pointers to the SoAs
   const auto *const __restrict x1ptr = soa1.template begin<Particle::AttributeNames::posX>();
   const auto *const __restrict y1ptr = soa1.template begin<Particle::AttributeNames::posY>();
@@ -127,7 +131,9 @@ void CollisionFunctor::SoAKernel(size_t i, size_t j, autopas::SoAView<SoAArraysT
     _threadData[autopas::autopas_get_thread_num()].collisions[ptr2ptr[j]] = ptr1ptr[i];
   }
 }
-void CollisionFunctor::initTraversal() { _collisions.clear(); }
+void CollisionFunctor::initTraversal() {
+  _collisions.clear();
+}
 
 void CollisionFunctor::endTraversal(bool newton3) {
   for (auto &data : _threadData) {
