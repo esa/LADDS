@@ -1,0 +1,42 @@
+# This workflow will install dependencies, run tests
+
+name: Running tests with address sanitizer
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+  workflow_dispatch:
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    env:
+        TSAN_OPTIONS: ignore_noninstrumented_modules=1
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install \
+            git \
+            clang \
+            cmake \
+            libomp-dev \
+    - name: Build project
+      run: |
+        mkdir build
+        cd build
+        CC=clang CXX=clang++ cmake \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DLADDS_DOXYGEN=OFF \
+          -DLADDS_ENABLE_ADDRESS_SANITIZER=ON \
+          ..
+        make -j4
+    - name: Test with ctest
+      run: |
+        cd build
+        ctest --verbose -j12
