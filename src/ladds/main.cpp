@@ -70,7 +70,8 @@ int main(int argc, char **argv) {
 
   // Read in scenario
   auto actualSatellites =
-      DatasetReader::readDataset(std::string(DATADIR) + config["io"]["posFileName"].as<std::string>(), std::string(DATADIR) + config["io"]["velFileName"].as<std::string>());
+      DatasetReader::readDataset(std::string(DATADIR) + config["io"]["posFileName"].as<std::string>(),
+                                 std::string(DATADIR) + config["io"]["velFileName"].as<std::string>());
   logger.log(Logger::Level::debug, "Parsed {} satellites", actualSatellites.size());
 
   double minAltitudeFound{std::numeric_limits<double>::max()};
