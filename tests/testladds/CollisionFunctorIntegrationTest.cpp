@@ -19,16 +19,16 @@ void CollisionFunctorIntegrationTest::SetUpTestSuite() {
   using autopasTools::generators::RandomGenerator;
   constexpr size_t numDebris = 15;
   Particle defaultParticle{{
-                             0.,
-                             0.,
-                             0.,
-                         },
-                         {
-                             0.,
-                             0.,
-                             0.,
-                         },
-                         0};
+                               0.,
+                               0.,
+                               0.,
+                           },
+                           {
+                               0.,
+                               0.,
+                               0.,
+                           },
+                           0};
   _debris.reserve(numDebris);
 
   // fix seed for randomPosition()
@@ -110,7 +110,8 @@ TEST_P(CollisionFunctorIntegrationTest, testAutoPasAlgorithm) {
 }
 
 // Generate tests for all configuration combinations
-INSTANTIATE_TEST_SUITE_P(Generated, CollisionFunctorIntegrationTest,
+INSTANTIATE_TEST_SUITE_P(Generated,
+                         CollisionFunctorIntegrationTest,
                          testing::Combine(testing::ValuesIn(autopas::TraversalOption::getAllOptions()),
                                           testing::ValuesIn(autopas::DataLayoutOption::getAllOptions()),
                                           testing::ValuesIn(autopas::Newton3Option::getAllOptions()),

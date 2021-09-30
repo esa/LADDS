@@ -35,16 +35,16 @@ int main(int argc, char **argv) {
   const auto config = LoadConfig::loadConfig(cfgFilePath, logger);
   logger.log(Logger::Level::info, "Config loaded.");
 
-  const size_t iterations = config["sim"]["iterations"].as<size_t>();
-  const size_t vtkWriteFrequency = config["io"]["vtkWriteFrequency"].as<size_t>();
+  const auto iterations = config["sim"]["iterations"].as<size_t>();
+  const auto vtkWriteFrequency = config["io"]["vtkWriteFrequency"].as<size_t>();
 
   using AutoPas_t = autopas::AutoPas<Particle>;
 
   // initialization of autopas
   AutoPas_t autopas;
-  const double maxAltitude = config["sim"]["maxAltitude"].as<double>();
-  const double cutoff = config["autopas"]["cutoff"].as<double>();
-  const double desiredCellsPerDimension = config["autopas"]["desiredCellsPerDimension"].as<double>();
+  const auto maxAltitude = config["sim"]["maxAltitude"].as<double>();
+  const auto cutoff = config["autopas"]["cutoff"].as<double>();
+  const auto desiredCellsPerDimension = config["autopas"]["desiredCellsPerDimension"].as<double>();
 
   autopas.setBoxMin({-maxAltitude, -maxAltitude, -maxAltitude});
   autopas.setBoxMax({maxAltitude, maxAltitude, maxAltitude});
@@ -56,14 +56,17 @@ int main(int argc, char **argv) {
   autopas.init();
 
   // initialization of the integrator
-  std::array<bool, 8> selectedPropagatorComponents{
-      config["sim"]["prop"]["useKEPComponent"].as<bool>(), config["sim"]["prop"]["useJ2Component"].as<bool>(),
-      config["sim"]["prop"]["useC22Component"].as<bool>(), config["sim"]["prop"]["useS22Component"].as<bool>(),
-      config["sim"]["prop"]["useSOLComponent"].as<bool>(), config["sim"]["prop"]["useLUNComponent"].as<bool>(),
-      config["sim"]["prop"]["useSRPComponent"].as<bool>(), config["sim"]["prop"]["useDRAGComponent"].as<bool>()};
+  std::array<bool, 8> selectedPropagatorComponents{config["sim"]["prop"]["useKEPComponent"].as<bool>(),
+                                                   config["sim"]["prop"]["useJ2Component"].as<bool>(),
+                                                   config["sim"]["prop"]["useC22Component"].as<bool>(),
+                                                   config["sim"]["prop"]["useS22Component"].as<bool>(),
+                                                   config["sim"]["prop"]["useSOLComponent"].as<bool>(),
+                                                   config["sim"]["prop"]["useLUNComponent"].as<bool>(),
+                                                   config["sim"]["prop"]["useSRPComponent"].as<bool>(),
+                                                   config["sim"]["prop"]["useDRAGComponent"].as<bool>()};
 
-  auto fo = std::make_shared<FileOutput<AutoPas_t, Particle>>(autopas, config["io"]["output_file"].as<std::string>(),
-                                                              OutputFile::CSV, selectedPropagatorComponents);
+  auto fo = std::make_shared<FileOutput<AutoPas_t, Particle>>(
+      autopas, config["io"]["output_file"].as<std::string>(), OutputFile::CSV, selectedPropagatorComponents);
   auto accumulator = std::make_shared<Acceleration::AccelerationAccumulator<AutoPas_t, Particle>>(
       selectedPropagatorComponents, autopas, 0.0, *fo);
   auto integrator = std::make_shared<Integrator<AutoPas_t, Particle>>(autopas, *accumulator, 1e-1);

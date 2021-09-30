@@ -29,9 +29,15 @@ class Particle final : public autopas::ParticleFP64 {
   /**
    * The type for the SoA storage.
    */
-  using SoAArraysType =
-      typename autopas::utils::SoAType<Particle *, size_t /*id*/, double /*x*/, double /*y*/, double /*z*/, double /*fx*/,
-                                       double /*fy*/, double /*fz*/, autopas::OwnershipState /*ownershipState*/>::Type;
+  using SoAArraysType = typename autopas::utils::SoAType<Particle *,
+                                                         size_t /*id*/,
+                                                         double /*x*/,
+                                                         double /*y*/,
+                                                         double /*z*/,
+                                                         double /*fx*/,
+                                                         double /*fy*/,
+                                                         double /*fz*/,
+                                                         autopas::OwnershipState /*ownershipState*/>::Type;
 
   /**
    * Getter, which allows access to an attribute using the corresponding attribute name (defined in AttributeNames).
@@ -91,7 +97,6 @@ class Particle final : public autopas::ParticleFP64 {
     }
   }
 
-
   /**
    * @brief Calculates distance from the origin of the coordinate frame
    *
@@ -125,56 +130,56 @@ class Particle final : public autopas::ParticleFP64 {
    *
    * @return 3D vector representation of the debris #position
    */
-  [[nodiscard]] const std::array<double, 3>& getPosition() const;
+  [[nodiscard]] const std::array<double, 3> &getPosition() const;
 
   /**
    * @brief Setter function for #position vector
    *
    * @param position 3D vector representation of the debris #position
    */
-  void setPosition(const std::array<double, 3>& position);
+  void setPosition(const std::array<double, 3> &position);
 
   /**
    * @brief Getter function for #velocity vector
    *
    * @return 3D vector representation of the debris #velocity
    */
-  [[nodiscard]] const std::array<double, 3>& getVelocity() const;
+  [[nodiscard]] const std::array<double, 3> &getVelocity() const;
 
   /**
    * @brief Setter function for #velocity vector
    *
    * @param velocity 3D vector representation of the debris #velocity
    */
-  void setVelocity(const std::array<double, 3>& velocity);
+  void setVelocity(const std::array<double, 3> &velocity);
 
   /**
    * @brief Getter function for #acc_t0 vector
    *
    * @return 3D vector representation of the debris #acc_t0
    */
-  [[nodiscard]] const std::array<double, 3>& getAccT0() const;
+  [[nodiscard]] const std::array<double, 3> &getAccT0() const;
 
   /**
    * @brief Setter function for #acc_t0 vector
    *
    * @param accT0 3D vector representation of the debris #acc_t0
    */
-  void setAccT0(const std::array<double, 3>& accT0);
+  void setAccT0(const std::array<double, 3> &accT0);
 
   /**
    * @brief Getter function for #acc_t1 vector
    *
    * @return 3D vector representation of the debris #acc_t1
    */
-  [[nodiscard]] const std::array<double, 3>& getAccT1() const;
+  [[nodiscard]] const std::array<double, 3> &getAccT1() const;
 
   /**
    * @brief Setter function for #acc_t1 vector
    *
    * @param accT1 3D vector representation of the debris #acc_t1
    */
-  void setAccT1(const std::array<double, 3>& accT1);
+  void setAccT1(const std::array<double, 3> &accT1);
 
   /**
    * @brief Getter function for #aom
@@ -211,23 +216,23 @@ class Particle final : public autopas::ParticleFP64 {
    * @return
    */
   friend std::ostream &operator<<(std::ostream &os, const Particle &particle);
- private:
 
+ private:
   /**
    *  3D vector representation of the debris acceleration at the last time step.
    */
-  std::array<double, 3> acc_t0 {}; 
+  std::array<double, 3> acc_t0{};
   /**
    * 3D vector representation of the debris acceleration at the current time step
    */
-  std::array<double, 3> acc_t1 {}; 
+  std::array<double, 3> acc_t1{};
   /**
    * Area to mass ration.
    */
-  double aom {0.};
+  double aom{0.};
   /**
-   * C_cA)/m is the inverse of the ballistic coefficient. 
+   * C_cA)/m is the inverse of the ballistic coefficient.
    * Used for Acceleration::DragComponent::apply().
    */
-  double bc_inv {0.};
+  double bc_inv{0.};
 };
