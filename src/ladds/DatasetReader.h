@@ -8,8 +8,8 @@ namespace DatasetReader {
 std::vector<Particle> readDataset(const std::string position_filepath, const std::string velocity_filepath) {
   std::cout << position_filepath << std::endl;
 
-  CSVReader pos_csvReader{position_filepath, false};
-  CSVReader vel_csvReader{velocity_filepath, false};
+  CSVReader<double> pos_csvReader{position_filepath, false};
+  CSVReader<double> vel_csvReader{velocity_filepath, false};
   std::vector<Particle> particleCollection;
 
   auto positions = pos_csvReader.getLines();
