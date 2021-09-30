@@ -14,7 +14,8 @@ sim:
                    
 io:
   output_file: output.csv # Output file name
-  tleFilePath: ../data/tle.txt # Path to TLE file with scenario
+  posFileName: pos_test.csv # Name of the CSV file with satellite positions
+  velFileName: v_test.csv # Name of the CSV file with satellite velocities
   vtkWriteFrequency: 10 # Frequency of writing to vtk file [iterations]
 
 autopas:
