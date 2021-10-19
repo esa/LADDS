@@ -29,8 +29,14 @@ class Particle final : public autopas::ParticleFP64 {
   /**
    * The type for the SoA storage.
    */
-  using SoAArraysType = typename autopas::utils::SoAType<Particle *, size_t /*id*/, double /*x*/, double /*y*/,
-                                                         double /*z*/, double /*fx*/, double /*fy*/, double /*fz*/,
+  using SoAArraysType = typename autopas::utils::SoAType<Particle *,
+                                                         size_t /*id*/,
+                                                         double /*x*/,
+                                                         double /*y*/,
+                                                         double /*z*/,
+                                                         double /*fx*/,
+                                                         double /*fy*/,
+                                                         double /*fz*/,
                                                          autopas::OwnershipState /*ownershipState*/>::Type;
 
   /**

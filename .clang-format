@@ -5,3 +5,8 @@ ColumnLimit: 120
 # ensure consistent pointer alignment
 DerivePointerAlignment: false
 PointerAlignment: Right
+# Only empty functions can be one-liner
+AllowShortFunctionsOnASingleLine: Empty
+# Arguments and parameters as block
+BinPackArguments: false
+BinPackParameters: false

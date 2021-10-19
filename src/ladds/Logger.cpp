@@ -12,8 +12,14 @@ Logger::Logger(std::string name, std::ostream &ostream) : _name(std::move(name))
   spdlog::register_logger(logger);
 }
 
-Logger::~Logger() { spdlog::drop(_name); }
+Logger::~Logger() {
+  spdlog::drop(_name);
+}
 
-std::shared_ptr<spdlog::logger> Logger::get() const { return spdlog::get(_name); }
+std::shared_ptr<spdlog::logger> Logger::get() const {
+  return spdlog::get(_name);
+}
 
-const std::string &Logger::getName() const { return _name; }
+const std::string &Logger::getName() const {
+  return _name;
+}
