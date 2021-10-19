@@ -38,5 +38,9 @@
 .vscode
 
 # Data folder
-data/
+data/satcat.txt
+data/satcat_breakupModel.csv
+data/tle.txt
+data/pos.csv
+data/v.csv
 notebooks/.ipynb_checkpoints
