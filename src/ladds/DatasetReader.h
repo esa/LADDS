@@ -22,15 +22,11 @@ std::vector<Particle> readDataset(const std::string position_filepath, const std
     return particleCollection;
   }
 
-  for (unsigned i = 0; i < positions.size(); i++) {
-    const auto &[x, y, z] = positions[i];
-    const auto &[vx, vy, vz] = velocities[i];
+  particleCollection.reserve(positions.size())
 
-    const std::array<double, 3> pos = {x, y, z};
-    const std::array<double, 3> vel = {vx, vy, vz};
-    particleCollection.push_back(Particle(pos, vel, i));
-  }
-
+      size_t particleId = 0;
+  std::transform(positions.begin(), positions.end(), velocities.begin(), std::back_insert_iterator(particleCollection),
+                 [&](const auto &pos, const auto &vel) { return Particle(pos, vel, particleId++); });
   return particleCollection;
 }
 }  // namespace DatasetReader

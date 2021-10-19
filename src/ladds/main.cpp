@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
     CollisionFunctor collisionFunctor(cutoff);
     autopas.iteratePairwise(&collisionFunctor);
     auto collisions = collisionFunctor.getCollisions();
-    logger.log(Logger::Level::info, "Close encounters: {}", collisions.size());
+    logger.log(Logger::Level::info, "Iteration {} - Close encounters: {}", i, collisions.size());
     for (const auto &[p1, p2] : collisions) {
       logger.log(Logger::Level::debug, "{} | {}", p1->getID(), p2->getID());
     }

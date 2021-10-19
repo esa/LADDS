@@ -5,7 +5,6 @@
  */
 
 #include "Particle.h"
-
 #include "satellitePropagator/utils/MathUtils.h"
 
 double Particle::getHeight() const { return MathUtils::euclideanNorm(getPosition()); }
