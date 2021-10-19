@@ -19,7 +19,7 @@ constexpr auto defaultCfgPath = "cfg/default_cfg.yaml";
     std::cout << e.msg << std::endl;
     logger.log(Logger::Level::warn, "Error loading cfg, loading default config.");
     try {
-      config = YAML::LoadFile("cfg/default_cfg.yaml");
+      config = YAML::LoadFile(defaultCfgPath);
     } catch (YAML::Exception &e) {
       logger.log(Logger::Level::err, "No default config file found. Should be cfg/default_cfg.yaml. Exiting...");
       exit(1);
