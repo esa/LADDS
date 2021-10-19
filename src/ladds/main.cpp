@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
 
     // TODO MPI: handle particle exchange between ranks
     // (potentially) update the internal data structure and collect particles which are leaving the container.
-    const auto [escapedParticles, containerUpdated] = autopas.updateContainer();
+    const auto escapedParticles = autopas.updateContainer();
 
     if (not escapedParticles.empty()) {
       logger.log(Logger::Level::err, "Particles are escaping! \n{}", escapedParticles);
