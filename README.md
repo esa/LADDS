@@ -27,3 +27,6 @@ cmake -DLADDS_BUILD_TESTS=ON .. # Should be enabled by default
 make ladds_tests -j12
 ctest -j12
 ```
+
+## Processing TLE Input 
+Data on current satellites etc. is often found [online](https://www.space-track.org/) in the [TLE format](https://en.wikipedia.org/wiki/Two-line_element_set). We include a Jupyter notebook which can be used to process TLE data with pykep to create and analyze suitable datasets. Detailed instructions can be found in the notebook in `notebooks/Data Processing.ipynb`.

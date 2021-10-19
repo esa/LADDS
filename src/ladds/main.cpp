@@ -5,7 +5,6 @@
  */
 
 #include <autopas/AutoPasDecl.h>
-#include <breakupModel/input/TLESatcatDataReader.h>
 #include <breakupModel/output/VTKWriter.h>
 #include <satellitePropagator/io/FileOutput.h>
 #include <satellitePropagator/physics/AccelerationAccumulator.h>
@@ -14,6 +13,7 @@
 #include <iostream>
 
 #include "CollisionFunctor.h"
+#include "DatasetReader.h"
 #include "LoadConfig.h"
 #include "Logger.h"
 #include "Particle.h"
@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
   logger.get()->set_level(spdlog::level::debug);
 
   // Default config path
-  auto cfgFilePath = LoadConfig::defaultCfgPath;
+  const auto *cfgFilePath = LoadConfig::defaultCfgPath;
 
   // Read in config if given
   if (argc > 1) cfgFilePath = argv[1];
@@ -72,16 +72,15 @@ int main(int argc, char **argv) {
   auto integrator = std::make_shared<Integrator<AutoPas_t, Particle>>(autopas, *accumulator, 1e-1);
 
   // Read in scenario
-  TLESatcatDataReader tleSatcatDataReader{std::string(DATADIR) + "satcat_breakupModel.csv",
-                                          config["io"]["tleFilePath"].as<std::string>()};
-  auto actualSatellites = tleSatcatDataReader.getSatelliteCollection();
+  auto actualSatellites =
+      DatasetReader::readDataset(std::string(DATADIR) + config["io"]["posFileName"].as<std::string>(),
+                                 std::string(DATADIR) + config["io"]["velFileName"].as<std::string>());
   logger.log(Logger::Level::debug, "Parsed {} satellites", actualSatellites.size());
 
   double minAltitudeFound{std::numeric_limits<double>::max()};
   double maxAltitudeFound{0.};
   // Convert satellites to particles
-  for (const auto &satellite : actualSatellites) {
-    auto particle = SatelliteToParticleConverter::convertSatelliteToParticle(satellite);
+  for (const auto &particle : actualSatellites) {
     auto pos = particle.getPosition();
     double altitude = sqrt(pos[0] * pos[0] + pos[1] * pos[1] + pos[2] * pos[2]);
     minAltitudeFound = std::max(minAltitudeFound, altitude);
@@ -112,7 +111,7 @@ int main(int argc, char **argv) {
     CollisionFunctor collisionFunctor(cutoff);
     autopas.iteratePairwise(&collisionFunctor);
     auto collisions = collisionFunctor.getCollisions();
-    logger.log(Logger::Level::info, "Close encounters: {}", collisions.size());
+    logger.log(Logger::Level::info, "Iteration {} - Close encounters: {}", i, collisions.size());
     for (const auto &[p1, p2] : collisions) {
       logger.log(Logger::Level::debug, "{} | {}", p1->getID(), p2->getID());
     }

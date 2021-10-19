@@ -38,4 +38,5 @@
 .vscode
 
 # Data folder
-data/
+data
+notebooks/.ipynb_checkpoints
