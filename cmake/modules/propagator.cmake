@@ -18,8 +18,8 @@ set(DebrisSim_Simulation OFF CACHE INTERNAL "")
 FetchContent_Declare(
         Propagatorfetch
         GIT_REPOSITORY ${PropagatorRepoPath}
-        # branch tmp (=GenericDebris + main)
-        GIT_TAG 9ad61f25686d34aa4be6642998a157c0f7cb3a5c
+        # latest version after BA 19.10.21
+        GIT_TAG 86a68d85ec1d7cd1abd37e000921e99e5bc87fe5
 )
 
 # Get Propagator source and binary directories from CMake project
