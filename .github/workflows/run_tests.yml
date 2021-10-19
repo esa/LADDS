@@ -23,6 +23,7 @@ jobs:
             clang \
             cmake \
             libomp-dev \
+            libtbb-dev \
             doxygen \
             graphviz
     - name: Build project
