@@ -22,8 +22,8 @@ jobs:
     - uses: actions/checkout@v2
     - name: Install dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install \
+        apt-get update
+        apt-get install \
             libtbb-dev
     - name: Build project
       run: |
