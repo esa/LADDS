@@ -133,7 +133,7 @@ int main(int argc, char **argv) {
   for (const auto &particle : actualSatellites) {
     auto pos = particle.getPosition();
     double altitude = sqrt(pos[0] * pos[0] + pos[1] * pos[1] + pos[2] * pos[2]);
-    minAltitudeFound = std::max(minAltitudeFound, altitude);
+    minAltitudeFound = std::min(minAltitudeFound, altitude);
     maxAltitudeFound = std::max(maxAltitudeFound, altitude);
     if (altitude < maxAltitude) {
       autopas.addParticle(particle);
