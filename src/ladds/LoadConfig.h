@@ -11,7 +11,7 @@ constexpr auto defaultCfgPath = "cfg/default_cfg.yaml";
 /**
  *  Loads the config file, falls back to default cfg if not found.
  */
-[[nodiscard]] const YAML::Node loadConfig(const std::string cfgFilePath, const Logger &logger) {
+[[nodiscard]] YAML::Node loadConfig(const std::string &cfgFilePath, const Logger &logger) {
   YAML::Node config;
   try {
     config = YAML::LoadFile(cfgFilePath);
