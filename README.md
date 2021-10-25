@@ -8,6 +8,7 @@ Codebase for the ARIADNA Study between TU Munich and ESA's Advanced Concepts Tea
 * A C++17 Compiler (recommended: gcc >=7 or clang >=8)
 * OpenMP >= 4.5
 * git (for fetching dependencies)
+* [TBB](https://github.com/oneapi-src/oneTBB) (Breakup-Model needs this)
 
 ### Optional
 * Doxygen
