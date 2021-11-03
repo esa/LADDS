@@ -65,11 +65,11 @@ int main(int argc, char **argv) {
                                                    config["sim"]["prop"]["useSRPComponent"].as<bool>(),
                                                    config["sim"]["prop"]["useDRAGComponent"].as<bool>()};
 
-  auto fo = std::make_shared<FileOutput<AutoPas_t, Particle>>(
+  auto fo = std::make_shared<FileOutput<AutoPas_t>>(
       autopas, config["io"]["output_file"].as<std::string>(), OutputFile::CSV, selectedPropagatorComponents);
-  auto accumulator = std::make_shared<Acceleration::AccelerationAccumulator<AutoPas_t, Particle>>(
+  auto accumulator = std::make_shared<Acceleration::AccelerationAccumulator<AutoPas_t>>(
       selectedPropagatorComponents, autopas, 0.0, *fo);
-  auto integrator = std::make_shared<Integrator<AutoPas_t, Particle>>(autopas, *accumulator, 1e-1);
+  auto integrator = std::make_shared<Integrator<AutoPas_t>>(autopas, *accumulator, 1e-1);
 
   // Read in scenario
   auto actualSatellites =
@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
 
     // TODO MPI: handle particle exchange between ranks
     // (potentially) update the internal data structure and collect particles which are leaving the container.
-    const auto [escapedParticles, containerUpdated] = autopas.updateContainer();
+    const auto escapedParticles = autopas.updateContainer();
 
     if (not escapedParticles.empty()) {
       logger.log(Logger::Level::err, "Particles are escaping! \n{}", escapedParticles);
