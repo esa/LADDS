@@ -26,6 +26,7 @@ jobs:
             clang \
             cmake \
             libomp-dev \
+            libtbb-dev
     - name: Build project
       run: |
         mkdir build
