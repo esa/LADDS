@@ -210,7 +210,7 @@ int main(int argc, char **argv) {
   std::cout << timerToString(
       "    Container update    ", timers.containerUpdate.getTotalTime(), maximumNumberOfDigits, timeSim);
   std::cout << timerToString(
-      "  Output                ", timers.output.getTotalTime(), maximumNumberOfDigits, timeTotal);
+      "    Output              ", timers.output.getTotalTime(), maximumNumberOfDigits, timeTotal);
   std::cout << timerToString("One iteration           ", timeSim / iterations, maximumNumberOfDigits, timeTotal);
 
   return 0;
