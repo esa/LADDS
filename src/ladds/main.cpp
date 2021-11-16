@@ -23,6 +23,7 @@
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
 extern template class autopas::AutoPas<Particle>;
+extern template bool autopas::AutoPas<Particle>::iteratePairwise(CollisionFunctor *);
 
 /**
  * Floating point precision for command line output.
