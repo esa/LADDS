@@ -102,8 +102,10 @@ int main(int argc, char **argv) {
   autopas.setCutoff(cutoff);
   // Set the size (relative to cutoff) of the cells so that roughly the desired number of cells per dimension is reached
   autopas.setCellSizeFactor((maxAltitude * 2.) / (cutoff * desiredCellsPerDimension));
+  autopas.setAllowedNewton3Options({autopas::Newton3Option::disabled});
   autopas.setAllowedDataLayouts({autopas::DataLayoutOption::aos});
-  autopas.setAllowedContainers({autopas::ContainerOption::verletListsCells});
+  autopas.setAllowedContainers({autopas::ContainerOption::varVerletListsAsBuild});
+  autopas.setAllowedTraversals({autopas::TraversalOption::vvl_as_built});
   autopas.init();
 
   // initialization of the integrator
