@@ -103,8 +103,9 @@ int main(int argc, char **argv) {
   autopas.setCutoff(cutoff);
   autopas.setVerletSkin(verletSkin);
   autopas.setVerletRebuildFrequency(verletRebuildFrequency);
-  // Set the size (relative to cutoff) of the cells so that roughly the desired number of cells per dimension is reached
-  autopas.setCellSizeFactor((maxAltitude * 2.) / (cutoff * desiredCellsPerDimension));
+  // Scale Cell size so that we get the desired number of cells
+  // -2 because internally there will be two halo cells added on top of maxAltitude
+  autopas.setCellSizeFactor((maxAltitude * 2.) / ((cutoff + verletSkin) * (desiredCellsPerDimension - 2)));
   autopas.setAllowedNewton3Options({autopas::Newton3Option::disabled});
   autopas.setAllowedDataLayouts({autopas::DataLayoutOption::aos});
   autopas.setAllowedContainers({autopas::ContainerOption::varVerletListsAsBuild});
