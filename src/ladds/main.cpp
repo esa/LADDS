@@ -119,7 +119,7 @@ int main(int argc, char **argv) {
       autopas, config["io"]["output_file"].as<std::string>(), OutputFile::CSV, selectedPropagatorComponents);
   auto accumulator = std::make_shared<Acceleration::AccelerationAccumulator<AutoPas_t>>(
       selectedPropagatorComponents, autopas, 0.0, *fo);
-  auto integrator = std::make_shared<Integrator<AutoPas_t>>(autopas, *accumulator, 1e-2);
+  auto integrator = std::make_shared<Integrator<AutoPas_t>>(autopas, *accumulator, 1e-1);
 
   // Read in scenario
   auto actualSatellites =
@@ -164,23 +164,13 @@ int main(int argc, char **argv) {
       logger.log(Logger::Level::err, "Particles are escaping! \n{}", escapedParticles);
     }
 
-    // TODO Check for particles that burn up
-    maxAltitudeFound = 0;
-    minAltitudeFound = std::numeric_limits<double>::max();
-    for (const auto &particle : autopas) {
-      auto pos = particle.getPosition();
-      double altitude = sqrt(pos[0] * pos[0] + pos[1] * pos[1] + pos[2] * pos[2]);
-      minAltitudeFound = std::min(minAltitudeFound, altitude);
-      maxAltitudeFound = std::max(maxAltitudeFound, altitude);
-    }
-
     timers.collisionDetection.start();
     // pairwise interaction
     CollisionFunctor collisionFunctor(cutoff);
     autopas.iteratePairwise(&collisionFunctor);
     auto collisions = collisionFunctor.getCollisions();
     logger.log(
-        Logger::Level::info, "Iteration {} - Close encounters: {}, MaxAlt={}", i, collisions.size(), maxAltitudeFound);
+        Logger::Level::info, "Iteration {} - Close encounters: {}", i, collisions.size());
     for (const auto &[p1, p2] : collisions) {
       logger.log(Logger::Level::debug, "{} | {}", p1->getID(), p2->getID());
     }
