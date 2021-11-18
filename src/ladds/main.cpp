@@ -163,6 +163,7 @@ int main(int argc, char **argv) {
     if (not escapedParticles.empty()) {
       logger.log(Logger::Level::err, "Particles are escaping! \n{}", escapedParticles);
     }
+    // TODO Check for particles that burn up
 
     timers.collisionDetection.start();
     // pairwise interaction
