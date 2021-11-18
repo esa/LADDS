@@ -164,12 +164,6 @@ int main(int argc, char **argv) {
       logger.log(Logger::Level::err, "Particles are escaping! \n{}", escapedParticles);
     }
 
-    for (const auto &particle : autopas) {
-      auto id = particle.getID();
-      if (id == 13577) {
-        logger.log(Logger::Level::info, "{}", particle);
-      }
-    }
     // TODO Check for particles that burn up
     maxAltitudeFound = 0;
     minAltitudeFound = std::numeric_limits<double>::max();
