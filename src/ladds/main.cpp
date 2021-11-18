@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
 
   Logger logger;
 
-  logger.get()->set_level(spdlog::level::info);
+  logger.get()->set_level(spdlog::level::debug);
 
   // Default config path
   const auto *cfgFilePath = LoadConfig::defaultCfgPath;
