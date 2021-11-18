@@ -23,6 +23,7 @@
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
 extern template class autopas::AutoPas<Particle>;
+extern template bool autopas::AutoPas<Particle>::iteratePairwise(CollisionFunctor *);
 
 /**
  * Floating point precision for command line output.
@@ -75,14 +76,13 @@ int main(int argc, char **argv) {
 
   Logger logger;
 
-  logger.get()->set_level(spdlog::level::debug);
-
   // Default config path
   const auto *cfgFilePath = LoadConfig::defaultCfgPath;
 
   // Read in config if given
   if (argc > 1) cfgFilePath = argv[1];
   const auto config = LoadConfig::loadConfig(cfgFilePath, logger);
+  logger.get()->set_level(spdlog::level::from_str(config["sim"]["logLevel"].as<std::string>()));
   logger.log(Logger::Level::info, "Config loaded.");
 
   const auto iterations = config["sim"]["iterations"].as<size_t>();
@@ -94,15 +94,23 @@ int main(int argc, char **argv) {
   AutoPas_t autopas;
   const auto maxAltitude = config["sim"]["maxAltitude"].as<double>();
   const auto cutoff = config["autopas"]["cutoff"].as<double>();
+  const auto verletSkin = config["autopas"]["skin"].as<double>();
+  const auto verletRebuildFrequency = config["autopas"]["rebuildFrequency"].as<unsigned int>();
   const auto desiredCellsPerDimension = config["autopas"]["desiredCellsPerDimension"].as<double>();
 
   autopas.setBoxMin({-maxAltitude, -maxAltitude, -maxAltitude});
   autopas.setBoxMax({maxAltitude, maxAltitude, maxAltitude});
   autopas.setCutoff(cutoff);
-  // Set the size (relative to cutoff) of the cells so that roughly the desired number of cells per dimension is reached
-  autopas.setCellSizeFactor((maxAltitude * 2.) / (cutoff * desiredCellsPerDimension));
+  autopas.setVerletSkin(verletSkin);
+  autopas.setVerletRebuildFrequency(verletRebuildFrequency);
+  // Scale Cell size so that we get the desired number of cells
+  // -2 because internally there will be two halo cells added on top of maxAltitude
+  autopas.setCellSizeFactor((maxAltitude * 2.) / ((cutoff + verletSkin) * (desiredCellsPerDimension - 2)));
+  autopas.setAllowedNewton3Options({autopas::Newton3Option::disabled});
   autopas.setAllowedDataLayouts({autopas::DataLayoutOption::aos});
-  autopas.setAllowedContainers({autopas::ContainerOption::verletListsCells});
+  autopas.setAllowedContainers({autopas::ContainerOption::varVerletListsAsBuild});
+  autopas.setAllowedTraversals({autopas::TraversalOption::vvl_as_built});
+  autopas::Logger::get()->set_level(spdlog::level::from_str(config["autopas"]["logLevel"].as<std::string>()));
   autopas.init();
 
   // initialization of the integrator
@@ -119,7 +127,8 @@ int main(int argc, char **argv) {
       autopas, config["io"]["output_file"].as<std::string>(), OutputFile::CSV, selectedPropagatorComponents);
   auto accumulator = std::make_shared<Acceleration::AccelerationAccumulator<AutoPas_t>>(
       selectedPropagatorComponents, autopas, 0.0, *fo);
-  auto integrator = std::make_shared<Integrator<AutoPas_t>>(autopas, *accumulator, 1e-1);
+  auto deltaT = config["sim"]["deltaT"].as<double>();
+  auto integrator = std::make_shared<Integrator<AutoPas_t>>(autopas, *accumulator, deltaT);
 
   // Read in scenario
   auto actualSatellites =
@@ -209,7 +218,7 @@ int main(int argc, char **argv) {
   std::cout << timerToString(
       "    Container update    ", timers.containerUpdate.getTotalTime(), maximumNumberOfDigits, timeSim);
   std::cout << timerToString(
-      "  Output                ", timers.output.getTotalTime(), maximumNumberOfDigits, timeTotal);
+      "    Output              ", timers.output.getTotalTime(), maximumNumberOfDigits, timeTotal);
   std::cout << timerToString("One iteration           ", timeSim / iterations, maximumNumberOfDigits, timeTotal);
 
   return 0;

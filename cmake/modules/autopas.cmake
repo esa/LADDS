@@ -13,8 +13,8 @@ endif ()
 FetchContent_Declare(
         autopasfetch
         GIT_REPOSITORY ${autopasRepoPath}
-        # linked cells interface 19.10.21
-        GIT_TAG cec0da94fdffac6aaae81443a1e8d35988c5da89
+        # more trace output for cell grid generation 18.11.21
+        GIT_TAG 0afef8656cd11bcc4d005c56598531d6d7fb8bae
 )
 # Populate dependency
 FetchContent_MakeAvailable(autopasfetch)
