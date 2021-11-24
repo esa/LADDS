@@ -29,6 +29,12 @@ class Constellation {
      */
     std::vector<Particle> tick();
 
+    /**
+     * getter for constellationSize = number of satellites in constellation
+     * @return int : constellationSize
+     */
+    int getConstellationSize();
+
   private:
    /**
     * stores the all satellites of the constellation that have not been added to the simulation

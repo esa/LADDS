@@ -107,8 +107,9 @@ std::vector<Particle> Constellation::tick() {
   return particles;
 }
 
-
-
+int Constellation::getConstellationSize() {
+    return constellationSize;
+}
 
 std::vector<Particle> Constellation::readDatasetConstellation(const std::string &position_filepath, const std::string &velocity_filepath) {
   CSVReader<double, double, double> pos_csvReader{position_filepath, false};

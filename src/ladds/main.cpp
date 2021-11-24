@@ -67,6 +67,7 @@ int main(int argc, char **argv) {
     autopas::utils::Timer initialization{};
     autopas::utils::Timer simulation{};
     autopas::utils::Timer integrator{};
+    autopas::utils::Timer constellationInsertion{};
     autopas::utils::Timer collisionDetection{};
     autopas::utils::Timer containerUpdate{};
     autopas::utils::Timer output{};
@@ -152,7 +153,7 @@ int main(int argc, char **argv) {
   logger.log(Logger::Level::info, "Min altitude is {}", minAltitudeFound);
   logger.log(Logger::Level::info, "Max altitude is {}", maxAltitudeFound);
 
-  logger.log(Logger::Level::info, "Number of particles: {}", autopas.getNumberOfParticles());
+  logger.log(Logger::Level::info, "Number of initial particles: {}", autopas.getNumberOfParticles());
 
     //non initial constellations are added
     std::vector<Constellation> constellations;
@@ -175,7 +176,12 @@ int main(int argc, char **argv) {
                 cons.erase(0, offset + 1);
             }
         }
+        int satellitesToInsert = 0;
+        for(int i = 0;i<nConstellations;i++){
+            satellitesToInsert += constellations.at(i).getConstellationSize();
+        }
 
+        logger.log(Logger::Level::info, "{} more particles will be added from {} constellations",satellitesToInsert, nConstellations);
     }
     std::vector<Particle> delayedInsertion;
 
@@ -198,6 +204,7 @@ int main(int argc, char **argv) {
     if (not escapedParticles.empty()) {
       logger.log(Logger::Level::err, "Particles are escaping! \n{}", escapedParticles);
     }
+    timers.constellationInsertion.start();
       //new satellites from constellations inserted over time
       if (i % interval == 0) {
           for (int c = 0; c < constellations.size(); c++) {
@@ -232,7 +239,7 @@ int main(int argc, char **argv) {
               }
           }
       }
-
+    timers.constellationInsertion.stop();
     // TODO Check for particles that burn up
 
     timers.collisionDetection.start();
@@ -274,6 +281,8 @@ int main(int argc, char **argv) {
   std::cout << timerToString("  Simulation            ", timeSim, maximumNumberOfDigits, timeTotal);
   std::cout << timerToString(
       "    Integrator          ", timers.integrator.getTotalTime(), maximumNumberOfDigits, timeSim);
+  std::cout << timerToString(
+            "    Insertion           ", timers.constellationInsertion.getTotalTime(), maximumNumberOfDigits, timeSim);
   std::cout << timerToString(
       "    Collision detection ", timers.collisionDetection.getTotalTime(), maximumNumberOfDigits, timeSim);
   std::cout << timerToString(

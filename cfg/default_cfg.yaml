@@ -1,6 +1,6 @@
 sim:
   logLevel: info    # Available levels are off, critical, err, warn, info, debug, trace
-  iterations: 4500 # Number of simulation iterations
+  iterations: 8000 # Number of simulation iterations
   maxAltitude: 85000 # Maximum satellite altitude [km]
   deltaT: 0.1 # [s]
 
@@ -19,7 +19,7 @@ io:
   posFileName: pos_test.csv # Name of the CSV file with satellite positions [km]
   velFileName: v_test.csv # Name of the CSV file with satellite velocities [km/s]
   vtkWriteFrequency: 10 # Frequency of writing to vtk file [iterations]
-  constellationList: ../data/StarlinkGen1,100,4000 # ';'-seperated constellations consisting of path, start time, duration
+  #constellationList: ../data/StarlinkGen1,100,7200 # ';'-seperated constellations consisting of path, start time, duration
   constellationFrequency: 10 # Frequency of adding satellites to simulation [iterations]
 
 autopas:
