@@ -20,6 +20,7 @@
 #include "Particle.h"
 #include "SatelliteToParticleConverter.h"
 #include "spdlog/fmt/ostr.h"
+#include "Constellation.h"
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
 extern template class autopas::AutoPas<Particle>;
@@ -153,6 +154,31 @@ int main(int argc, char **argv) {
 
   logger.log(Logger::Level::info, "Number of particles: {}", autopas.getNumberOfParticles());
 
+    //non initial constellations are added
+    std::vector<Constellation> constellations;
+    int interval = config["io"]["constellationFrequency"].IsDefined()?config["io"]["constellationFrequency"].as<int>():1;
+    if(config["io"]["constellationList"].IsDefined()) {
+        auto cons = config["io"]["constellationList"].as<std::string>();
+        int nConstellations = 1;
+        for (int i = 0; i < cons.size(); i++) {
+            if (cons.at(i) == ';') {
+                nConstellations++;
+            }
+        }
+        for (int i = 0; i < nConstellations; i++) {
+            int offset = cons.find(';', 0);
+            if (offset == 0) {
+                constellations.emplace_back(Constellation(cons,interval));
+                break;
+            } else {
+                constellations.emplace_back(Constellation(cons.substr(0, offset),interval));
+                cons.erase(0, offset + 1);
+            }
+        }
+
+    }
+    std::vector<Particle> delayedInsertion;
+
   timers.initialization.stop();
 
   // main-loop skeleton
@@ -172,6 +198,41 @@ int main(int argc, char **argv) {
     if (not escapedParticles.empty()) {
       logger.log(Logger::Level::err, "Particles are escaping! \n{}", escapedParticles);
     }
+      //new satellites from constellations inserted over time
+      if (i % interval == 0) {
+          for (int c = 0; c < constellations.size(); c++) {
+              // new satellites are gradually added to the simulation according to their starting time and operation duration
+              std::vector<Particle> newSatellites = constellations.at(c).tick();
+              // set mass (/color) of every satellite
+              /*for(auto &nSat : newSatellites){
+                  nSat.setAom(c + 2);
+              }*/
+              // add waiting satellites to newSatellites and reset waiting list
+              newSatellites.insert(newSatellites.end(),delayedInsertion.begin(),delayedInsertion.end());
+              delayedInsertion = {};
+
+              for (auto &nSat : newSatellites) {
+                  //only insert satellites, if they have a reasonable distance to other satellites
+                  bool collisionFree = true;
+                  double collisionRadius = 2*cutoff;
+                  std::array<double,3> boxSpan = {collisionRadius,collisionRadius,collisionRadius};
+                  std::array<double,3> lowCorner = autopas::utils::ArrayMath::sub(nSat.getPosition(),boxSpan);
+                  std::array<double,3> highCorner = autopas::utils::ArrayMath::add(nSat.getPosition(),boxSpan);
+                  for(auto iter = autopas.getRegionIterator(lowCorner, highCorner);iter.isValid();++iter) {
+                      std::array<double,3> diff = autopas::utils::ArrayMath::sub(nSat.getPosition(),iter->getPosition());
+                      collisionFree = collisionFree && (autopas::utils::ArrayMath::dot(diff,diff) > collisionRadius*collisionRadius);
+                  }
+                  if(collisionFree) {
+                      autopas.addParticle(nSat);
+                  } else {
+                      std::cout << "delayed!" << std::endl;
+                      //nSat.setAom(c + 2);
+                      delayedInsertion.push_back(nSat);
+                  }
+              }
+          }
+      }
+
     // TODO Check for particles that burn up
 
     timers.collisionDetection.start();

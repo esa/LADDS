@@ -6,7 +6,7 @@
 
 namespace LoadConfig {
 
-constexpr auto defaultCfgPath = "cfg/default_cfg.yaml";
+constexpr auto defaultCfgPath = "../../cfg/default_cfg.yaml";
 
 /**
  *  Loads the config file, falls back to default cfg if not found.
@@ -21,7 +21,7 @@ constexpr auto defaultCfgPath = "cfg/default_cfg.yaml";
     try {
       config = YAML::LoadFile(defaultCfgPath);
     } catch (YAML::Exception &e) {
-      logger.log(Logger::Level::err, "No default config file found. Should be cfg/default_cfg.yaml. Exiting...");
+      logger.log(Logger::Level::err, "No default config file found. Should be ../../cfg/default_cfg.yaml. Exiting...");
       exit(1);
     }
   }
