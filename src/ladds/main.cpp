@@ -210,10 +210,7 @@ int main(int argc, char **argv) {
           for (auto & constellation : constellations) {
               // new satellites are gradually added to the simulation according to their starting time and operation duration
               std::vector<Particle> newSatellites = constellation.tick();
-              // set mass (/color) of every satellite
-              /*for(auto &nSat : newSatellites){
-                  nSat.setAom(c + 2);
-              }*/
+
               // add waiting satellites to newSatellites and reset waiting list
               newSatellites.insert(newSatellites.end(),delayedInsertion.begin(),delayedInsertion.end());
               delayedInsertion = {};
@@ -233,7 +230,6 @@ int main(int argc, char **argv) {
                       autopas.addParticle(nSat);
                   } else {
                       std::cout << "delayed!" << std::endl;
-                      //nSat.setAom(c + 2);
                       delayedInsertion.push_back(nSat);
                   }
               }

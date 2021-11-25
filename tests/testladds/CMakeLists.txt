@@ -42,3 +42,8 @@ target_include_directories(
 
 
 gtest_discover_tests(${TEST_EXECUTABLE_NAME})
+
+target_compile_definitions(${TEST_EXECUTABLE_NAME}
+        PUBLIC
+        DATADIR=\"${PROJECT_SOURCE_DIR}/data/\"
+        )
