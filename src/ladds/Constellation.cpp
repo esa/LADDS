@@ -8,17 +8,16 @@
 #include <string>
 Constellation::Constellation(const std::string &constellation, int interval) {
   //split the 3 comma seperated arguments
-  int seperator1 = constellation.find(',',0);
-  int seperator2 = constellation.find(',',seperator1+1);
+  auto seperator1 = constellation.find(',',0);
+  auto seperator2 = constellation.find(',',seperator1+1);
   std::string arg1 = constellation.substr(0,seperator1);                                           //  arg1     s1  arg2  s2   arg3    // n: 4
   std::string arg2 = constellation.substr(seperator1+1,seperator2-seperator1-1);                //a  b  c  d  ,  e  f  ,  g  h  i   // n: 7-4-1=2
   std::string arg3 = constellation.substr(seperator2+1,constellation.size()-seperator2-1);      //0  1  2  3  4  5  6  7  8  9  10  // n: 11-7-1=3
 
   //set variables using 3 args
-  std::string path = arg1;
-  std::vector<Particle> sats = readDatasetConstellation(std::string(DATADIR) + path + "/pos.csv",std::string(DATADIR) + path + "/v.csv");
+  std::vector<Particle> sats = readDatasetConstellation(std::string(DATADIR) + arg1 + "/pos.csv",std::string(DATADIR) + arg1 + "/v.csv");
   //convert vector to deque (should be changed some time)
-  constellationSize = sats.size();
+  constellationSize = static_cast<int>(sats.size());
   for(int i = 0;i<constellationSize;i++) {
     satellites.push_back(sats.at(i));
   }
@@ -32,10 +31,10 @@ Constellation::Constellation(const std::string &constellation, int interval) {
   status = 'i';
 
   std::ifstream shellParameters(std::string(DATADIR) + arg1 + "/shells.txt");
-  std::string tmp_string = "";
+  std::string tmp_string;
   std::getline(shellParameters,tmp_string);
   double altitude,inclination,nPlanes,satsPerPlane;
-  while(tmp_string != ""){
+  while(!tmp_string.empty()){
     std::istringstream numStream(tmp_string);
     numStream >> altitude;
     numStream >> inclination;
@@ -80,7 +79,7 @@ std::vector<Particle> Constellation::tick() {
 
       while (timeActive >= timestamps.at(currentShellIndex) + planesDeployed * timeSteps.at(currentShellIndex)) {
 
-        int planeSize = shells.at(currentShellIndex)[3];
+        int planeSize = static_cast<int>(shells.at(currentShellIndex)[3]);
         for(int i = 0;i<planeSize;i++) {
           particles.push_back(satellites.at(0));
           satellites.pop_front();
@@ -107,7 +106,7 @@ std::vector<Particle> Constellation::tick() {
   return particles;
 }
 
-int Constellation::getConstellationSize() {
+int Constellation::getConstellationSize() const {
     return constellationSize;
 }
 

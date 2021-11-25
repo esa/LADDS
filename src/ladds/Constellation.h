@@ -33,7 +33,7 @@ class Constellation {
      * getter for constellationSize = number of satellites in constellation
      * @return int : constellationSize
      */
-    int getConstellationSize();
+    [[nodiscard]] int getConstellationSize() const;
 
   private:
    /**
@@ -44,7 +44,7 @@ class Constellation {
     /**
      * Reads the passed position and velocity csv files. Returns a vector of particles.
      */
-    std::vector<Particle> readDatasetConstellation(const std::string &position_filepath, const std::string &velocity_filepath);
+    static std::vector<Particle> readDatasetConstellation(const std::string &position_filepath, const std::string &velocity_filepath);
 
     /**
      * iteration from which constellation starts being added to the simulation

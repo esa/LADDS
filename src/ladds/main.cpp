@@ -161,13 +161,13 @@ int main(int argc, char **argv) {
     if(config["io"]["constellationList"].IsDefined()) {
         auto cons = config["io"]["constellationList"].as<std::string>();
         int nConstellations = 1;
-        for (int i = 0; i < cons.size(); i++) {
-            if (cons.at(i) == ';') {
+        for (char con : cons) {
+            if (con == ';') {
                 nConstellations++;
             }
         }
         for (int i = 0; i < nConstellations; i++) {
-            int offset = cons.find(';', 0);
+            unsigned long offset = cons.find(';', 0);
             if (offset == 0) {
                 constellations.emplace_back(Constellation(cons,interval));
                 break;
@@ -207,9 +207,9 @@ int main(int argc, char **argv) {
     timers.constellationInsertion.start();
       //new satellites from constellations inserted over time
       if (i % interval == 0) {
-          for (int c = 0; c < constellations.size(); c++) {
+          for (auto & constellation : constellations) {
               // new satellites are gradually added to the simulation according to their starting time and operation duration
-              std::vector<Particle> newSatellites = constellations.at(c).tick();
+              std::vector<Particle> newSatellites = constellation.tick();
               // set mass (/color) of every satellite
               /*for(auto &nSat : newSatellites){
                   nSat.setAom(c + 2);
