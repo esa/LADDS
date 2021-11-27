@@ -21,6 +21,7 @@
 #include "SatelliteToParticleConverter.h"
 #include "spdlog/fmt/ostr.h"
 #include "Constellation.h"
+#include "SafeInsertion.h"
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
 extern template class autopas::AutoPas<Particle>;
@@ -211,31 +212,13 @@ int main(int argc, char **argv) {
               // new satellites are gradually added to the simulation according to their starting time and operation duration
               std::vector<Particle> newSatellites = constellation.tick();
 
-              // add waiting satellites to newSatellites and reset waiting list
+              // add waiting satellites to newSatellites
               newSatellites.insert(newSatellites.end(),delayedInsertion.begin(),delayedInsertion.end());
-              delayedInsertion = {};
-
-              for (auto &nSat : newSatellites) {
-                  //only insert satellites, if they have a reasonable distance to other satellites
-                  bool collisionFree = true;
-                  double collisionRadius = 2*cutoff;
-                  std::array<double,3> boxSpan = {collisionRadius,collisionRadius,collisionRadius};
-                  std::array<double,3> lowCorner = autopas::utils::ArrayMath::sub(nSat.getPosition(),boxSpan);
-                  std::array<double,3> highCorner = autopas::utils::ArrayMath::add(nSat.getPosition(),boxSpan);
-                  for(auto iter = autopas.getRegionIterator(lowCorner, highCorner);iter.isValid();++iter) {
-                      std::array<double,3> diff = autopas::utils::ArrayMath::sub(nSat.getPosition(),iter->getPosition());
-                      collisionFree = collisionFree && (autopas::utils::ArrayMath::dot(diff,diff) > collisionRadius*collisionRadius);
-                  }
-                  if(collisionFree) {
-                      autopas.addParticle(nSat);
-                  } else {
-                      std::cout << "delayed!" << std::endl;
-                      delayedInsertion.push_back(nSat);
-                  }
-              }
+              delayedInsertion = SafeInsertion::insert(autopas,newSatellites,cutoff);
           }
       }
     timers.constellationInsertion.stop();
+
     // TODO Check for particles that burn up
 
     timers.collisionDetection.start();
