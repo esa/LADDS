@@ -13,7 +13,14 @@
 namespace SafeInsertion {
 
 
-
+/**
+ * inserts the particles of newSatellites to autopas that have a safe distance to particles
+ * in the simulation and returns particles that are not added
+ * @param autopas
+ * @param newSatellites
+ * @param cutoff
+ * @return std::vector<Particle> delayedInsertion
+ */
 std::vector<Particle> insert(autopas::AutoPas<Particle>& autopas,std::vector<Particle>& newSatellites,double cutoff){
     std::vector<Particle> delayedInsertion = {};
 
