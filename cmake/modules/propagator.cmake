@@ -17,10 +17,9 @@ set(DebrisSim_Simulation OFF CACHE INTERNAL "")
 
 FetchContent_Declare(
         Propagatorfetch
-        URL /home/fabio/workspace/BA_space_debris
-#        GIT_REPOSITORY ${PropagatorRepoPath}
-#        # branch: IntegratorComparision; fixed applyComponents code dupe
-#        GIT_TAG d8e23fcd27398dab77bd2c2aa7849edd1a31d0f1
+        GIT_REPOSITORY ${PropagatorRepoPath}
+        # branch: IntegratorComparision; fixed applyComponents code dupe
+        GIT_TAG d8e23fcd27398dab77bd2c2aa7849edd1a31d0f1
 )
 
 # Get Propagator source and binary directories from CMake project
