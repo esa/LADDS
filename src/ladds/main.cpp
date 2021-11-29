@@ -196,6 +196,10 @@ int main(int argc, char **argv) {
       for (const auto &p : autopas) {
         allParticles.push_back(SatelliteToParticleConverter::convertParticleToSatellite(p));
       }
+      // sort particles by Id to provide consistent output files
+      std::sort(allParticles.begin(), allParticles.end(), [](const auto &p1, const auto &p2) {
+        return p1.getId() < p2.getId();
+      });
       vtkWriter.printResult(allParticles);
     }
     timers.output.stop();
