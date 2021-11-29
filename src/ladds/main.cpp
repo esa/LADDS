@@ -179,7 +179,15 @@ int main(int argc, char **argv) {
     CollisionFunctor collisionFunctor(cutoff);
     autopas.iteratePairwise(&collisionFunctor);
     auto collisions = collisionFunctor.getCollisions();
-    logger.log(Logger::Level::info, "Iteration {} - Close encounters: {}", i, collisions.size());
+
+    double vel_mag = 0;
+    for (const auto &particle : autopas) {
+      auto v = particle.getVelocity();
+      double mag = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+      vel_mag = std::max(vel_mag, mag);
+    }
+
+    logger.log(Logger::Level::info, "Iteration {} - Close encounters: {} MaxV = {}", i, collisions.size(), vel_mag);
     for (const auto &[p1, p2] : collisions) {
       logger.log(Logger::Level::debug, "{} | {}", p1->getID(), p2->getID());
     }
