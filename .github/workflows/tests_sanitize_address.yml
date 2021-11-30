@@ -40,4 +40,5 @@ jobs:
     - name: Test with ctest
       run: |
         cd build
-        ctest --verbose -j12
+        # disable all irrelevant functor tests. We need to change this if we switch configuration
+        ctest -j 4 --output-on-failure -E 'CollisionFunctorIntegration.*\/.[^v]' 
