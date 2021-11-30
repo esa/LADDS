@@ -11,19 +11,23 @@ if len(sys.argv) != 4 :
     print('Usage: ' + sys.argv[0] + ' LADDSExe cfg reference.vtu')
     sys.exit(1)
 
+# path to the ladds executable
 exe_path=sys.argv[1]
+# path to the yaml input file
 yaml_path=sys.argv[2]
 
+# run the simulation and capture the output. Abort if the simulation failed.
 sim = subprocess.Popen([exe_path, yaml_path])
 output, err = sim.communicate()
 exit_code = sim.wait()
-
 if exit_code != 0 :
     sys.exit('An error occured during the simulation')
 
 output_path='output_10.vtu'
+# path to the given reference vtu
 reference_path=sys.argv[3]
 
+# read all positions and velocities data from output and reference
 reader = vtkXMLUnstructuredGridReader()
 reader.SetFileName(output_path)
 reader.Update()
@@ -39,6 +43,7 @@ reference = reader.GetOutput()
 v_ref = VN.vtk_to_numpy(reference.GetPointData().GetArray('velocity')).astype('double')
 r_ref = VN.vtk_to_numpy(reference.GetPoints().GetData()).astype('double')
 
+# perform similarity checks on all loaded data
 allTestsOk = True
 if not (len(r_out) == len(r_ref)) :
     print('Number of particles differs!')
@@ -50,5 +55,6 @@ if not np.allclose(r_out, r_ref) :
     print('Positions differ!')
     allTestsOk = False
 
+# communicate test result via exit status
 if not allTestsOk :
     sys.exit(-1)
