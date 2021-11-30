@@ -10,7 +10,7 @@
 #include <autopas/utils/SoA.h>
 #include <autopas/utils/SoAView.h>
 
-#include "Particle.h"
+#include "ladds/particle/Particle.h"
 
 /**
  * Class describing the pairwise particle computation for determining whether a collision occured.

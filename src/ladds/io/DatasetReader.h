@@ -2,7 +2,7 @@
 
 #include <breakupModel/input/CSVReader.h>
 
-#include "Particle.h"
+#include "ladds/particle/Particle.h"
 
 namespace DatasetReader {
 

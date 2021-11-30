@@ -14,11 +14,11 @@
 #include <iostream>
 
 #include "CollisionFunctor.h"
-#include "DatasetReader.h"
-#include "LoadConfig.h"
-#include "Logger.h"
-#include "Particle.h"
-#include "SatelliteToParticleConverter.h"
+#include "ladds/io/DatasetReader.h"
+#include "ladds/io/LoadConfig.h"
+#include "ladds/io/Logger.h"
+#include "ladds/particle/Particle.h"
+#include "ladds/particle/SatelliteToParticleConverter.h"
 #include "spdlog/fmt/ostr.h"
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
