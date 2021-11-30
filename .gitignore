@@ -39,4 +39,4 @@
 
 # Data folder
 data
-notebooks/.ipynb_checkpoints
+*/.ipynb_checkpoints
