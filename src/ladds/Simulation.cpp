@@ -10,26 +10,11 @@
 #include <ladds/io/DatasetReader.h>
 #include <ladds/particle/SatelliteToParticleConverter.h>
 
+#include <tuple>
+
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
 extern template class autopas::AutoPas<Particle>;
 extern template bool autopas::AutoPas<Particle>::iteratePairwise(CollisionFunctor *);
-
-void Simulation::run(const YAML::Node &config) {
-  timers.total.start();
-
-  timers.initialization.start();
-  auto autopas = initAutoPas(config);
-  auto integrator = initIntegrator(*autopas, config);
-  loadSatellites(*autopas, config);
-  timers.initialization.stop();
-
-  timers.simulation.start();
-  simulationLoop(*autopas, *integrator, config);
-  timers.simulation.stop();
-
-  printTimers(config);
-  timers.total.stop();
-}
 
 std::unique_ptr<Simulation::AutoPas_t> Simulation::initAutoPas(const YAML::Node &config) {
   auto autopas = std::make_unique<AutoPas_t>();
@@ -58,8 +43,7 @@ std::unique_ptr<Simulation::AutoPas_t> Simulation::initAutoPas(const YAML::Node 
   return autopas;
 }
 
-std::unique_ptr<Integrator<Simulation::AutoPas_t>> Simulation::initIntegrator(AutoPas_t &autopas,
-                                                                              const YAML::Node &config) {
+auto Simulation::initIntegrator(AutoPas_t &autopas, const YAML::Node &config) {
   // initialization of the integrator
   std::array<bool, 8> selectedPropagatorComponents{config["sim"]["prop"]["useKEPComponent"].as<bool>(),
                                                    config["sim"]["prop"]["useJ2Component"].as<bool>(),
@@ -77,14 +61,14 @@ std::unique_ptr<Integrator<Simulation::AutoPas_t>> Simulation::initIntegrator(Au
   auto deltaT = config["sim"]["deltaT"].as<double>();
   auto integrator = std::make_unique<Integrator<AutoPas_t>>(autopas, *accumulator, deltaT);
 
-  return integrator;
+  return std::make_tuple<>(std::move(csvWriter), std::move(accumulator), std::move(integrator));
 }
 
 void Simulation::loadSatellites(AutoPas_t &autopas, const YAML::Node &config) {
   // Read in scenario
   auto actualSatellites = DatasetReader::readDataset(config["io"]["posFileName"].as<std::string>(),
                                                      config["io"]["velFileName"].as<std::string>());
-  //  logger.log(Logger::Level::debug, "Parsed {} satellites", actualSatellites.size());
+  SPDLOG_LOGGER_DEBUG(logger.get(), "Parsed {} satellites", actualSatellites.size());
 
   const auto maxAltitude = config["sim"]["maxAltitude"].as<double>();
   double minAltitudeFound{std::numeric_limits<double>::max()};
@@ -99,9 +83,9 @@ void Simulation::loadSatellites(AutoPas_t &autopas, const YAML::Node &config) {
       autopas.addParticle(particle);
     }
   }
-  //  logger.log(Logger::Level::info, "Min altitude is {}", minAltitudeFound);
-  //  logger.log(Logger::Level::info, "Max altitude is {}", maxAltitudeFound);
-  //  logger.log(Logger::Level::info, "Number of particles: {}", autopas.getNumberOfParticles());
+  SPDLOG_LOGGER_INFO(logger.get(), "Min altitude is {}", minAltitudeFound);
+  SPDLOG_LOGGER_INFO(logger.get(), "Max altitude is {}", maxAltitudeFound);
+  SPDLOG_LOGGER_INFO(logger.get(), "Number of particles: {}", autopas.getNumberOfParticles());
 }
 
 void Simulation::simulationLoop(AutoPas_t &autopas, Integrator<AutoPas_t> &integrator, const YAML::Node &config) {
@@ -122,7 +106,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas, Integrator<AutoPas_t> &integ
     timers.containerUpdate.stop();
 
     if (not escapedParticles.empty()) {
-      //      logger.log(Logger::Level::err, "Particles are escaping! \n{}", escapedParticles);
+      SPDLOG_LOGGER_ERROR(logger.get(), "Particles are escaping! \n{}", escapedParticles);
     }
     // TODO Check for particles that burn up
 
@@ -131,9 +115,9 @@ void Simulation::simulationLoop(AutoPas_t &autopas, Integrator<AutoPas_t> &integ
     CollisionFunctor collisionFunctor(cutoff);
     autopas.iteratePairwise(&collisionFunctor);
     auto collisions = collisionFunctor.getCollisions();
-    //    logger.log(Logger::Level::info, "Iteration {} - Close encounters: {}", i, collisions.size());
+    SPDLOG_LOGGER_INFO(logger.get(), "Iteration {} - Close encounters: {}", i, collisions.size());
     for (const auto &[p1, p2] : collisions) {
-      //      logger.log(Logger::Level::debug, "{} | {}", p1->getID(), p2->getID());
+      SPDLOG_LOGGER_DEBUG(logger.get(), "{} | {}", p1->getID(), p2->getID());
     }
     timers.collisionDetection.stop();
 
@@ -158,7 +142,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas, Integrator<AutoPas_t> &integ
   }
 }
 
-void Simulation::printTimers(const YAML::Node &config) {
+void Simulation::printTimers(const YAML::Node &config) const {
   const auto iterations = config["sim"]["iterations"].as<size_t>();
 
   const auto timeTotal = timers.total.getTotalTime();
@@ -206,4 +190,22 @@ std::string Simulation::timerToString(const std::string &name, long timeNS, int 
   }
   ss << std::endl;
   return ss.str();
+}
+
+void Simulation::run(const YAML::Node &config) {
+  timers.total.start();
+
+  timers.initialization.start();
+  auto autopas = initAutoPas(config);
+  // need to keep csvWriter and accumulator alive bc integrator relies on pointers to them but does not take ownership
+  auto [csvWriter, accumulator, integrator] = initIntegrator(*autopas, config);
+  loadSatellites(*autopas, config);
+  timers.initialization.stop();
+
+  timers.simulation.start();
+  simulationLoop(*autopas, *integrator, config);
+  timers.simulation.stop();
+
+  timers.total.stop();
+  printTimers(config);
 }

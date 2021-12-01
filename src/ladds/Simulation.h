@@ -7,10 +7,13 @@
 #pragma once
 
 #include <autopas/AutoPasDecl.h>
+#include <ladds/io/Logger.h>
 #include <satellitePropagator/io/FileOutput.h>
 #include <satellitePropagator/physics/AccelerationAccumulator.h>
 #include <satellitePropagator/physics/Integrator.h>
 #include <yaml-cpp/yaml.h>
+
+#include <memory>
 
 #include "CollisionFunctor.h"
 #include "ladds/particle/Particle.h"
@@ -22,24 +25,27 @@ class Simulation {
  public:
   using AutoPas_t = autopas::AutoPas<Particle>;
 
+  explicit Simulation(Logger &logger) : logger(logger) {}
+
   void run(const YAML::Node &config);
 
  private:
   [[nodiscard]] std::unique_ptr<AutoPas_t> initAutoPas(const YAML::Node &config);
-  [[nodiscard]] std::unique_ptr<Integrator<Simulation::AutoPas_t>> initIntegrator(AutoPas_t &autopas,
-                                                                                  const YAML::Node &config);
+  [[nodiscard]] auto initIntegrator(AutoPas_t &autopas, const YAML::Node &config);
   void loadSatellites(AutoPas_t &autopas, const YAML::Node &config);
 
   void simulationLoop(AutoPas_t &autopas, Integrator<AutoPas_t> &integrator, const YAML::Node &config);
 
-  void printTimers(const YAML::Node &config);
+  void printTimers(const YAML::Node &config) const;
 
-  std::string timerToString(const std::string &name, long timeNS, int numberWidth = 0l, long maxTime = 0ul);
+  static std::string timerToString(const std::string &name, long timeNS, int numberWidth = 0, long maxTime = 0ul);
 
   /**
    * Floating point precision for command line output.
    */
   static constexpr int floatStringPrecision = 3;
+
+  Logger &logger;
 
   struct Timers {
     autopas::utils::Timer total{};

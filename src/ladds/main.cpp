@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
   Logger logger;
 
   // Default config path
-  if (argc != 1) {
+  if (argc != 2) {
     logger.log(Logger::Level::critical, "No config given!");
     return -1;
   }
@@ -24,9 +24,9 @@ int main(int argc, char **argv) {
   const auto config = LoadConfig::loadConfig(cfgFilePath, logger);
 
   logger.get()->set_level(spdlog::level::from_str(config["sim"]["logLevel"].as<std::string>()));
-  logger.log(Logger::Level::info, "Config loaded.");
+  SPDLOG_LOGGER_INFO(logger.get(), "Config loaded.");
 
-  Simulation simulation;
+  Simulation simulation(logger);
 
   simulation.run(config);
 
