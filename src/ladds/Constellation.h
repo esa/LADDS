@@ -36,7 +36,7 @@ class Constellation {
 
   private:
    /**
-    * stores the all satellites of the constellation that have not been added to the simulation
+    * stores the satellites of the constellation that have not been added to the simulation
     */
     std::deque<Particle> satellites;
 

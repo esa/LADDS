@@ -126,10 +126,10 @@ int main(int argc, char **argv) {
                                                    config["sim"]["prop"]["useSRPComponent"].as<bool>(),
                                                    config["sim"]["prop"]["useDRAGComponent"].as<bool>()};
 
-  auto fo = std::make_shared<FileOutput<AutoPas_t>>(
+  auto csvWriter = std::make_shared<FileOutput<AutoPas_t>>(
       autopas, config["io"]["output_file"].as<std::string>(), OutputFile::CSV, selectedPropagatorComponents);
   auto accumulator = std::make_shared<Acceleration::AccelerationAccumulator<AutoPas_t>>(
-      selectedPropagatorComponents, autopas, 0.0, *fo);
+      selectedPropagatorComponents, autopas, 0.0, *csvWriter);
   auto deltaT = config["sim"]["deltaT"].as<double>();
   auto integrator = std::make_shared<Integrator<AutoPas_t>>(autopas, *accumulator, deltaT);
 
@@ -243,6 +243,10 @@ int main(int argc, char **argv) {
       for (const auto &p : autopas) {
         allParticles.push_back(SatelliteToParticleConverter::convertParticleToSatellite(p));
       }
+      // sort particles by Id to provide consistent output files
+      std::sort(allParticles.begin(), allParticles.end(), [](const auto &p1, const auto &p2) {
+        return p1.getId() < p2.getId();
+      });
       vtkWriter.printResult(allParticles);
     }
     timers.output.stop();

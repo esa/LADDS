@@ -1,0 +1,28 @@
+sim:
+  logLevel: debug    # Available levels are off, critical, err, warn, info, debug, trace
+  iterations: 11 # Number of simulation iterations
+  maxAltitude: 85000 # Maximum satellite altitude [km]
+  deltaT: 0.1 # [s]
+
+  prop: # Which propagation model components should be applied
+    useKEPComponent: true # Keplerian propagation
+    useJ2Component: true # J2 spherical harmonic approximation
+    useC22Component: true # C22 spherical harmonic approximation
+    useS22Component: true # S22 spherical harmonic approximation
+    useSOLComponent: true # Solar gravitational pull
+    useLUNComponent: true # Lunar gravitational pull
+    useSRPComponent: true # Solar radiation pressure
+    useDRAGComponent: true # Atmospheric drag
+
+io:
+  output_file: output.csv # Output file name
+  posFileName: pos_test.csv # Name of the CSV file with satellite positions [km]
+  velFileName: v_test.csv # Name of the CSV file with satellite velocities [km/s]
+  vtkWriteFrequency: 10 # Frequency of writing to vtk file [iterations]
+
+autopas:
+  logLevel: off
+  cutoff: 0.02 # Cutoff for autopas force interaction
+  skin: 0.20 # twice the maximum distance a particle can travel between two list rebuilds
+  rebuildFrequency: 20
+  desiredCellsPerDimension: 32 # Desired number of cells per dimension
