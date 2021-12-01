@@ -5,12 +5,15 @@
  */
 
 #include <autopas/AutoPasDecl.h>
+#include <autopas/utils/ArrayMath.h>
+#include <autopas/utils/ArrayUtils.h>
 #include <autopas/utils/Timer.h>
 #include <breakupModel/output/VTKWriter.h>
 #include <satellitePropagator/io/FileOutput.h>
 #include <satellitePropagator/physics/AccelerationAccumulator.h>
 #include <satellitePropagator/physics/Integrator.h>
 
+#include <fstream>
 #include <iostream>
 
 #include "CollisionFunctor.h"
@@ -157,6 +160,11 @@ int main(int argc, char **argv) {
 
   // main-loop skeleton
   timers.simulation.start();
+
+  std::array<int, 10> conjunctionCounts{0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  std::ofstream outfile;
+  outfile.open("conjunctionCounts.csv");
+
   for (size_t i = 0; i < iterations; ++i) {
     // update positions
     timers.integrator.start();
@@ -179,6 +187,8 @@ int main(int argc, char **argv) {
     CollisionFunctor collisionFunctor(cutoff);
     autopas.iteratePairwise(&collisionFunctor);
     auto collisions = collisionFunctor.getCollisions();
+    auto conjunctions = collisionFunctor.getConjunctionCounts();
+    conjunctionCounts = autopas::utils::ArrayMath::add(conjunctionCounts, conjunctions);
 
     double vel_mag = 0;
     for (const auto &particle : autopas) {
@@ -187,7 +197,15 @@ int main(int argc, char **argv) {
       vel_mag = std::max(vel_mag, mag);
     }
 
-    logger.log(Logger::Level::info, "Iteration {} - Close encounters: {} MaxV = {}", i, collisions.size(), vel_mag);
+    logger.log(Logger::Level::info,
+               "It {} - Encounters:{} MaxV={:.4f} Total conjunctions:{}",
+               i,
+               collisions.size(),
+               vel_mag,
+               autopas::utils::ArrayUtils::to_string(conjunctionCounts));
+
+    outfile << autopas::utils::ArrayUtils::to_string(conjunctionCounts, ",", {"", ""}) << "\n";
+
     for (const auto &[p1, p2] : collisions) {
       logger.log(Logger::Level::debug, "{} | {}", p1->getID(), p2->getID());
     }
@@ -214,6 +232,8 @@ int main(int argc, char **argv) {
   }
   timers.simulation.stop();
   timers.total.stop();
+
+  logger.log(Logger::Level::info, "Total conjunctions: {}", autopas::utils::ArrayUtils::to_string(conjunctionCounts));
 
   // dump all timers
   const auto timeTotal = timers.total.getTotalTime();

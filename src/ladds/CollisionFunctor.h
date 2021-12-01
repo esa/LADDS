@@ -10,6 +10,8 @@
 #include <autopas/utils/SoA.h>
 #include <autopas/utils/SoAView.h>
 
+#include <array>
+
 #include "Particle.h"
 
 /**
@@ -66,6 +68,10 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
                         const std::vector<size_t, autopas::AlignedAllocator<size_t>> &neighborList,
                         bool newton3) final;
 
+  std::array<int, 10> getConjunctionCounts() const {
+    return _conjCounts;
+  }
+
  private:
   void SoAKernel(
       size_t i, size_t j, autopas::SoAView<SoAArraysType> &soa1, autopas::SoAView<SoAArraysType> &soa2, bool newton3);
@@ -73,6 +79,7 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
   // Buffer struct that is safe against false sharing
   struct ThreadData {
     std::unordered_map<Particle *, Particle *> collisions{};
+    std::array<int, 10> conjCounts{};
   } __attribute__((aligned(64)));
 
   // make sure that the size of ThreadData is correct
@@ -82,5 +89,6 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
   std::vector<ThreadData> _threadData{};
   // key = particle with the smaller id
   std::unordered_map<Particle *, Particle *> _collisions{};
+  std::array<int, 10> _conjCounts{};
   const double _cutoffSquare;
 };
