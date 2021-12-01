@@ -4,6 +4,4 @@
 
 #include <gtest/gtest.h>
 
-
 class SafeInsertionTest {};
-

@@ -14,14 +14,14 @@
 #include <iostream>
 
 #include "CollisionFunctor.h"
+#include "Constellation.h"
 #include "DatasetReader.h"
 #include "LoadConfig.h"
 #include "Logger.h"
 #include "Particle.h"
+#include "SafeInsertion.h"
 #include "SatelliteToParticleConverter.h"
 #include "spdlog/fmt/ostr.h"
-#include "Constellation.h"
-#include "SafeInsertion.h"
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
 extern template class autopas::AutoPas<Particle>;
@@ -156,35 +156,39 @@ int main(int argc, char **argv) {
 
   logger.log(Logger::Level::info, "Number of initial particles: {}", autopas.getNumberOfParticles());
 
-    //non initial constellations are added
-    std::vector<Constellation> constellations;
-    int interval = config["io"]["constellationFrequency"].IsDefined()?config["io"]["constellationFrequency"].as<int>():1;
-    if(config["io"]["constellationList"].IsDefined()) {
-        auto cons = config["io"]["constellationList"].as<std::string>();
-        int nConstellations = 1;
-        for (char con : cons) {
-            if (con == ';') {
-                nConstellations++;
-            }
-        }
-        for (int i = 0; i < nConstellations; i++) {
-            unsigned long offset = cons.find(';', 0);
-            if (offset == 0) {
-                constellations.emplace_back(Constellation(cons,interval));
-                break;
-            } else {
-                constellations.emplace_back(Constellation(cons.substr(0, offset),interval));
-                cons.erase(0, offset + 1);
-            }
-        }
-        int satellitesToInsert = 0;
-        for(int i = 0;i<nConstellations;i++){
-            satellitesToInsert += constellations.at(i).getConstellationSize();
-        }
-
-        logger.log(Logger::Level::info, "{} more particles will be added from {} constellations",satellitesToInsert, nConstellations);
+  // non initial constellations are added
+  std::vector<Constellation> constellations;
+  int interval =
+      config["io"]["constellationFrequency"].IsDefined() ? config["io"]["constellationFrequency"].as<int>() : 1;
+  if (config["io"]["constellationList"].IsDefined()) {
+    auto cons = config["io"]["constellationList"].as<std::string>();
+    int nConstellations = 1;
+    for (char con : cons) {
+      if (con == ';') {
+        nConstellations++;
+      }
     }
-    std::vector<Particle> delayedInsertion;
+    for (int i = 0; i < nConstellations; i++) {
+      unsigned long offset = cons.find(';', 0);
+      if (offset == 0) {
+        constellations.emplace_back(Constellation(cons, interval));
+        break;
+      } else {
+        constellations.emplace_back(Constellation(cons.substr(0, offset), interval));
+        cons.erase(0, offset + 1);
+      }
+    }
+    int satellitesToInsert = 0;
+    for (int i = 0; i < nConstellations; i++) {
+      satellitesToInsert += constellations.at(i).getConstellationSize();
+    }
+
+    logger.log(Logger::Level::info,
+               "{} more particles will be added from {} constellations",
+               satellitesToInsert,
+               nConstellations);
+  }
+  std::vector<Particle> delayedInsertion;
 
   timers.initialization.stop();
 
@@ -206,17 +210,17 @@ int main(int argc, char **argv) {
       logger.log(Logger::Level::err, "Particles are escaping! \n{}", escapedParticles);
     }
     timers.constellationInsertion.start();
-      //new satellites from constellations inserted over time
-      if (i % interval == 0) {
-          for (auto & constellation : constellations) {
-              // new satellites are gradually added to the simulation according to their starting time and operation duration
-              std::vector<Particle> newSatellites = constellation.tick();
+    // new satellites from constellations inserted over time
+    if (i % interval == 0) {
+      for (auto &constellation : constellations) {
+        // new satellites are gradually added to the simulation according to their starting time and operation duration
+        std::vector<Particle> newSatellites = constellation.tick();
 
-              // add waiting satellites to newSatellites
-              newSatellites.insert(newSatellites.end(),delayedInsertion.begin(),delayedInsertion.end());
-              delayedInsertion = SafeInsertion::insert(autopas,newSatellites,cutoff);
-          }
+        // add waiting satellites to newSatellites
+        newSatellites.insert(newSatellites.end(), delayedInsertion.begin(), delayedInsertion.end());
+        delayedInsertion = SafeInsertion::insert(autopas, newSatellites, cutoff);
       }
+    }
     timers.constellationInsertion.stop();
 
     // TODO Check for particles that burn up
@@ -265,7 +269,7 @@ int main(int argc, char **argv) {
   std::cout << timerToString(
       "    Integrator          ", timers.integrator.getTotalTime(), maximumNumberOfDigits, timeSim);
   std::cout << timerToString(
-            "    Insertion           ", timers.constellationInsertion.getTotalTime(), maximumNumberOfDigits, timeSim);
+      "    Insertion           ", timers.constellationInsertion.getTotalTime(), maximumNumberOfDigits, timeSim);
   std::cout << timerToString(
       "    Collision detection ", timers.collisionDetection.getTotalTime(), maximumNumberOfDigits, timeSim);
   std::cout << timerToString(
