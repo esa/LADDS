@@ -2,7 +2,6 @@
 // Created by albert on 12.11.21.
 //
 #pragma once
-#include <autopas/AutoPas.h>
 #include <iostream>
 #include <breakupModel/input/CSVReader.h>
 #include "Particle.h"
@@ -20,7 +19,7 @@ class Constellation {
     * @param interval : the interval of satellites being added to the simulation is
     * passed for internal logic
     */
-    Constellation(const std::string &constellation, int interval);
+    Constellation(const std::string &constellation_data_str, int interval);
     /**
      * determines which satellites are being added to the simulation by adding each shell
      * within a time span proportional to the shells size. shells are added plane by plane
@@ -74,14 +73,18 @@ class Constellation {
      */
     int simulationTime;
 
+    enum Status {
+        inactive, active, deployed
+    };
+
     /**
      * the internal state of the constellation object that determines the behaviour
      * of tick(). There are 3 different states:
-     * i = inactive: startTime has not been reached yet
-     * a = active: the constellation is currently being added to the simulation
-     * d = deployed: the constellation is fully deployed, and tick becomes a NOOP
+     * inactive: startTime has not been reached yet
+     * active: the constellation is currently being added to the simulation
+     * deployed: the constellation is fully deployed, and tick becomes a NOOP
      */
-    char status;    // a: active , i: inactive , d: deployed
+    Status status;    //active , inactive ,deployed
 
     /**
      * size of the constellation for internal use

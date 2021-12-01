@@ -6,31 +6,36 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
-Constellation::Constellation(const std::string &constellation, int interval) {
+Constellation::Constellation(const std::string &constellation_data_str, int interval) {
   //split the 3 comma seperated arguments
-  auto seperator1 = constellation.find(',',0);
-  auto seperator2 = constellation.find(',',seperator1+1);
-  std::string arg1 = constellation.substr(0,seperator1);                                           //  arg1     s1  arg2  s2   arg3    // n: 4
-  std::string arg2 = constellation.substr(seperator1+1,seperator2-seperator1-1);                //a  b  c  d  ,  e  f  ,  g  h  i   // n: 7-4-1=2
-  std::string arg3 = constellation.substr(seperator2+1,constellation.size()-seperator2-1);      //0  1  2  3  4  5  6  7  8  9  10  // n: 11-7-1=3
+  auto seperator1 = constellation_data_str.find(',', 0);
+  auto seperator2 = constellation_data_str.find(',', seperator1 + 1);
+
+  // argDirPath s1 argStartTime s2  argDuration    // n: 4
+  //a   b   c   d   ,   e   f   ,   g   h   i   // n: 7-4-1=2
+  //0   1   2   3   4   5   6   7   8   9   10  // n: 11-7-1=3
+  std::string argConstellationName = constellation_data_str.substr(0, seperator1);
+  std::string argStartTime = constellation_data_str.substr(seperator1 + 1, seperator2 - seperator1 - 1);
+  std::string argDuration = constellation_data_str.substr(seperator2 + 1, constellation_data_str.size() - seperator2 - 1);
 
   //set variables using 3 args
-  std::vector<Particle> sats = readDatasetConstellation(std::string(DATADIR) + arg1 + "/pos.csv",std::string(DATADIR) + arg1 + "/v.csv");
+  std::vector<Particle> sats = readDatasetConstellation(std::string(DATADIR) + argConstellationName + "/pos_"+ argConstellationName + ".csv",
+                                                        std::string(DATADIR) + argConstellationName + "/v_"+ argConstellationName + ".csv");
   //convert vector to deque (should be changed some time)
   constellationSize = static_cast<int>(sats.size());
   for(int i = 0;i<constellationSize;i++) {
     satellites.push_back(sats.at(i));
   }
 
-  startTime = std::stoi(arg2);
-  duration = std::stoi(arg3);
+  startTime = std::stoi(argStartTime);
+  duration = std::stoi(argDuration);
   timeActive = 0;
   this->interval = interval;
   simulationTime = 0;
 
-  status = 'i';
+  status = Status::inactive;
 
-  std::ifstream shellParameters(std::string(DATADIR) + arg1 + "/shells.txt");
+  std::ifstream shellParameters(std::string(DATADIR) + argConstellationName + "/shells_" + argConstellationName + ".txt");
   std::string tmp_string;
   std::getline(shellParameters,tmp_string);
   double altitude,inclination,nPlanes,satsPerPlane;
@@ -65,17 +70,17 @@ Constellation::Constellation(const std::string &constellation, int interval) {
 std::vector<Particle> Constellation::tick() {
   std::vector<Particle> particles{};
   switch(status) {
-    case 'd':
+    case Status::deployed:
       // do nothing
       break;
-    case 'i':
+    case Status::inactive:
       // check time and activate if startTime is reached
       if (simulationTime >= startTime) {
-        status = 'a';
+        status = Status::active;
       } else {
         break;
       }
-    case 'a':
+    case Status::active:
 
       while (timeActive >= timestamps.at(currentShellIndex) + planesDeployed * timeSteps.at(currentShellIndex)) {
 
@@ -91,7 +96,7 @@ std::vector<Particle> Constellation::tick() {
           currentShellIndex++;
           //end the operation, if every shell has been deployed = set constellation to 'd' = deployed
           if(currentShellIndex >= shells.size()){
-            status = 'd';
+            status = Status::deployed;
             break;
           }
 
