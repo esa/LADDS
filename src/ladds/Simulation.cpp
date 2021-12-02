@@ -17,7 +17,7 @@ extern template class autopas::AutoPas<Particle>;
 extern template bool autopas::AutoPas<Particle>::iteratePairwise(CollisionFunctor *);
 
 /**
- * Anonymous namespace to hide this content to the outside.
+ * Anonymous namespace to hide this content from the outside.
  */
 namespace {
 /**
