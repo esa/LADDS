@@ -47,13 +47,3 @@ include(ladds_compilerWarnings)
 # fetch the default configuration file from the cfg folder
 file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/cfg)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cfg/default_cfg.yaml ${CMAKE_CURRENT_BINARY_DIR}/cfg/default_cfg.yaml COPYONLY)
-
-add_test(
-        NAME validationtest.testValidation.yaml
-        COMMAND
-        ${PROJECT_SOURCE_DIR}/tests/validationtest.py
-        src/ladds/ladds
-        ${PROJECT_SOURCE_DIR}/cfg/testValidation.yaml
-        ${PROJECT_SOURCE_DIR}/tests/data/reference_10.vtu
-        CONFIGURATIONS validation
-)
