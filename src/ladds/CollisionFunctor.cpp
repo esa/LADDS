@@ -30,17 +30,6 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   auto dr = autopas::utils::ArrayMath::sub(i.getR(), j.getR());
   auto distanceSquare = autopas::utils::ArrayMath::dot(dr, dr);
 
-  if (distanceSquare < 0.001 * 0.001) _threadData[autopas::autopas_get_thread_num()].conjCounts[0]++;
-  if (distanceSquare < 0.005 * 0.005) _threadData[autopas::autopas_get_thread_num()].conjCounts[1]++;
-  if (distanceSquare < 0.01 * 0.01) _threadData[autopas::autopas_get_thread_num()].conjCounts[2]++;
-  if (distanceSquare < 0.02 * 0.02) _threadData[autopas::autopas_get_thread_num()].conjCounts[3]++;
-  if (distanceSquare < 0.025 * 0.025) _threadData[autopas::autopas_get_thread_num()].conjCounts[4]++;
-  if (distanceSquare < 0.05 * 0.05) _threadData[autopas::autopas_get_thread_num()].conjCounts[5]++;
-  if (distanceSquare < 0.075 * 0.075) _threadData[autopas::autopas_get_thread_num()].conjCounts[6]++;
-  if (distanceSquare < 0.1 * 0.1) _threadData[autopas::autopas_get_thread_num()].conjCounts[7]++;
-  if (distanceSquare < 0.25 * 0.25) _threadData[autopas::autopas_get_thread_num()].conjCounts[8]++;
-  if (distanceSquare < 0.5 * 0.5) _threadData[autopas::autopas_get_thread_num()].conjCounts[9]++;
-
   // if distance is wider than cutoff everything is fine and we can return
   if (distanceSquare > _cutoffSquare) {
     return;
@@ -75,12 +64,12 @@ void CollisionFunctor::SoAFunctorPair(autopas::SoAView<SoAArraysType> soa1,
       continue;
     }
 
-    // inner loop over SoA2
-    // custom reduction for unordered maps
-    // #pragma omp declare reduction(mapMerge : std::unordered_map<Particle *, Particle *> :
-    // omp_out.insert(omp_in.begin(), omp_in.end())) alias because OpenMP needs it
+// inner loop over SoA2
+// custom reduction for unordered maps
+#pragma omp declare reduction(mapMerge : std::unordered_map <Particle *, Particle *> : omp_out.insert(omp_in.begin(), omp_in.end()))
+    // alias because OpenMP needs it
     auto &thisCollisions = _threadData[autopas::autopas_get_thread_num()].collisions;
-    // #pragma omp simd reduction(mapMerge : thisCollisions)
+#pragma omp simd reduction(mapMerge : thisCollisions)
     for (size_t j = 0; j < soa2.getNumParticles(); ++j) {
       SoAKernel(i, j, soa1, soa2, newton3);
     }
@@ -153,10 +142,5 @@ void CollisionFunctor::initTraversal() {
 void CollisionFunctor::endTraversal(bool newton3) {
   for (auto &data : _threadData) {
     _collisions.insert(data.collisions.begin(), data.collisions.end());
-    for (size_t i = 0; i < data.conjCounts.size(); ++i) {
-      _conjCounts[i] = data.conjCounts[i];
-    }
-    data.collisions.clear();
-    data.conjCounts = {};
   }
 }
