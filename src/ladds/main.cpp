@@ -10,6 +10,12 @@
 #include "ladds/io/LoadConfig.h"
 #include "ladds/io/Logger.h"
 
+/**
+ * The entrypoint of the program.
+ * @param argc
+ * @param argv
+ * @return
+ */
 int main(int argc, char **argv) {
   Logger logger;
 
