@@ -19,7 +19,7 @@ namespace SafeInsertion {
  * @param cutoff
  * @return std::vector<Particle> delayedInsertion
  */
-std::vector<Particle> insert(autopas::AutoPas<Particle> &autopas, std::vector<Particle> &newSatellites, double cutoff) {
+std::vector<Particle> insert(autopas::AutoPas<Particle> &autopas, const std::vector<Particle> &newSatellites, double cutoff) {
   std::vector<Particle> delayedInsertion = {};
 
   for (auto &nSat : newSatellites) {
