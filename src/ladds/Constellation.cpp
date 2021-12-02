@@ -44,7 +44,7 @@ Constellation::Constellation(const std::string &constellation_data_str, int inte
     numStream >> inclination;
     numStream >> nPlanes;
     numStream >> satsPerPlane;
-    std::array<double,4> shell = {altitude,inclination,nPlanes,satsPerPlane};
+    std::array<double, 4> shell = {altitude, inclination, nPlanes, satsPerPlane};
     shells.emplace_back(shell);
     std::getline(shellParameters, tmp_string);
   }
@@ -53,7 +53,7 @@ Constellation::Constellation(const std::string &constellation_data_str, int inte
   // determine times when each shell has its deployment started
   double timestamp = 0;
   timestamps.push_back(0);
-  for (auto [alt,i,planes,nSats] : shells) {
+  for (auto [alt, i, planes, nSats] : shells) {
     timestamp += (planes * nSats / static_cast<double>(constellationSize)) * duration;
     timestamps.push_back(timestamp);
   }
