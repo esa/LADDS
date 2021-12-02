@@ -26,3 +26,4 @@ autopas:
   skin: 0.20 # twice the maximum distance a particle can travel between two list rebuilds
   rebuildFrequency: 20
   desiredCellsPerDimension: 32 # Desired number of cells per dimension
+  tuningMode: false

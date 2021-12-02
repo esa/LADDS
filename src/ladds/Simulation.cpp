@@ -33,10 +33,20 @@ std::unique_ptr<Simulation::AutoPas_t> Simulation::initAutoPas(const YAML::Node 
   // Scale Cell size so that we get the desired number of cells
   // -2 because internally there will be two halo cells added on top of maxAltitude
   autopas->setCellSizeFactor((maxAltitude * 2.) / ((cutoff + verletSkin) * (desiredCellsPerDimension - 2)));
-  autopas->setAllowedNewton3Options({autopas::Newton3Option::disabled});
-  autopas->setAllowedDataLayouts({autopas::DataLayoutOption::aos});
-  autopas->setAllowedContainers({autopas::ContainerOption::varVerletListsAsBuild});
-  autopas->setAllowedTraversals({autopas::TraversalOption::vvl_as_built});
+
+  // only restrict AutoPas options if we are not in tuning mode
+  const auto tuningModeNode = config["autopas"]["tuningMode"];
+  const auto tuningMode = tuningModeNode.IsDefined() and tuningModeNode.as<bool>();
+  if (not tuningMode) {
+    autopas->setAllowedNewton3Options({autopas::Newton3Option::enabled});
+    autopas->setAllowedDataLayouts({autopas::DataLayoutOption::aos});
+    autopas->setAllowedContainers({autopas::ContainerOption::varVerletListsAsBuild});
+    autopas->setAllowedTraversals({autopas::TraversalOption::vvl_as_built});
+  }
+  // arbitrary number. Can be changed to whatever makes sense.
+  autopas->setTuningInterval(10000);
+  autopas->setSelectorStrategy(autopas::SelectorStrategyOption::fastestMean);
+  autopas->setNumSamples(verletRebuildFrequency);
   autopas::Logger::get()->set_level(spdlog::level::from_str(config["autopas"]["logLevel"].as<std::string>()));
   autopas->init();
 
