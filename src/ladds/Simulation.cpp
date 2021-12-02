@@ -66,8 +66,9 @@ auto Simulation::initIntegrator(AutoPas_t &autopas, const YAML::Node &config) {
 
 void Simulation::loadSatellites(AutoPas_t &autopas, const YAML::Node &config) {
   // Read in scenario
-  auto actualSatellites = DatasetReader::readDataset(config["io"]["posFileName"].as<std::string>(),
-                                                     config["io"]["velFileName"].as<std::string>());
+  auto actualSatellites =
+      DatasetReader::readDataset(std::string(DATADIR) + config["io"]["posFileName"].as<std::string>(),
+                                 std::string(DATADIR) + config["io"]["velFileName"].as<std::string>());
   SPDLOG_LOGGER_DEBUG(logger.get(), "Parsed {} satellites", actualSatellites.size());
 
   const auto maxAltitude = config["sim"]["maxAltitude"].as<double>();

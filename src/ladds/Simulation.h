@@ -60,6 +60,9 @@ class Simulation {
 
   /**
    * Load the particles from the input csv files in the config as particles into AutoPas.
+   *
+   * @note Paths for csv files are relative to ladds/data!
+   *
    * @param autopas
    * @param config
    */
