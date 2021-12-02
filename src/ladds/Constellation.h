@@ -11,6 +11,13 @@
 
 #include "Particle.h"
 
+/**
+ * The Constellation class contains a collection of Particles that inserts these particles to
+ * the simulation over time based on parameters a Constellation object is constructed with.
+ * The object is constructed from a data string that consists of the comma seperated
+ * arguments: directory path (directory with constellation information files), start time
+ * (time when constellation is inserted), duration (time span of insertion)
+ */
 class Constellation {
  public:
   /**
@@ -76,11 +83,17 @@ class Constellation {
    */
   int simulationTime;
 
+  /**
+   * The three different possible internal states of a constellation object:
+   * inactive: startTime has not been reached yet
+   * active: the constellation is currently being added to the simulation
+   * deployed: the constellation is fully deployed, and tick becomes a NOOP
+   */
   enum Status { inactive, active, deployed };
 
   /**
-   * the internal state of the constellation object that determines the behaviour
-   * of tick(). There are 3 different states:
+   * variable that holds the internal state of the constellation object that determines
+   * the behaviour of tick(). There are 3 different states:
    * inactive: startTime has not been reached yet
    * active: the constellation is currently being added to the simulation
    * deployed: the constellation is fully deployed, and tick becomes a NOOP
