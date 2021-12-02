@@ -19,11 +19,12 @@ target_link_libraries(${EXECUTABLE_NAME}
         breakupModel_lib
         )
 
+# note: in spdlog trace is the highest level
 set(
         LADDS_MAX_LOGLVL
         "DEBUG"
         CACHE
-        STRING "Choose the maximum compiled log level."
+        STRING "Choose the most verbose log level that shall be compiled."
 )
 # let ccmake and cmake-gui offer the default build type options
 set_property(CACHE LADDS_MAX_LOGLVL PROPERTY STRINGS "TRACE;DEBUG;INFO;WARN;ERR;CRITICAL;OFF")
@@ -32,4 +33,4 @@ target_compile_definitions(${EXECUTABLE_NAME}
         PUBLIC
         SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_${LADDS_MAX_LOGLVL}
         DATADIR=\"${PROJECT_SOURCE_DIR}/data/\"
-        )
+)
