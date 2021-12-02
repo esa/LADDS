@@ -16,6 +16,29 @@
 extern template class autopas::AutoPas<Particle>;
 extern template bool autopas::AutoPas<Particle>::iteratePairwise(CollisionFunctor *);
 
+/**
+ * Anonymous namespace to hide this content to the outside.
+ */
+namespace {
+/**
+ * Local helper function for parsing AutoPas Set options or setting default values.
+ * @tparam Option
+ * @tparam F
+ * @param node
+ * @param setterFun
+ * @param defaultVal
+ */
+template <class Option, class F>
+void setAutoPasOption(const YAML::Node &node, F setterFun, const std::set<Option> &defaultVal) {
+  if (node.IsDefined()) {
+    const auto options = Option::parseOptions(node.as<std::string>());
+    setterFun(options);
+  } else {
+    setterFun(defaultVal);
+  }
+}
+}  // namespace
+
 std::unique_ptr<Simulation::AutoPas_t> Simulation::initAutoPas(const YAML::Node &config) {
   auto autopas = std::make_unique<AutoPas_t>();
 
@@ -38,10 +61,18 @@ std::unique_ptr<Simulation::AutoPas_t> Simulation::initAutoPas(const YAML::Node 
   const auto tuningModeNode = config["autopas"]["tuningMode"];
   const auto tuningMode = tuningModeNode.IsDefined() and tuningModeNode.as<bool>();
   if (not tuningMode) {
-    autopas->setAllowedNewton3Options({autopas::Newton3Option::enabled});
-    autopas->setAllowedDataLayouts({autopas::DataLayoutOption::aos});
-    autopas->setAllowedContainers({autopas::ContainerOption::varVerletListsAsBuild});
-    autopas->setAllowedTraversals({autopas::TraversalOption::vvl_as_built});
+    setAutoPasOption<autopas::Newton3Option>(config["autopas"]["Newton3"],
+                                             [&](const auto &op) { autopas->setAllowedNewton3Options(op); },
+                                             {autopas::Newton3Option::enabled});
+    setAutoPasOption<autopas::DataLayoutOption>(config["autopas"]["DataLayout"],
+                                                [&](const auto &op) { autopas->setAllowedDataLayouts(op); },
+                                                {autopas::DataLayoutOption::aos});
+    setAutoPasOption<autopas::ContainerOption>(config["autopas"]["Container"],
+                                               [&](const auto &op) { autopas->setAllowedContainers(op); },
+                                               {autopas::ContainerOption::varVerletListsAsBuild});
+    setAutoPasOption<autopas::TraversalOption>(config["autopas"]["Traversal"],
+                                               [&](const auto &op) { autopas->setAllowedTraversals(op); },
+                                               {autopas::TraversalOption::vvl_as_built});
   }
   // arbitrary number. Can be changed to whatever makes sense.
   autopas->setTuningInterval(10000);
