@@ -62,9 +62,6 @@ Constellation::Constellation(const std::string &constellation_data_str, int inte
   for (int i = 0; i < timestamps.size() - 1; i++) {
     timeSteps.push_back((timestamps[i + 1] - timestamps[i]) / shells[i][2]);  // = duration_i / nPlanes_i
   }
-
-  currentShellIndex;
-  planesDeployed;
 }
 
 std::vector<Particle> Constellation::tick() {
