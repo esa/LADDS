@@ -24,7 +24,9 @@ jobs:
       run: |
         apt-get update
         apt-get install -y \
-            libtbb-dev
+            libtbb-dev \
+            python3-numpy \
+            python3-vtk7
     - name: Build project
       run: |
         mkdir build

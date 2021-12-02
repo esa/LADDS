@@ -25,7 +25,9 @@ jobs:
             libomp-dev \
             libtbb-dev \
             doxygen \
-            graphviz
+            graphviz \
+            python3-numpy \
+            python3-vtk7
     - name: Build project
       run: |
         mkdir build
