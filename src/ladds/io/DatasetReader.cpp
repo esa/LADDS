@@ -1,8 +1,8 @@
 /**
-* @file DatasetReader.cpp
-* @author F. Gratl
-* @date 01.12.21
-*/
+ * @file DatasetReader.cpp
+ * @author F. Gratl
+ * @date 01.12.21
+ */
 
 #include "DatasetReader.h"
 
