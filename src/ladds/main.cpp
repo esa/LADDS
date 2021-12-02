@@ -180,7 +180,7 @@ int main(int argc, char **argv) {
     }
     size_t satellitesToInsert = 0;
     for (int i = 0; i < nConstellations; i++) {
-      satellitesToInsert += constellations.at(i).getConstellationSize();
+      satellitesToInsert += constellations[i].getConstellationSize();
     }
 
     logger.log(Logger::Level::info,

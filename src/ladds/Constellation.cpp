@@ -27,7 +27,7 @@ Constellation::Constellation(const std::string &constellation_data_str, int inte
   // convert vector to deque
   constellationSize = sats.size();
   for (int i = 0; i < constellationSize; i++) {
-    satellites.push_back(sats.at(i));
+    satellites.push_back(sats[i]);
   }
 
   startTime = std::stoi(argStartTime);
@@ -60,11 +60,11 @@ Constellation::Constellation(const std::string &constellation_data_str, int inte
 
   // for each shell determine the interval a new plane is added, each shell has its own timestep
   for (int i = 0; i < timestamps.size() - 1; i++) {
-    timeSteps.push_back((timestamps.at(i + 1) - timestamps.at(i)) / shells.at(i)[2]);  // = duration_i / nPlanes_i
+    timeSteps.push_back((timestamps[i + 1] - timestamps[i]) / shells[i][2]);  // = duration_i / nPlanes_i
   }
 
-  currentShellIndex = 0;
-  planesDeployed = 0;
+  currentShellIndex;
+  planesDeployed;
 }
 
 std::vector<Particle> Constellation::tick() {
@@ -82,17 +82,17 @@ std::vector<Particle> Constellation::tick() {
       }
     case Status::active:
 
-      while (timeActive >= timestamps.at(currentShellIndex) + planesDeployed * timeSteps.at(currentShellIndex)) {
-        int planeSize = static_cast<int>(shells.at(currentShellIndex)[3]);
+      while (timeActive >= timestamps[currentShellIndex] + planesDeployed * timeSteps[currentShellIndex]) {
+        int planeSize = static_cast<int>(shells[currentShellIndex][3]);
         particles.reserve(planeSize);
         for (int i = 0; i < planeSize; i++) {
-          particles.push_back(satellites.at(0));
+          particles.push_back(satellites[0]);
           satellites.pop_front();
         }
         planesDeployed++;
 
         // if all planes of the shell are done increment currentShell and set planesDeployed to 0
-        if (planesDeployed >= shells.at(currentShellIndex)[2]) {
+        if (planesDeployed >= shells[currentShellIndex][2]) {
           currentShellIndex++;
           // end the operation, if every shell has been deployed = set constellation to 'd' = deployed
           if (currentShellIndex >= shells.size()) {

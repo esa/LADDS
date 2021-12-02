@@ -124,10 +124,10 @@ class Constellation {
   /**
    * keeps track of which shell will be added next
    */
-  int currentShellIndex;
+  int currentShellIndex = 0;
 
   /**
    * keeps track of which plane will be added next
    */
-  int planesDeployed;
+  int planesDeployed = 0;
 };
