@@ -40,3 +40,4 @@
 # Data folder
 data
 *.ipynb_checkpoints
+results
