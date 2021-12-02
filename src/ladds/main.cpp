@@ -178,7 +178,7 @@ int main(int argc, char **argv) {
         cons.erase(0, offset + 1);
       }
     }
-    int satellitesToInsert = 0;
+    size_t satellitesToInsert = 0;
     for (int i = 0; i < nConstellations; i++) {
       satellitesToInsert += constellations.at(i).getConstellationSize();
     }

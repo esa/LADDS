@@ -7,7 +7,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
-Constellation::Constellation(const std::string &constellation_data_str, int interval) {
+Constellation::Constellation(const std::string &constellation_data_str, int interval) : interval(interval) {
   // split the 3 comma seperated arguments
   auto seperator1 = constellation_data_str.find(',', 0);
   auto seperator2 = constellation_data_str.find(',', seperator1 + 1);
@@ -24,19 +24,14 @@ Constellation::Constellation(const std::string &constellation_data_str, int inte
   std::vector<Particle> sats =
       readDatasetConstellation(std::string(DATADIR) + argConstellationName + "/pos_" + argConstellationName + ".csv",
                                std::string(DATADIR) + argConstellationName + "/v_" + argConstellationName + ".csv");
-  // convert vector to deque (should be changed some time)
-  constellationSize = static_cast<int>(sats.size());
+  // convert vector to deque
+  constellationSize = sats.size();
   for (int i = 0; i < constellationSize; i++) {
     satellites.push_back(sats.at(i));
   }
 
   startTime = std::stoi(argStartTime);
   duration = std::stoi(argDuration);
-  timeActive = 0;
-  this->interval = interval;
-  simulationTime = 0;
-
-  status = Status::inactive;
 
   std::ifstream shellParameters(std::string(DATADIR) + argConstellationName + "/shells_" + argConstellationName +
                                 ".txt");
@@ -49,7 +44,8 @@ Constellation::Constellation(const std::string &constellation_data_str, int inte
     numStream >> inclination;
     numStream >> nPlanes;
     numStream >> satsPerPlane;
-    shells.push_back({altitude, inclination, nPlanes, satsPerPlane});
+    std::array<double,4> shell = {altitude,inclination,nPlanes,satsPerPlane};
+    shells.emplace_back(shell);
     std::getline(shellParameters, tmp_string);
   }
   shellParameters.close();
@@ -57,8 +53,8 @@ Constellation::Constellation(const std::string &constellation_data_str, int inte
   // determine times when each shell has its deployment started
   double timestamp = 0;
   timestamps.push_back(0);
-  for (auto shell : shells) {
-    timestamp += (shell[2] * shell[3] / constellationSize) * duration;
+  for (auto [alt,i,planes,nSats] : shells) {
+    timestamp += (planes * nSats / static_cast<double>(constellationSize)) * duration;
     timestamps.push_back(timestamp);
   }
 
@@ -88,6 +84,7 @@ std::vector<Particle> Constellation::tick() {
 
       while (timeActive >= timestamps.at(currentShellIndex) + planesDeployed * timeSteps.at(currentShellIndex)) {
         int planeSize = static_cast<int>(shells.at(currentShellIndex)[3]);
+        particles.reserve(planeSize);
         for (int i = 0; i < planeSize; i++) {
           particles.push_back(satellites.at(0));
           satellites.pop_front();
@@ -113,7 +110,7 @@ std::vector<Particle> Constellation::tick() {
   return particles;
 }
 
-int Constellation::getConstellationSize() const {
+size_t Constellation::getConstellationSize() const {
   return constellationSize;
 }
 

@@ -41,7 +41,7 @@ class Constellation {
    * getter for constellationSize = number of satellites in constellation
    * @return int : constellationSize
    */
-  [[nodiscard]] int getConstellationSize() const;
+  [[nodiscard]] size_t getConstellationSize() const;
 
  private:
   /**
@@ -69,7 +69,7 @@ class Constellation {
    * internal clock that determines which satellites are added to the simulation,
    * starts the count when constellation is set to 'a' = active
    */
-  int timeActive;
+  int timeActive = 0;
 
   /**
    * the interval of satellites being added to the simulation is
@@ -81,7 +81,7 @@ class Constellation {
    * multiples of interval. the constellations state is set to 'a' = active whenever
    * simulationTime reaches startTime
    */
-  int simulationTime;
+  int simulationTime = 0;
 
   /**
    * The three different possible internal states of a constellation object:
@@ -98,12 +98,12 @@ class Constellation {
    * active: the constellation is currently being added to the simulation
    * deployed: the constellation is fully deployed, and tick becomes a NOOP
    */
-  Status status;  // active , inactive ,deployed
+  Status status = Status::inactive;  // active , inactive ,deployed
 
   /**
    * size of the constellation for internal use
    */
-  int constellationSize;
+  size_t constellationSize;
 
   /**
    * contains information of a shell: altitude, inclination, #planes, #satellitesPerPlane
