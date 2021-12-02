@@ -190,18 +190,10 @@ int main(int argc, char **argv) {
     auto conjunctions = collisionFunctor.getConjunctionCounts();
     conjunctionCounts = autopas::utils::ArrayMath::add(conjunctionCounts, conjunctions);
 
-    double vel_mag = 0;
-    for (const auto &particle : autopas) {
-      auto v = particle.getVelocity();
-      double mag = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-      vel_mag = std::max(vel_mag, mag);
-    }
-
     logger.log(Logger::Level::info,
-               "It {} - Encounters:{} MaxV={:.4f} Total conjunctions:{}",
+               "It {} - Encounters:{} Total conjunctions:{}",
                i,
                collisions.size(),
-               vel_mag,
                autopas::utils::ArrayUtils::to_string(conjunctionCounts));
 
     outfile << autopas::utils::ArrayUtils::to_string(conjunctionCounts, ",", {"", ""}) << "\n";
