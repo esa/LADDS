@@ -14,19 +14,19 @@ std::vector<Particle> SafeInsertion::insert(autopas::AutoPas<Particle> &autopas,
   const double collisionRadius = 2 * cutoff;
   const double collisionRadiusSquared = collisionRadius * collisionRadius;
   const std::array<double, 3> boxSpan = {collisionRadius, collisionRadius, collisionRadius};
-  for (const auto &nSat : newSatellites) {
+  for (const auto &satellite : newSatellites) {
     // only insert satellites, if they have a reasonable distance to other satellites
     bool collisionFree = true;
-    const std::array<double, 3> lowCorner = autopas::utils::ArrayMath::sub(nSat.getPosition(), boxSpan);
-    const std::array<double, 3> highCorner = autopas::utils::ArrayMath::add(nSat.getPosition(), boxSpan);
+    const auto lowCorner = autopas::utils::ArrayMath::sub(satellite.getPosition(), boxSpan);
+    const auto highCorner = autopas::utils::ArrayMath::add(satellite.getPosition(), boxSpan);
     for (auto iter = autopas.getRegionIterator(lowCorner, highCorner); iter.isValid() and collisionFree; ++iter) {
-      std::array<double, 3> diff = autopas::utils::ArrayMath::sub(nSat.getPosition(), iter->getPosition());
+      const auto diff = autopas::utils::ArrayMath::sub(satellite.getPosition(), iter->getPosition());
       collisionFree = autopas::utils::ArrayMath::dot(diff, diff) > collisionRadiusSquared;
     }
     if (collisionFree) {
-      autopas.addParticle(nSat);
+      autopas.addParticle(satellite);
     } else {
-      delayedInsertion.push_back(nSat);
+      delayedInsertion.push_back(satellite);
     }
   }
   return delayedInsertion;

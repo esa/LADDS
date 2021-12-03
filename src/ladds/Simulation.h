@@ -16,8 +16,8 @@
 #include <memory>
 
 #include "CollisionFunctor.h"
-#include "ladds/particle/Particle.h"
 #include "Constellation.h"
+#include "ladds/particle/Particle.h"
 
 extern template class autopas::AutoPas<Particle>;
 extern template bool autopas::AutoPas<Particle>::iteratePairwise(CollisionFunctor *);
