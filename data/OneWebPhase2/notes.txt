@@ -1,0 +1,4 @@
+Shell 1 überlappt mit Shell 1 aus Phase 1 daher startingW 360.0*1.0/72.0 = 5.0
+
+Shell 2 überlappt mit Shell 2 aus Phase 2  daher startingW 360.0*1.0/64.0 = 5.625
+Shell 3 startingM = 0
