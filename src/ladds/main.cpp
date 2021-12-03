@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
   // Scale Cell size so that we get the desired number of cells
   // -2 because internally there will be two halo cells added on top of maxAltitude
   autopas.setCellSizeFactor((maxAltitude * 2.) / ((cutoff + verletSkin) * (desiredCellsPerDimension - 2)));
-  autopas.setAllowedNewton3Options({autopas::Newton3Option::disabled});
+  autopas.setAllowedNewton3Options({autopas::Newton3Option::enabled});
   autopas.setAllowedDataLayouts({autopas::DataLayoutOption::aos});
   autopas.setAllowedContainers({autopas::ContainerOption::varVerletListsAsBuild});
   autopas.setAllowedTraversals({autopas::TraversalOption::vvl_as_built});
@@ -161,9 +161,11 @@ int main(int argc, char **argv) {
   // main-loop skeleton
   timers.simulation.start();
 
-  std::array<int, 10> conjunctionCounts{0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   std::ofstream outfile;
+  int total_conjunctions = 0;
   outfile.open("conjunctionCounts.csv");
+  outfile << "Iteration,P1,P2,SquaredDistance"
+          << "\n";
 
   for (size_t i = 0; i < iterations; ++i) {
     // update positions
@@ -187,19 +189,17 @@ int main(int argc, char **argv) {
     CollisionFunctor collisionFunctor(cutoff);
     autopas.iteratePairwise(&collisionFunctor);
     auto collisions = collisionFunctor.getCollisions();
-    auto conjunctions = collisionFunctor.getConjunctionCounts();
-    conjunctionCounts = autopas::utils::ArrayMath::add(conjunctionCounts, conjunctions);
-
-    logger.log(Logger::Level::info,
-               "It {} - Encounters:{} Total conjunctions:{}",
-               i,
-               collisions.size(),
-               autopas::utils::ArrayUtils::to_string(conjunctionCounts));
-
-    outfile << autopas::utils::ArrayUtils::to_string(conjunctionCounts, ",", {"", ""}) << "\n";
-
     for (const auto &[p1, p2] : collisions) {
-      logger.log(Logger::Level::debug, "{} | {}", p1->getID(), p2->getID());
+      total_conjunctions++;
+      auto dr = autopas::utils::ArrayMath::sub(p1->getR(), p2->getR());
+      auto distanceSquare = autopas::utils::ArrayMath::dot(dr, dr);
+      outfile << i << "," << p1->getID() << "," << p2->getID() << "," << distanceSquare << "\n";
+      logger.log(Logger::Level::debug, "{} | {} | {}", p1->getID(), p2->getID());
+    }
+
+    if (i % 50 == 0) {
+      logger.log(
+          Logger::Level::info, "It {} - Encounters:{} Total conjunctions:{}", i, collisions.size(), total_conjunctions);
     }
     timers.collisionDetection.stop();
 
@@ -222,10 +222,13 @@ int main(int argc, char **argv) {
     }
     timers.output.stop();
   }
+
+  outfile.close();
+
   timers.simulation.stop();
   timers.total.stop();
 
-  logger.log(Logger::Level::info, "Total conjunctions: {}", autopas::utils::ArrayUtils::to_string(conjunctionCounts));
+  logger.log(Logger::Level::info, "Total conjunctions: {}", total_conjunctions);
 
   // dump all timers
   const auto timeTotal = timers.total.getTotalTime();
