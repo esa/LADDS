@@ -17,6 +17,7 @@
 
 #include "CollisionFunctor.h"
 #include "ladds/particle/Particle.h"
+#include "Constellation.h"
 
 extern template class autopas::AutoPas<Particle>;
 extern template bool autopas::AutoPas<Particle>::iteratePairwise(CollisionFunctor *);
@@ -69,12 +70,22 @@ class Simulation {
   void loadSatellites(AutoPas_t &autopas, const YAML::Node &config);
 
   /**
+   * Parse constellation information and prepare satellites for insertion.
+   * @param config
+   * @return Vector of Constellations
+   */
+  std::vector<Constellation> loadConstellations(const YAML::Node &config);
+
+  /**
    * The main loop.
    * @param autopas
    * @param integrator
    * @param config
    */
-  void simulationLoop(AutoPas_t &autopas, Integrator<AutoPas_t> &integrator, const YAML::Node &config);
+  void simulationLoop(AutoPas_t &autopas,
+                      Integrator<AutoPas_t> &integrator,
+                      std::vector<Constellation> &constellations,
+                      const YAML::Node &config);
 
   /**
    * Print timer information to stdout.
@@ -110,6 +121,7 @@ class Simulation {
     autopas::utils::Timer initialization{};
     autopas::utils::Timer simulation{};
     autopas::utils::Timer integrator{};
+    autopas::utils::Timer constellationInsertion{};
     autopas::utils::Timer collisionDetection{};
     autopas::utils::Timer containerUpdate{};
     autopas::utils::Timer output{};

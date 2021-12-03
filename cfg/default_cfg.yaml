@@ -1,28 +1,30 @@
 sim:
   logLevel: info    # Available levels are off, critical, err, warn, info, debug, trace
-  iterations: 3 # Number of simulation iterations
-  maxAltitude: 85000 # Maximum satellite altitude [km]
-  deltaT: 0.1 # [s]
+  iterations: 32000 # Number of simulation iterations
+  maxAltitude: 10000 # Maximum satellite altitude [km]
+  deltaT: 10.0 # [s]
 
   prop: # Which propagation model components should be applied
     useKEPComponent: true # Keplerian propagation
-    useJ2Component: false # J2 spherical harmonic approximation
-    useC22Component: false # C22 spherical harmonic approximation
-    useS22Component: false # S22 spherical harmonic approximation
-    useSOLComponent: false # Solar gravitational pull
-    useLUNComponent: false # Lunar gravitational pull
-    useSRPComponent: false # Solar radiation pressure
-    useDRAGComponent: false # Atmospheric drag
+    useJ2Component: true # J2 spherical harmonic approximation
+    useC22Component: true # C22 spherical harmonic approximation
+    useS22Component: true # S22 spherical harmonic approximation
+    useSOLComponent: true # Solar gravitational pull
+    useLUNComponent: true # Lunar gravitational pull
+    useSRPComponent: true # Solar radiation pressure
+    useDRAGComponent: true # Atmospheric drag
 
 io:
   output_file: output.csv # Output file name
-  posFileName: pos_test.csv # Name of the CSV file with satellite positions [km]
-  velFileName: v_test.csv # Name of the CSV file with satellite velocities [km/s]
-  vtkWriteFrequency: 10 # Frequency of writing to vtk file [iterations]
+  posFileName: pos.csv # Name of the CSV file with satellite positions [km]
+  velFileName: v.csv # Name of the CSV file with satellite velocities [km/s]
+  vtkWriteFrequency: 1000 # Frequency of writing to vtk file [iterations]
+  #constellationList: StarlinkGen1,100,7200 # ';'-seperated constellations consisting of path (to constellation directory), start time, duration
+  #constellationFrequency: 10 # Frequency of adding satellites to simulation [iterations]
 
 autopas:
   logLevel: off
-  cutoff: 0.02 # Cutoff for autopas force interaction
+  cutoff: 1.0 # Cutoff for autopas force interaction
   skin: 0.20 # twice the maximum distance a particle can travel between two list rebuilds
   rebuildFrequency: 20
   desiredCellsPerDimension: 32 # Desired number of cells per dimension

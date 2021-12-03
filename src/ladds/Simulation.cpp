@@ -10,7 +10,12 @@
 #include <ladds/io/DatasetReader.h>
 #include <ladds/particle/SatelliteToParticleConverter.h>
 
+#include <array>
 #include <tuple>
+#include <vector>
+
+#include "Constellation.h"
+#include "SafeInsertion.h"
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
 extern template class autopas::AutoPas<Particle>;
@@ -130,16 +135,77 @@ void Simulation::loadSatellites(AutoPas_t &autopas, const YAML::Node &config) {
   SPDLOG_LOGGER_INFO(logger.get(), "Number of particles: {}", autopas.getNumberOfParticles());
 }
 
-void Simulation::simulationLoop(AutoPas_t &autopas, Integrator<AutoPas_t> &integrator, const YAML::Node &config) {
+std::vector<Constellation> Simulation::loadConstellations(const YAML::Node &config) {
+  std::vector<Constellation> constellations;
+
+  if (config["io"]["constellationList"].IsDefined()) {
+    const auto insertionFrequency =
+        config["io"]["constellationFrequency"].IsDefined() ? config["io"]["constellationFrequency"].as<int>() : 1;
+    auto constellationDataStr = config["io"]["constellationList"].as<std::string>();
+    // count constellation by counting ';'
+    int nConstellations = 1;
+    for (char con : constellationDataStr) {
+      if (con == ';') {
+        nConstellations++;
+      }
+    }
+
+    // parse constellation info
+    constellations.reserve(nConstellations);
+    for (int i = 0; i < nConstellations; ++i) {
+      unsigned long offset = constellationDataStr.find(';', 0);
+      if (offset == 0) {
+        constellations.emplace_back(Constellation(constellationDataStr, insertionFrequency));
+        break;
+      } else {
+        constellations.emplace_back(Constellation(constellationDataStr.substr(0, offset), insertionFrequency));
+        constellationDataStr.erase(0, offset + 1);
+      }
+    }
+
+    size_t constellationTotalNumSatellites = 0;
+    for (const auto &constellation : constellations) {
+      constellationTotalNumSatellites += constellation.getConstellationSize();
+    }
+
+    SPDLOG_LOGGER_INFO(logger.get(),
+                       "{} more particles will be added from {} constellations",
+                       constellationTotalNumSatellites,
+                       nConstellations);
+  }
+  return constellations;
+}
+
+void Simulation::simulationLoop(AutoPas_t &autopas,
+                                Integrator<AutoPas_t> &integrator,
+                                std::vector<Constellation> &constellations,
+                                const YAML::Node &config) {
   const auto cutoff = config["autopas"]["cutoff"].as<double>();
   const auto iterations = config["sim"]["iterations"].as<size_t>();
   const auto vtkWriteFrequency = config["io"]["vtkWriteFrequency"].as<size_t>();
+  const auto constellationInsertionFrequency =
+      config["io"]["constellationFrequency"].IsDefined() ? config["io"]["constellationFrequency"].as<int>() : 1;
+  std::vector<Particle> delayedInsertion;
 
-  for (size_t i = 0; i < iterations; ++i) {
+  for (size_t i = 0ul; i < iterations; ++i) {
     // update positions
     timers.integrator.start();
     integrator.integrate(false);
     timers.integrator.stop();
+
+    timers.constellationInsertion.start();
+    // new satellites from constellations inserted over time
+    if (i % constellationInsertionFrequency == 0) {
+      for (auto &constellation : constellations) {
+        // new satellites are gradually added to the simulation according to their starting time and operation duration
+        auto newSatellites = constellation.tick();
+
+        // add waiting satellites to newSatellites
+        newSatellites.insert(newSatellites.end(), delayedInsertion.begin(), delayedInsertion.end());
+        delayedInsertion = SafeInsertion::insert(autopas, newSatellites, cutoff);
+      }
+    }
+    timers.constellationInsertion.stop();
 
     // TODO MPI: handle particle exchange between ranks
     timers.containerUpdate.start();
@@ -190,19 +256,21 @@ void Simulation::printTimers(const YAML::Node &config) const {
   const auto timeTotal = timers.total.getTotalTime();
   const auto timeSim = timers.simulation.getTotalTime();
   const auto maximumNumberOfDigits = static_cast<int>(std::to_string(timeTotal).length());
-  std::cout << timerToString("Total                   ", timeTotal, maximumNumberOfDigits);
+  std::cout << timerToString("Total                       ", timeTotal, maximumNumberOfDigits);
   std::cout << timerToString(
-      "  Initialization        ", timers.initialization.getTotalTime(), maximumNumberOfDigits, timeTotal);
+      "  Initialization            ", timers.initialization.getTotalTime(), maximumNumberOfDigits, timeTotal);
   std::cout << timerToString("  Simulation            ", timeSim, maximumNumberOfDigits, timeTotal);
   std::cout << timerToString(
-      "    Integrator          ", timers.integrator.getTotalTime(), maximumNumberOfDigits, timeSim);
+      "    Integrator              ", timers.integrator.getTotalTime(), maximumNumberOfDigits, timeSim);
   std::cout << timerToString(
-      "    Collision detection ", timers.collisionDetection.getTotalTime(), maximumNumberOfDigits, timeSim);
+      "    Constellation insertion ", timers.constellationInsertion.getTotalTime(), maximumNumberOfDigits, timeSim);
   std::cout << timerToString(
-      "    Container update    ", timers.containerUpdate.getTotalTime(), maximumNumberOfDigits, timeSim);
+      "    Collision detection     ", timers.collisionDetection.getTotalTime(), maximumNumberOfDigits, timeSim);
   std::cout << timerToString(
-      "    Output              ", timers.output.getTotalTime(), maximumNumberOfDigits, timeTotal);
-  std::cout << timerToString("One iteration           ", timeSim / iterations, maximumNumberOfDigits, timeTotal);
+      "    Container update        ", timers.containerUpdate.getTotalTime(), maximumNumberOfDigits, timeSim);
+  std::cout << timerToString(
+      "    Output                  ", timers.output.getTotalTime(), maximumNumberOfDigits, timeTotal);
+  std::cout << timerToString("One iteration               ", timeSim / iterations, maximumNumberOfDigits, timeTotal);
 }
 
 /**
@@ -242,10 +310,11 @@ void Simulation::run(const YAML::Node &config) {
   // need to keep csvWriter and accumulator alive bc integrator relies on pointers to them but does not take ownership
   auto [csvWriter, accumulator, integrator] = initIntegrator(*autopas, config);
   loadSatellites(*autopas, config);
+  auto constellations = loadConstellations(config);
   timers.initialization.stop();
 
   timers.simulation.start();
-  simulationLoop(*autopas, *integrator, config);
+  simulationLoop(*autopas, *integrator, constellations, config);
   timers.simulation.stop();
 
   timers.total.stop();
