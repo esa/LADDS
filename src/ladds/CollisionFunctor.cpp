@@ -4,13 +4,9 @@
  * @date 28.06.21
  */
 
-// clang-format off
-#include <stddef.h>
-// clang-format on
+#include "CollisionFunctor.h"
 
 #include <autopas/utils/WrapOpenMP.h>
-
-#include "CollisionFunctor.h"
 
 CollisionFunctor::CollisionFunctor(double cutoff) : Functor(cutoff), _cutoffSquare(cutoff * cutoff) {
   _threadData.resize(autopas::autopas_get_max_threads());
