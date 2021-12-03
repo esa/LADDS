@@ -16,8 +16,8 @@ sim:
 
 io:
   output_file: output.csv # Output file name
-  posFileName: pos_test_10s.csv # Name of the CSV file with satellite positions [km]
-  velFileName: v_test_10s.csv # Name of the CSV file with satellite velocities [km/s]
+  posFileName: pos_test.csv # Name of the CSV file with satellite positions [km]
+  velFileName: v_test.csv # Name of the CSV file with satellite velocities [km/s]
   vtkWriteFrequency: 10 # Frequency of writing to vtk file [iterations]
 
 autopas:

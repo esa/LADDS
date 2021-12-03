@@ -18,8 +18,8 @@ set(DebrisSim_Simulation OFF CACHE INTERNAL "")
 FetchContent_Declare(
         Propagatorfetch
         GIT_REPOSITORY ${PropagatorRepoPath}
-        # branch: IntegratorComparision; fixed applyComponents code dupe
-        GIT_TAG d8e23fcd27398dab77bd2c2aa7849edd1a31d0f1
+        # branch: IntegratorComparision; OpenMP parallelization
+        GIT_TAG 58ebb3a7d902a5adef9c9e4a9a62bb87367aa2b9
 )
 
 # Get Propagator source and binary directories from CMake project
