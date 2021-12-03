@@ -60,9 +60,9 @@ void CollisionFunctor::SoAFunctorPair(autopas::SoAView<SoAArraysType> soa1,
       continue;
     }
 
-    // inner loop over SoA2
-    // custom reduction for unordered maps
-#pragma omp declare reduction(mapMerge : std::unordered_map<Particle *, Particle *> : omp_out.insert(omp_in.begin(), omp_in.end()))
+// inner loop over SoA2
+// custom reduction for unordered maps
+#pragma omp declare reduction(mapMerge : std::unordered_map <Particle *, Particle *> : omp_out.insert(omp_in.begin(), omp_in.end()))
     // alias because OpenMP needs it
     auto &thisCollisions = _threadData[autopas::autopas_get_thread_num()].collisions;
 #pragma omp simd reduction(mapMerge : thisCollisions)

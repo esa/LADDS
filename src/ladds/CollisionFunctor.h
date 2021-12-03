@@ -10,6 +10,8 @@
 #include <autopas/utils/SoA.h>
 #include <autopas/utils/SoAView.h>
 
+#include <array>
+
 #include "Particle.h"
 
 /**
