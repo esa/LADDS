@@ -5,7 +5,7 @@ Codebase for the ARIADNA Study between TU Munich and ESA's Advanced Concepts Tea
 ## Requirements
 * CMake >= 3.14
 * make (build-essentials, or equivalent)
-* A C++17 Compiler (recommended: gcc >=7 or clang >=8)
+* A C++17 Compiler (recommended: gcc >=7 or clang >=8, only clang-10 is tested)
 * OpenMP >= 4.5
 * git (for fetching dependencies)
 * [TBB](https://github.com/oneapi-src/oneTBB) (Breakup-Model needs this)
