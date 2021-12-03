@@ -14,7 +14,7 @@
 #include <tuple>
 #include <vector>
 
-#include "Constellation.h"
+#include "ladds/particle/Constellation.h"
 #include "SafeInsertion.h"
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.

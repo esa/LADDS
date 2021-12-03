@@ -16,7 +16,7 @@
 #include <memory>
 
 #include "CollisionFunctor.h"
-#include "Constellation.h"
+#include "ladds/particle/Constellation.h"
 #include "ladds/particle/Particle.h"
 
 extern template class autopas::AutoPas<Particle>;
