@@ -138,5 +138,6 @@ void CollisionFunctor::initTraversal() {
 void CollisionFunctor::endTraversal(bool newton3) {
   for (auto &data : _threadData) {
     _collisions.insert(data.collisions.begin(), data.collisions.end());
+    data.collisions.clear();
   }
 }
