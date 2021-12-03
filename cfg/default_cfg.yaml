@@ -26,3 +26,8 @@ autopas:
   skin: 0.20 # twice the maximum distance a particle can travel between two list rebuilds
   rebuildFrequency: 20
   desiredCellsPerDimension: 32 # Desired number of cells per dimension
+  tuningMode: false
+#  Newton3: "enabled, disabled"
+#  DataLayout: "AoS, SoA"
+#  Container: "varVerletListsAsBuilt, verletListCells"
+#  Traversal: "vvl_as_build, vlc_c01, vlc_c18, vlc_sliced_balanced, vlc_slice_c02"
