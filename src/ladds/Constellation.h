@@ -47,7 +47,7 @@ class Constellation {
   /**
    * stores the satellites of the constellation that have not been added to the simulation
    */
-  std::deque<Particle> satellites;
+  std::deque<Particle> satellites{};
 
   /**
    * Reads the passed position and velocity csv files. Returns a vector of particles.
@@ -58,12 +58,12 @@ class Constellation {
   /**
    * iteration from which constellation starts being added to the simulation
    */
-  int startTime;
+  int startTime = 0;
 
   /**
    * time span over which satellites of the constellation are being added
    */
-  int duration;
+  int duration = 0;
 
   /**
    * internal clock that determines which satellites are added to the simulation,
@@ -75,7 +75,7 @@ class Constellation {
    * the interval of satellites being added to the simulation is
    * passed for internal logic
    */
-  int interval;
+  int interval = 0;
 
   /**
    * multiples of interval. the constellations state is set to 'a' = active whenever
@@ -103,28 +103,28 @@ class Constellation {
   /**
    * size of the constellation for internal use
    */
-  size_t constellationSize;
+  size_t constellationSize = 0ul;
 
   /**
    * contains information of a shell: altitude, inclination, #planes, #satellitesPerPlane
    */
-  std::vector<std::array<double, 4>> shells;
+  std::vector<std::array<double, 4>> shells{};
 
   /**
    * contains the time shell i begins its deployment at vector index i
    */
-  std::vector<double> timestamps;
+  std::vector<double> timestamps{};
 
   /**
    * contains the time steps of shell i to enable adding each plane of
    * shell i linearly over time at vector index i
    */
-  std::vector<double> timeSteps;
+  std::vector<double> timeSteps{};
 
   /**
    * keeps track of which shell will be added next
    */
-  int currentShellIndex = 0;
+  size_t currentShellIndex = 0ul;
 
   /**
    * keeps track of which plane will be added next

@@ -4,7 +4,7 @@
 
 #include "SafeInsertionTest.h"
 
-#include <autopas/AutoPas.h>
+#include <autopas/AutoPasDecl.h>
 #include <satellitePropagator/io/FileOutput.h>
 #include <satellitePropagator/physics/AccelerationAccumulator.h>
 #include <satellitePropagator/physics/Integrator.h>

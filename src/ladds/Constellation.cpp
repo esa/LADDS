@@ -26,7 +26,7 @@ Constellation::Constellation(const std::string &constellation_data_str, int inte
                                std::string(DATADIR) + argConstellationName + "/v_" + argConstellationName + ".csv");
   // convert vector to deque
   constellationSize = sats.size();
-  for (int i = 0; i < constellationSize; i++) {
+  for (size_t i = 0ul; i < constellationSize; ++i) {
     satellites.push_back(sats[i]);
   }
 
@@ -44,8 +44,7 @@ Constellation::Constellation(const std::string &constellation_data_str, int inte
     numStream >> inclination;
     numStream >> nPlanes;
     numStream >> satsPerPlane;
-    std::array<double, 4> shell = {altitude, inclination, nPlanes, satsPerPlane};
-    shells.emplace_back(shell);
+    shells.emplace_back<std::array<double, 4>>({altitude, inclination, nPlanes, satsPerPlane});
     std::getline(shellParameters, tmp_string);
   }
   shellParameters.close();
@@ -59,7 +58,7 @@ Constellation::Constellation(const std::string &constellation_data_str, int inte
   }
 
   // for each shell determine the interval a new plane is added, each shell has its own timestep
-  for (int i = 0; i < timestamps.size() - 1; i++) {
+  for (size_t i = 0ul; i < timestamps.size() - 1; ++i) {
     timeSteps.push_back((timestamps[i + 1] - timestamps[i]) / shells[i][2]);  // = duration_i / nPlanes_i
   }
 }
