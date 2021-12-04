@@ -82,7 +82,9 @@ std::unique_ptr<Simulation::AutoPas_t> Simulation::initAutoPas(const YAML::Node 
   autopas->setTuningInterval(10000);
   autopas->setSelectorStrategy(autopas::SelectorStrategyOption::fastestMean);
   autopas->setNumSamples(verletRebuildFrequency);
-  autopas::Logger::get()->set_level(spdlog::level::from_str(config["autopas"]["logLevel"].as<std::string>()));
+  if (config["autopas"]["logLevel"].IsDefined()) {
+    autopas::Logger::get()->set_level(spdlog::level::from_str(config["autopas"]["logLevel"].as<std::string>()));
+  }
   autopas->init();
 
   return autopas;
@@ -90,14 +92,19 @@ std::unique_ptr<Simulation::AutoPas_t> Simulation::initAutoPas(const YAML::Node 
 
 auto Simulation::initIntegrator(AutoPas_t &autopas, const YAML::Node &config) {
   // initialization of the integrator
-  std::array<bool, 8> selectedPropagatorComponents{config["sim"]["prop"]["useKEPComponent"].as<bool>(),
-                                                   config["sim"]["prop"]["useJ2Component"].as<bool>(),
-                                                   config["sim"]["prop"]["useC22Component"].as<bool>(),
-                                                   config["sim"]["prop"]["useS22Component"].as<bool>(),
-                                                   config["sim"]["prop"]["useSOLComponent"].as<bool>(),
-                                                   config["sim"]["prop"]["useLUNComponent"].as<bool>(),
-                                                   config["sim"]["prop"]["useSRPComponent"].as<bool>(),
-                                                   config["sim"]["prop"]["useDRAGComponent"].as<bool>()};
+  std::array<bool, 8> selectedPropagatorComponents{};
+  const auto &configProp = config["sim"]["prop"];
+  if (configProp.IsDefined()) {
+    selectedPropagatorComponents = {
+        configProp["useKEPComponent"].IsDefined() and configProp["useKEPComponent"].as<bool>(),
+        configProp["useJ2Component"].IsDefined() and configProp["useJ2Component"].as<bool>(),
+        configProp["useC22Component"].IsDefined() and configProp["useC22Component"].as<bool>(),
+        configProp["useS22Component"].IsDefined() and configProp["useS22Component"].as<bool>(),
+        configProp["useSOLComponent"].IsDefined() and configProp["useSOLComponent"].as<bool>(),
+        configProp["useLUNComponent"].IsDefined() and configProp["useLUNComponent"].as<bool>(),
+        configProp["useSRPComponent"].IsDefined() and configProp["useSRPComponent"].as<bool>(),
+        configProp["useDRAGComponent"].IsDefined() and configProp["useDRAGComponent"].as<bool>()};
+  }
 
   auto csvWriter = std::make_unique<FileOutput<AutoPas_t>>(
       autopas, config["io"]["output_file"].as<std::string>(), OutputFile::CSV, selectedPropagatorComponents);
