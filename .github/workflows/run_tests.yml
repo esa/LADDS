@@ -8,11 +8,15 @@ on:
     - main
   pull_request:
   workflow_dispatch:
+
+# abort old runs if a new one is started
+concurrency:
+  group: ${{ github.head_ref }}-tests
+  cancel-in-progress: true
+
 jobs:
-  build:
-
+  tests_default_release:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Install dependencies
@@ -39,3 +43,79 @@ jobs:
         cd build
         # disable all irrelevant functor tests. We need to change this if we switch configuration
         ctest -j 4 --output-on-failure -C validation -E 'CollisionFunctorIntegration.*\/.[^v]' 
+
+  test_ASAN:
+    runs-on: ubuntu-latest
+    env:
+      TSAN_OPTIONS: ignore_noninstrumented_modules=1
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install \
+              git \
+              clang \
+              cmake \
+              libomp-dev \
+              libtbb-dev \
+              python3-numpy \
+              python3-vtk7
+      - name: Build project
+        run: |
+          mkdir build
+          cd build
+          CC=clang CXX=clang++ cmake \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DLADDS_DOXYGEN=OFF \
+            -DLADDS_ENABLE_ADDRESS_SANITIZER=ON \
+            ..
+          make -j 4
+      - name: Test with ctest
+        run: |
+          cd build
+          # disable all irrelevant functor tests. We need to change this if we switch configuration
+          ctest -j 4 --output-on-failure -C validation -E 'CollisionFunctorIntegration.*\/.[^v]' 
+
+  test_TSAN:
+    runs-on: ubuntu-latest
+    container:
+      image: autopas/autopas-build-archer
+    env:
+      TSAN_OPTIONS: ignore_noninstrumented_modules=1
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y \
+              libtbb-dev \
+              python3-numpy \
+              python3-vtk7
+      - name: Build project
+        run: |
+          mkdir build
+          cd build
+          CC=clang CXX=clang++ cmake \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DLADDS_DOXYGEN=OFF \
+            -DLADDS_ENABLE_THREAD_SANITIZER=ON \
+            ..
+          make -j 4
+      - name: Test with ctest
+        run: |
+          cd build
+          # disable all irrelevant functor tests. We need to change this if we switch configuration
+          ctest -j 4 --output-on-failure -C validation -E 'CollisionFunctorIntegration.*\/.[^v]'
+
+  format_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: DoozyX/clang-format-lint-action@v0.12
+        with:
+          source: 'src tests'
+          # exclude: 'none'
+          extensions: 'h,cpp'
+          clangFormatVersion: 9
+          style: file
