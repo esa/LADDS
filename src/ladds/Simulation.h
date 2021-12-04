@@ -41,7 +41,6 @@ class Simulation {
    */
   void run(const YAML::Node &config);
 
- private:
   /**
    * Create and initialize an AutoPas object from the given config.
    * @param config
@@ -55,9 +54,12 @@ class Simulation {
    * these objects. Hence, they need to be kept alive as long as the integrator is needed.
    * @param autopas
    * @param config
-   * @return
+   * @return Tuple of csvWriter, AccelerationAccumulator, and Integrator
    */
-  [[nodiscard]] auto initIntegrator(AutoPas_t &autopas, const YAML::Node &config);
+  [[nodiscard]] std::tuple<std::unique_ptr<FileOutput<AutoPas_t>>,
+                           std::unique_ptr<Acceleration::AccelerationAccumulator<AutoPas_t>>,
+                           std::unique_ptr<Integrator<AutoPas_t>>>
+  initIntegrator(AutoPas_t &autopas, const YAML::Node &config);
 
   /**
    * Load the particles from the input csv files in the config as particles into AutoPas.

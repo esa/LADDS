@@ -90,7 +90,10 @@ std::unique_ptr<Simulation::AutoPas_t> Simulation::initAutoPas(const YAML::Node 
   return autopas;
 }
 
-auto Simulation::initIntegrator(AutoPas_t &autopas, const YAML::Node &config) {
+std::tuple<std::unique_ptr<FileOutput<Simulation::AutoPas_t>>,
+           std::unique_ptr<Acceleration::AccelerationAccumulator<Simulation::AutoPas_t>>,
+           std::unique_ptr<Integrator<Simulation::AutoPas_t>>>
+Simulation::initIntegrator(AutoPas_t &autopas, const YAML::Node &config) {
   // initialization of the integrator
   std::array<bool, 8> selectedPropagatorComponents{};
   const auto &configProp = config["sim"]["prop"];
