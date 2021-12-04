@@ -15,7 +15,6 @@
 #include <vector>
 
 #include "ladds/particle/Constellation.h"
-#include "SafeInsertion.h"
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
 extern template class autopas::AutoPas<Particle>;
@@ -202,7 +201,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
 
         // add waiting satellites to newSatellites
         newSatellites.insert(newSatellites.end(), delayedInsertion.begin(), delayedInsertion.end());
-        delayedInsertion = SafeInsertion::insert(autopas, newSatellites, cutoff);
+        delayedInsertion = checkedInsert(autopas, newSatellites, cutoff);
       }
     }
     timers.constellationInsertion.stop();
@@ -248,6 +247,41 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     }
     timers.output.stop();
   }
+}
+
+std::vector<Particle> Simulation::checkedInsert(autopas::AutoPas<Particle> &autopas,
+                                                const std::vector<Particle> &newSatellites,
+                                                double cutoff) {
+  std::vector<Particle> delayedInsertion = {};
+
+  const double collisionRadius = 2 * cutoff;
+  const double collisionRadiusSquared = collisionRadius * collisionRadius;
+  const std::array<double, 3> boxSpan = {collisionRadius, collisionRadius, collisionRadius};
+  for (const auto &satellite : newSatellites) {
+    // only insert satellites, if they have a reasonable distance to other satellites
+    bool collisionFree = true;
+    // check a box around the insertion location
+    const auto lowCorner = autopas::utils::ArrayMath::sub(satellite.getPosition(), boxSpan);
+    const auto highCorner = autopas::utils::ArrayMath::add(satellite.getPosition(), boxSpan);
+    for (auto iter = autopas.getRegionIterator(lowCorner, highCorner); iter.isValid() and collisionFree; ++iter) {
+      const auto diff = autopas::utils::ArrayMath::sub(satellite.getPosition(), iter->getPosition());
+      collisionFree = autopas::utils::ArrayMath::dot(diff, diff) > collisionRadiusSquared;
+      if (not collisionFree) {
+        SPDLOG_LOGGER_DEBUG(logger.get(),
+                            "Satellite insertion delayed because it was too close to another!\n"
+                            "Satellite to insert: {}\n"
+                            "Colliding satellite: {}",
+                            satellite,
+                            *iter);
+        delayedInsertion.push_back(satellite);
+        break;
+      }
+    }
+    if (collisionFree) {
+      autopas.addParticle(satellite);
+    }
+  }
+  return delayedInsertion;
 }
 
 void Simulation::printTimers(const YAML::Node &config) const {

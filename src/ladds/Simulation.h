@@ -88,6 +88,17 @@ class Simulation {
                       const YAML::Node &config);
 
   /**
+   * Inserts particles into autopas if they have a safe distance to existing particles.
+   * @param autopas Container where particles are about to be added.
+   * @param newSatellites Satellites to be added.
+   * @param cutoff
+   * @return Vector of particles that were not added.
+   */
+  std::vector<Particle> checkedInsert(autopas::AutoPas<Particle> &autopas,
+                                      const std::vector<Particle> &newSatellites,
+                                      double cutoff);
+
+  /**
    * Print timer information to stdout.
    * @param config
    */
