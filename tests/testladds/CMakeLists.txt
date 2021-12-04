@@ -44,6 +44,8 @@ target_compile_definitions(${TEST_EXECUTABLE_NAME}
     PUBLIC
     SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_${LADDS_MAX_LOGLVL}
     DATADIR=\"${PROJECT_SOURCE_DIR}/data/\"
+    CFGDIR=\"${PROJECT_SOURCE_DIR}/cfg/\"
+    CFGDIRTEST=\"${PROJECT_SOURCE_DIR}/cfg/\"
 )
 
 gtest_discover_tests(${TEST_EXECUTABLE_NAME})
