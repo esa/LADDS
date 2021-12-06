@@ -9,8 +9,8 @@
 
 #include "CollisionFunctor.h"
 
-CollisionFunctor::CollisionFunctor(double cutoff, double dt)
-    : Functor(cutoff), _cutoffSquare(cutoff * cutoff), _dt(dt) {
+CollisionFunctor::CollisionFunctor(double cutoff, double dt, double minorCutoff)
+    : Functor(cutoff), _cutoffSquare(cutoff * cutoff), _dt(dt), _minorCutoffSquare(minorCutoff * minorCutoff) {
   _threadData.resize(autopas::autopas_get_max_threads());
 }
 
@@ -19,14 +19,19 @@ const std::unordered_map<Particle *, Particle *> &CollisionFunctor::getCollision
 }
 
 void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
+  using autopas::utils::ArrayMath::dot;
+  using autopas::utils::ArrayMath::add;
+  using autopas::utils::ArrayMath::sub;
+  using autopas::utils::ArrayMath::mulScalar;
+
   // skip interaction with deleted particles
   if (i.isDummy() or j.isDummy()) {
     return;
   }
 
   // calculate distance between particles
-  auto dr = autopas::utils::ArrayMath::sub(i.getR(), j.getR());
-  auto distanceSquare = autopas::utils::ArrayMath::dot(dr, dr);
+  const auto dr = sub(i.getR(), j.getR());
+  const auto distanceSquare = dot(dr, dr);
 
   // if distance is wider than cutoff everything is fine and we can return
   if (distanceSquare > _cutoffSquare) {
@@ -35,16 +40,55 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
 
   // if distance is smaller we compute the minimum distance between the linear interpolations
   // of the particle trajectory over the last timestep
-  auto old_r_i = autopas::utils::ArrayMath::sub(i.getR(), autopas::utils::ArrayMath::mulScalar(i.getVelocity(), _dt));
-  auto old_r_j = autopas::utils::ArrayMath::sub(j.getR(), autopas::utils::ArrayMath::mulScalar(j.getVelocity(), _dt));
+  // according to wolfram alpha, should look like this: 
+  // https://www.wolframalpha.com/input/?i=solve+for+t+d%2Fdt%5Bsqrt%28%28-z_1+t+%2B+t+v_1+%2B+x_1+-+y_1%29%5E2+%2B+%28-z_2+t+%2B+t+v_2+%2B+x_2+-+y_2%29%5E2+%2B+%28t+v_3+-+t+z_3+%2B+x_3+-+y_3%29%5E2%29%5D
+
+  // Get old time step position
+  const auto old_r_i = sub(i.getR(), mulScalar(i.getVelocity(), _dt));
+  const auto old_r_j = sub(j.getR(), mulScalar(j.getVelocity(), _dt));
+
+
+  // Compute nominator dot products
+  const auto vi_ri = dot(i.getVelocity(),old_r_i);
+  const auto vi_rj = dot(i.getVelocity(),old_r_j);
+  const auto vj_ri = dot(j.getVelocity(),old_r_i);
+  const auto vj_rj = dot(j.getVelocity(),old_r_j);
+
+  const auto nominator = vi_rj + vj_ri - vi_ri - vj_rj;
+
+  // Compute denominator dot products
+  const auto two_vi_vj = mulScalar(dot(i.getVelocity(),j.getVelocity()),2.);
+  const auto vi_square = dot(i.getVelocity(),i.getVelocity());
+  const auto vj_square = dot(j.getVelocity(),j.getVelocity());
+
+  const auto denominator = vi_square + vj_square - two_vi_vj;
+
+  // Compute t at minimal distance
+  const auto t = nominator / denominator;
+
+  // If in the past, minimum is at t = 0
+  if(t < 0)
+    t = 0.;
+  // If in future timesteps, minimum for this is at t = 10
+  else if (t > _dt)
+    t = _dt;
+
+  // Compute actual distance by propagating along the line to t
+  const auto p1 = add(old_r_i,mulScalar(i.getVelocity,t));
+  const auto p2 = add(old_r_j,mulScalar(j.getVelocity,t));
+  
+  const auto dr_lines = sub(p1, p2);
+  const auto distanceSquare_lines = dot(dr, dr);
+
+  if
 
   // store pointers to colliding pair
   if (i.getID() < j.getID()) {
     _threadData[autopas::autopas_get_thread_num()].collisions[i.get<Particle::AttributeNames::ptr>()] =
-        j.get<Particle::AttributeNames::ptr>();
+        {j.get<Particle::AttributeNames::ptr>(),distanceSquare_lines};
   } else {
     _threadData[autopas::autopas_get_thread_num()].collisions[j.get<Particle::AttributeNames::ptr>()] =
-        i.get<Particle::AttributeNames::ptr>();
+        {i.get<Particle::AttributeNames::ptr>()}, distanceSquare_lines;
   }
 }
 

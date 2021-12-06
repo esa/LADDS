@@ -229,7 +229,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
 
     timers.collisionDetection.start();
     // pairwise interaction
-    CollisionFunctor collisionFunctor(cutoff);
+    CollisionFunctor collisionFunctor(cutoff,config["sim"]["deltaT"],0.1*cutoff);
     autopas.iteratePairwise(&collisionFunctor);
     auto collisions = collisionFunctor.getCollisions();
     SPDLOG_LOGGER_INFO(logger.get(), "Iteration {} - Close encounters: {}", i, collisions.size());

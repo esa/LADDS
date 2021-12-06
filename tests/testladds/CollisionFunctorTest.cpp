@@ -28,7 +28,7 @@ TEST(CollisionFunctorTest, ThreeParticles) {
     debris.emplace_back(std::array<double, 3>{static_cast<double>(i), 0., 0.}, std::array<double, 3>{0., 0., 0.}, i);
   }
 
-  CollisionFunctor collisionFunctor(cutoff);
+  CollisionFunctor collisionFunctor(cutoff,10.0,0.1*cutoff);
 
   for (auto &di : debris) {
     for (auto &dj : debris) {
