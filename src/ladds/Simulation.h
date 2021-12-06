@@ -16,6 +16,7 @@
 #include <memory>
 
 #include "CollisionFunctor.h"
+#include "ladds/io/ConjunctionLogger.h"
 #include "ladds/particle/Constellation.h"
 #include "ladds/particle/Particle.h"
 
@@ -91,6 +92,16 @@ class Simulation {
                            std::vector<Constellation> constellations,
                            int constellationInsertionFrequency,
                            std::vector<Particle> &delayedInsertion);
+
+  /**
+   * Check for collisions / conjunctions and write statistics about them.
+   * @param autopas
+   */
+  void collisionDetection(size_t iteration,
+                          Simulation::AutoPas_t &autopas,
+                          ConjunctionLogger &conjunctionLogger,
+                          size_t &totalConjunctions,
+                          size_t progressOutputFrequency);
 
   /**
    * Write a vtk file with the current state of the simulation.

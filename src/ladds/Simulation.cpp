@@ -200,11 +200,31 @@ void Simulation::updateConstellation(AutoPas_t &autopas,
   }
 }
 
+void Simulation::collisionDetection(size_t iteration,
+                                    Simulation::AutoPas_t &autopas,
+                                    ConjunctionLogger &conjunctionLogger,
+                                    size_t &totalConjunctions,
+                                    size_t progressOutputFrequency) {
+  // pairwise interaction
+  CollisionFunctor collisionFunctor(autopas.getCutoff());
+  autopas.iteratePairwise(&collisionFunctor);
+  auto collisions = collisionFunctor.getCollisions();
+  SPDLOG_LOGGER_INFO(logger.get(), "Iteration {} - Close encounters: {}", iteration, collisions.size());
+  for (const auto &[p1, p2] : collisions) {
+    totalConjunctions++;
+    conjunctionLogger.log(iteration, *p1, *p2);
+    SPDLOG_LOGGER_DEBUG(logger.get(), "{} | {}", p1->getID(), p2->getID());
+  }
+  if (iteration % progressOutputFrequency == 0) {
+    SPDLOG_LOGGER_INFO(
+        logger.get(), "It {} - Encounters:{} Total conjunctions:{}", iteration, collisions.size(), totalConjunctions);
+  }
+}
+
 void Simulation::simulationLoop(AutoPas_t &autopas,
                                 Integrator<AutoPas_t> &integrator,
                                 std::vector<Constellation> &constellations,
                                 const YAML::Node &config) {
-  const auto cutoff = config["autopas"]["cutoff"].as<double>();
   const auto iterations = config["sim"]["iterations"].as<size_t>();
   const auto vtkWriteFrequency = config["io"]["vtkWriteFrequency"].as<size_t>();
   const auto constellationInsertionFrequency =
@@ -235,27 +255,16 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     const auto escapedParticles = autopas.updateContainer();
     timers.containerUpdate.stop();
 
+    // sanity check
     if (not escapedParticles.empty()) {
       SPDLOG_LOGGER_ERROR(logger.get(), "Particles are escaping! \n{}", escapedParticles);
     }
     // TODO Check for particles that burn up
 
     timers.collisionDetection.start();
-    // pairwise interaction
-    CollisionFunctor collisionFunctor(cutoff);
-    autopas.iteratePairwise(&collisionFunctor);
-    auto collisions = collisionFunctor.getCollisions();
-    SPDLOG_LOGGER_INFO(logger.get(), "Iteration {} - Close encounters: {}", i, collisions.size());
-    for (const auto &[p1, p2] : collisions) {
-      totalConjunctions++;
-      conjunctionLogger.log(i, *p1, *p2);
-      SPDLOG_LOGGER_DEBUG(logger.get(), "{} | {}", p1->getID(), p2->getID());
-    }
+    collisionDetection(i, autopas, conjunctionLogger, totalConjunctions, progressOutputFrequency);
     timers.collisionDetection.stop();
-    if (i % progressOutputFrequency == 0) {
-      SPDLOG_LOGGER_INFO(
-          logger.get(), "It {} - Encounters:{} Total conjunctions:{}", i, collisions.size(), totalConjunctions);
-    }
+
     // TODO insert breakup model here
 
     timers.output.start();
