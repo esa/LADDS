@@ -186,6 +186,20 @@ std::vector<Constellation> Simulation::loadConstellations(const YAML::Node &conf
   return constellations;
 }
 
+void Simulation::updateConstellation(AutoPas_t &autopas,
+                                     std::vector<Constellation> constellations,
+                                     int constellationInsertionFrequency,
+                                     std::vector<Particle> &delayedInsertion) {
+  for (auto &constellation : constellations) {
+    // new satellites are gradually added to the simulation according to their starting time and operation duration
+    auto newSatellites = constellation.tick();
+
+    // add waiting satellites to newSatellites
+    newSatellites.insert(newSatellites.end(), delayedInsertion.begin(), delayedInsertion.end());
+    delayedInsertion = checkedInsert(autopas, newSatellites, autopas.getCutoff());
+  }
+}
+
 void Simulation::simulationLoop(AutoPas_t &autopas,
                                 Integrator<AutoPas_t> &integrator,
                                 std::vector<Constellation> &constellations,
@@ -211,14 +225,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     timers.constellationInsertion.start();
     // new satellites from constellations inserted over time
     if (i % constellationInsertionFrequency == 0) {
-      for (auto &constellation : constellations) {
-        // new satellites are gradually added to the simulation according to their starting time and operation duration
-        auto newSatellites = constellation.tick();
-
-        // add waiting satellites to newSatellites
-        newSatellites.insert(newSatellites.end(), delayedInsertion.begin(), delayedInsertion.end());
-        delayedInsertion = checkedInsert(autopas, newSatellites, cutoff);
-      }
+      updateConstellation(autopas, constellations, constellationInsertionFrequency, delayedInsertion);
     }
     timers.constellationInsertion.stop();
 

@@ -79,6 +79,20 @@ class Simulation {
   std::vector<Constellation> loadConstellations(const YAML::Node &config);
 
   /**
+   * Tick constellation state machines and if applicable insert new satellites as well as delayed ones from previous
+   * launch phase.
+   * @param autopas
+   * @param constellations
+   * @param constellationInsertionFrequency
+   * @param delayedInsertion Vector of satellites that could not be inserted in the last phase. This is an in/out
+   * parameter!
+   */
+  void updateConstellation(AutoPas_t &autopas,
+                           std::vector<Constellation> constellations,
+                           int constellationInsertionFrequency,
+                           std::vector<Particle> &delayedInsertion);
+
+  /**
    * The main loop.
    * @param autopas
    * @param integrator
