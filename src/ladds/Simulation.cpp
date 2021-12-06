@@ -14,6 +14,7 @@
 #include <tuple>
 #include <vector>
 
+#include "ladds/io/ConjunctionLogger.h"
 #include "ladds/particle/Constellation.h"
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
@@ -194,7 +195,12 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
   const auto vtkWriteFrequency = config["io"]["vtkWriteFrequency"].as<size_t>();
   const auto constellationInsertionFrequency =
       config["io"]["constellationFrequency"].IsDefined() ? config["io"]["constellationFrequency"].as<int>() : 1;
+  const auto progressOutputFrequency =
+      config["io"]["progressOutputFrequency"].IsDefined() ? config["io"]["progressOutputFrequency"].as<int>() : 50;
   std::vector<Particle> delayedInsertion;
+
+  size_t totalConjunctions{0ul};
+  ConjunctionLogger conjunctionLogger("");
 
   for (size_t i = 0ul; i < iterations; ++i) {
     // update positions
@@ -234,10 +240,15 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     auto collisions = collisionFunctor.getCollisions();
     SPDLOG_LOGGER_INFO(logger.get(), "Iteration {} - Close encounters: {}", i, collisions.size());
     for (const auto &[p1, p2] : collisions) {
+      totalConjunctions++;
+      conjunctionLogger.log(i, *p1, *p2);
       SPDLOG_LOGGER_DEBUG(logger.get(), "{} | {}", p1->getID(), p2->getID());
     }
     timers.collisionDetection.stop();
-
+    if (i % progressOutputFrequency == 0) {
+      SPDLOG_LOGGER_INFO(
+          logger.get(), "It {} - Encounters:{} Total conjunctions:{}", i, collisions.size(), totalConjunctions);
+    }
     // TODO insert breakup model here
 
     timers.output.start();
@@ -257,6 +268,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     }
     timers.output.stop();
   }
+  SPDLOG_LOGGER_INFO(logger.get(), "Total conjunctions: {}", totalConjunctions);
 }
 
 std::vector<Particle> Simulation::checkedInsert(autopas::AutoPas<Particle> &autopas,
