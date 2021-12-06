@@ -55,7 +55,7 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
 
   void endTraversal(bool newton3) final;
 
-  [[nodiscard]] const std::unordered_map<Particle *, Particle *> &getCollisions() const;
+  [[nodiscard]] const std::unordered_map<Particle *, std::tuple<Particle *, double>> &getCollisions() const;
 
   void AoSFunctor(Particle &i, Particle &j, bool newton3) final;
 
@@ -74,7 +74,7 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
 
   // Buffer struct that is safe against false sharing
   struct ThreadData {
-    std::unordered_map<Particle *, std::tuple<Particle *,double>> collisions{};
+    std::unordered_map<Particle *, std::tuple<Particle *, double>> collisions{};
   } __attribute__((aligned(64)));
 
   // make sure that the size of ThreadData is correct
@@ -83,7 +83,7 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
   // Buffer per thread
   std::vector<ThreadData> _threadData{};
   // key = particle with the smaller id
-  std::unordered_map<Particle *, std::tuple<Particle *,double>> _collisions{};
+  std::unordered_map<Particle *, std::tuple<Particle *, double>> _collisions{};
   const double _cutoffSquare;
   const double _minorCutoffSquare;
   const double _dt;

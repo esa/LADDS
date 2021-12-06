@@ -4,8 +4,6 @@
  * @date 30.11.21
  */
 
-#include "Simulation.h"
-
 #include <breakupModel/output/VTKWriter.h>
 #include <ladds/io/DatasetReader.h>
 #include <ladds/particle/SatelliteToParticleConverter.h>
@@ -14,6 +12,7 @@
 #include <tuple>
 #include <vector>
 
+#include "Simulation.h"
 #include "ladds/particle/Constellation.h"
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
@@ -229,11 +228,12 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
 
     timers.collisionDetection.start();
     // pairwise interaction
-    CollisionFunctor collisionFunctor(cutoff,config["sim"]["deltaT"],0.1*cutoff);
+    CollisionFunctor collisionFunctor(cutoff, config["sim"]["deltaT"], 0.1 * cutoff);
     autopas.iteratePairwise(&collisionFunctor);
     auto collisions = collisionFunctor.getCollisions();
     SPDLOG_LOGGER_INFO(logger.get(), "Iteration {} - Close encounters: {}", i, collisions.size());
-    for (const auto &[p1, p2] : collisions) {
+    for (const auto &[p1, p2AndDist] : collisions) {
+      const auto &[p2, dist] = p2AndDist;
       SPDLOG_LOGGER_DEBUG(logger.get(), "{} | {}", p1->getID(), p2->getID());
     }
     timers.collisionDetection.stop();
