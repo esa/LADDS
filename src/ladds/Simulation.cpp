@@ -124,7 +124,6 @@ Simulation::initIntegrator(AutoPas_t &autopas, const YAML::Node &config) {
 
 void Simulation::updateConstellation(AutoPas_t &autopas,
                                      std::vector<Constellation> constellations,
-                                     int constellationInsertionFrequency,
                                      std::vector<Particle> &delayedInsertion) {
   for (auto &constellation : constellations) {
     // new satellites are gradually added to the simulation according to their starting time and operation duration
@@ -181,7 +180,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     timers.constellationInsertion.start();
     // new satellites from constellations inserted over time
     if (i % constellationInsertionFrequency == 0) {
-      updateConstellation(autopas, constellations, constellationInsertionFrequency, delayedInsertion);
+      updateConstellation(autopas, constellations, delayedInsertion);
     }
     timers.constellationInsertion.stop();
 

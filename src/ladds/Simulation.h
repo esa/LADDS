@@ -67,13 +67,11 @@ class Simulation {
    * launch phase.
    * @param autopas
    * @param constellations
-   * @param constellationInsertionFrequency
    * @param delayedInsertion Vector of satellites that could not be inserted in the last phase. This is an in/out
    * parameter!
    */
   void updateConstellation(AutoPas_t &autopas,
                            std::vector<Constellation> constellations,
-                           int constellationInsertionFrequency,
                            std::vector<Particle> &delayedInsertion);
 
   /**
