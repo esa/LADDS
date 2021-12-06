@@ -13,6 +13,9 @@
 #include <vector>
 
 #include "Simulation.h"
+#include "ladds/io/ConjunctionLogger.h"
+#include "ladds/io/SatelliteLoader.h"
+#include "ladds/io/VTUWriter.h"
 #include "ladds/particle/Constellation.h"
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
@@ -42,7 +45,7 @@ void setAutoPasOption(const YAML::Node &node, F setterFun, const std::set<Option
 }
 }  // namespace
 
-std::unique_ptr<Simulation::AutoPas_t> Simulation::initAutoPas(const YAML::Node &config) {
+std::unique_ptr<AutoPas_t> Simulation::initAutoPas(const YAML::Node &config) {
   auto autopas = std::make_unique<AutoPas_t>();
 
   const auto maxAltitude = config["sim"]["maxAltitude"].as<double>();
@@ -89,9 +92,9 @@ std::unique_ptr<Simulation::AutoPas_t> Simulation::initAutoPas(const YAML::Node 
   return autopas;
 }
 
-std::tuple<std::unique_ptr<FileOutput<Simulation::AutoPas_t>>,
-           std::unique_ptr<Acceleration::AccelerationAccumulator<Simulation::AutoPas_t>>,
-           std::unique_ptr<Integrator<Simulation::AutoPas_t>>>
+std::tuple<std::unique_ptr<FileOutput<AutoPas_t>>,
+           std::unique_ptr<Acceleration::AccelerationAccumulator<AutoPas_t>>,
+           std::unique_ptr<Integrator<AutoPas_t>>>
 Simulation::initIntegrator(AutoPas_t &autopas, const YAML::Node &config) {
   // initialization of the integrator
   std::array<bool, 8> selectedPropagatorComponents{};
@@ -118,82 +121,54 @@ Simulation::initIntegrator(AutoPas_t &autopas, const YAML::Node &config) {
   return std::make_tuple<>(std::move(csvWriter), std::move(accumulator), std::move(integrator));
 }
 
-void Simulation::loadSatellites(AutoPas_t &autopas, const YAML::Node &config) {
-  // Read in scenario
-  auto actualSatellites =
-      DatasetReader::readDataset(std::string(DATADIR) + config["io"]["posFileName"].as<std::string>(),
-                                 std::string(DATADIR) + config["io"]["velFileName"].as<std::string>());
-  SPDLOG_LOGGER_DEBUG(logger.get(), "Parsed {} satellites", actualSatellites.size());
+void Simulation::updateConstellation(AutoPas_t &autopas,
+                                     std::vector<Constellation> constellations,
+                                     std::vector<Particle> &delayedInsertion) {
+  for (auto &constellation : constellations) {
+    // new satellites are gradually added to the simulation according to their starting time and operation duration
+    auto newSatellites = constellation.tick();
 
-  const auto maxAltitude = config["sim"]["maxAltitude"].as<double>();
-  double minAltitudeFound{std::numeric_limits<double>::max()};
-  double maxAltitudeFound{0.};
-  // Convert satellites to particles
-  for (const auto &particle : actualSatellites) {
-    auto pos = particle.getPosition();
-    double altitude = sqrt(pos[0] * pos[0] + pos[1] * pos[1] + pos[2] * pos[2]);
-    minAltitudeFound = std::min(minAltitudeFound, altitude);
-    maxAltitudeFound = std::max(maxAltitudeFound, altitude);
-    if (altitude < maxAltitude) {
-      autopas.addParticle(particle);
-    }
+    // add waiting satellites to newSatellites
+    newSatellites.insert(newSatellites.end(), delayedInsertion.begin(), delayedInsertion.end());
+    delayedInsertion = checkedInsert(autopas, newSatellites, autopas.getCutoff());
   }
-  SPDLOG_LOGGER_INFO(logger.get(), "Min altitude is {}", minAltitudeFound);
-  SPDLOG_LOGGER_INFO(logger.get(), "Max altitude is {}", maxAltitudeFound);
-  SPDLOG_LOGGER_INFO(logger.get(), "Number of particles: {}", autopas.getNumberOfParticles());
 }
 
-std::vector<Constellation> Simulation::loadConstellations(const YAML::Node &config) {
-  std::vector<Constellation> constellations;
-
-  if (config["io"]["constellationList"].IsDefined()) {
-    const auto insertionFrequency =
-        config["io"]["constellationFrequency"].IsDefined() ? config["io"]["constellationFrequency"].as<int>() : 1;
-    auto constellationDataStr = config["io"]["constellationList"].as<std::string>();
-    // count constellation by counting ';'
-    int nConstellations = 1;
-    for (char con : constellationDataStr) {
-      if (con == ';') {
-        nConstellations++;
-      }
-    }
-
-    // parse constellation info
-    constellations.reserve(nConstellations);
-    for (int i = 0; i < nConstellations; ++i) {
-      unsigned long offset = constellationDataStr.find(';', 0);
-      if (offset == 0) {
-        constellations.emplace_back(Constellation(constellationDataStr, insertionFrequency));
-        break;
-      } else {
-        constellations.emplace_back(Constellation(constellationDataStr.substr(0, offset), insertionFrequency));
-        constellationDataStr.erase(0, offset + 1);
-      }
-    }
-
-    size_t constellationTotalNumSatellites = 0;
-    for (const auto &constellation : constellations) {
-      constellationTotalNumSatellites += constellation.getConstellationSize();
-    }
-
-    SPDLOG_LOGGER_INFO(logger.get(),
-                       "{} more particles will be added from {} constellations",
-                       constellationTotalNumSatellites,
-                       nConstellations);
+void Simulation::collisionDetection(size_t iteration,
+                                    AutoPas_t &autopas,
+                                    ConjunctionLogger &conjunctionLogger,
+                                    size_t &totalConjunctions,
+                                    size_t progressOutputFrequency) {
+  // pairwise interaction
+  CollisionFunctor collisionFunctor(autopas.getCutoff());
+  autopas.iteratePairwise(&collisionFunctor);
+  auto collisions = collisionFunctor.getCollisions();
+  SPDLOG_LOGGER_INFO(logger.get(), "Iteration {} - Close encounters: {}", iteration, collisions.size());
+  for (const auto &[p1, p2] : collisions) {
+    totalConjunctions++;
+    conjunctionLogger.log(iteration, *p1, *p2);
+    SPDLOG_LOGGER_DEBUG(logger.get(), "{} | {}", p1->getID(), p2->getID());
   }
-  return constellations;
+  if (iteration % progressOutputFrequency == 0) {
+    SPDLOG_LOGGER_INFO(
+        logger.get(), "It {} - Encounters:{} Total conjunctions:{}", iteration, collisions.size(), totalConjunctions);
+  }
 }
 
 void Simulation::simulationLoop(AutoPas_t &autopas,
                                 Integrator<AutoPas_t> &integrator,
                                 std::vector<Constellation> &constellations,
                                 const YAML::Node &config) {
-  const auto cutoff = config["autopas"]["cutoff"].as<double>();
   const auto iterations = config["sim"]["iterations"].as<size_t>();
   const auto vtkWriteFrequency = config["io"]["vtkWriteFrequency"].as<size_t>();
   const auto constellationInsertionFrequency =
       config["io"]["constellationFrequency"].IsDefined() ? config["io"]["constellationFrequency"].as<int>() : 1;
+  const auto progressOutputFrequency =
+      config["io"]["progressOutputFrequency"].IsDefined() ? config["io"]["progressOutputFrequency"].as<int>() : 50;
   std::vector<Particle> delayedInsertion;
+
+  size_t totalConjunctions{0ul};
+  ConjunctionLogger conjunctionLogger("");
 
   for (size_t i = 0ul; i < iterations; ++i) {
     // update positions
@@ -204,14 +179,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     timers.constellationInsertion.start();
     // new satellites from constellations inserted over time
     if (i % constellationInsertionFrequency == 0) {
-      for (auto &constellation : constellations) {
-        // new satellites are gradually added to the simulation according to their starting time and operation duration
-        auto newSatellites = constellation.tick();
-
-        // add waiting satellites to newSatellites
-        newSatellites.insert(newSatellites.end(), delayedInsertion.begin(), delayedInsertion.end());
-        delayedInsertion = checkedInsert(autopas, newSatellites, cutoff);
-      }
+      updateConstellation(autopas, constellations, delayedInsertion);
     }
     timers.constellationInsertion.stop();
 
@@ -221,21 +189,14 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     const auto escapedParticles = autopas.updateContainer();
     timers.containerUpdate.stop();
 
+    // sanity check
     if (not escapedParticles.empty()) {
       SPDLOG_LOGGER_ERROR(logger.get(), "Particles are escaping! \n{}", escapedParticles);
     }
     // TODO Check for particles that burn up
 
     timers.collisionDetection.start();
-    // pairwise interaction
-    CollisionFunctor collisionFunctor(cutoff, config["sim"]["deltaT"], 0.1 * cutoff);
-    autopas.iteratePairwise(&collisionFunctor);
-    auto collisions = collisionFunctor.getCollisions();
-    SPDLOG_LOGGER_INFO(logger.get(), "Iteration {} - Close encounters: {}", i, collisions.size());
-    for (const auto &[p1, p2AndDist] : collisions) {
-      const auto &[p2, dist] = p2AndDist;
-      SPDLOG_LOGGER_DEBUG(logger.get(), "{} | {}", p1->getID(), p2->getID());
-    }
+    collisionDetection(i, autopas, conjunctionLogger, totalConjunctions, progressOutputFrequency);
     timers.collisionDetection.stop();
 
     // TODO insert breakup model here
@@ -243,20 +204,11 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     timers.output.start();
     // Visualization:
     if (i % vtkWriteFrequency == 0) {
-      VTKWriter vtkWriter("output_" + std::to_string(i) + ".vtu");
-      std::vector<Satellite> allParticles;
-      allParticles.reserve(autopas.getNumberOfParticles());
-      for (const auto &p : autopas) {
-        allParticles.push_back(SatelliteToParticleConverter::convertParticleToSatellite(p));
-      }
-      // sort particles by Id to provide consistent output files
-      std::sort(allParticles.begin(), allParticles.end(), [](const auto &p1, const auto &p2) {
-        return p1.getId() < p2.getId();
-      });
-      vtkWriter.printResult(allParticles);
+      VTUWriter::writeVTK(i, autopas);
     }
     timers.output.stop();
   }
+  SPDLOG_LOGGER_INFO(logger.get(), "Total conjunctions: {}", totalConjunctions);
 }
 
 std::vector<Particle> Simulation::checkedInsert(autopas::AutoPas<Particle> &autopas,
@@ -294,58 +246,6 @@ std::vector<Particle> Simulation::checkedInsert(autopas::AutoPas<Particle> &auto
   return delayedInsertion;
 }
 
-void Simulation::printTimers(const YAML::Node &config) const {
-  const auto iterations = config["sim"]["iterations"].as<size_t>();
-
-  const auto timeTotal = timers.total.getTotalTime();
-  const auto timeSim = timers.simulation.getTotalTime();
-  const auto maximumNumberOfDigits = static_cast<int>(std::to_string(timeTotal).length());
-  std::cout << timerToString("Total                       ", timeTotal, maximumNumberOfDigits);
-  std::cout << timerToString(
-      "  Initialization            ", timers.initialization.getTotalTime(), maximumNumberOfDigits, timeTotal);
-  std::cout << timerToString("  Simulation            ", timeSim, maximumNumberOfDigits, timeTotal);
-  std::cout << timerToString(
-      "    Integrator              ", timers.integrator.getTotalTime(), maximumNumberOfDigits, timeSim);
-  std::cout << timerToString(
-      "    Constellation insertion ", timers.constellationInsertion.getTotalTime(), maximumNumberOfDigits, timeSim);
-  std::cout << timerToString(
-      "    Collision detection     ", timers.collisionDetection.getTotalTime(), maximumNumberOfDigits, timeSim);
-  std::cout << timerToString(
-      "    Container update        ", timers.containerUpdate.getTotalTime(), maximumNumberOfDigits, timeSim);
-  std::cout << timerToString(
-      "    Output                  ", timers.output.getTotalTime(), maximumNumberOfDigits, timeTotal);
-  std::cout << timerToString("One iteration               ", timeSim / iterations, maximumNumberOfDigits, timeTotal);
-}
-
-/**
- * Turns the timers into a human readable string.
- * @param name: The timer's name.
- * @param timeNS: The time in nano seconds.
- * @param numberWidth: The precision of the printed number.
- * @param maxTime: The simulation's total execution time.
- * @return All information of the timer in a human readable string.
- *
- * @note Taken from md-flexible.
- */
-std::string Simulation::timerToString(const std::string &name, long timeNS, int numberWidth, long maxTime) {
-  // only print timers that were actually used
-  if (timeNS == 0) {
-    return "";
-  }
-
-  std::ostringstream ss;
-  ss << std::fixed << std::setprecision(floatStringPrecision) << name << " : " << std::setw(numberWidth) << std::right
-     << timeNS
-     << " ns ("
-     // min width of the representation of seconds is numberWidth - 9 (from conversion) + 4 (for dot and digits after)
-     << std::setw(numberWidth - 5) << ((double)timeNS * 1e-9) << "s)";
-  if (maxTime != 0) {
-    ss << " =" << std::setw(7) << std::right << ((double)timeNS / (double)maxTime * 100) << "%";
-  }
-  ss << std::endl;
-  return ss.str();
-}
-
 void Simulation::run(const YAML::Node &config) {
   timers.total.start();
 
@@ -353,8 +253,8 @@ void Simulation::run(const YAML::Node &config) {
   auto autopas = initAutoPas(config);
   // need to keep csvWriter and accumulator alive bc integrator relies on pointers to them but does not take ownership
   auto [csvWriter, accumulator, integrator] = initIntegrator(*autopas, config);
-  loadSatellites(*autopas, config);
-  auto constellations = loadConstellations(config);
+  SatelliteLoader::loadSatellites(*autopas, config, logger);
+  auto constellations = SatelliteLoader::loadConstellations(config, logger);
   timers.initialization.stop();
 
   timers.simulation.start();
@@ -362,5 +262,5 @@ void Simulation::run(const YAML::Node &config) {
   timers.simulation.stop();
 
   timers.total.stop();
-  printTimers(config);
+  timers.printTimers(config);
 }

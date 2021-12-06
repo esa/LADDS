@@ -57,7 +57,8 @@ TEST_F(SimulationTest, testInsertionOverlap) {
 
   autopas->addParticle(p1);
   autopas->addParticle(p2);
-  const auto escapedParticles = autopas->updateContainer();
+  auto escapedParticles = autopas->updateContainer();
+  EXPECT_EQ(escapedParticles.size(), 0);
   ASSERT_EQ(autopas->getNumberOfParticles(), 2) << "Container initialized wrong!";
 
   // 0
@@ -66,25 +67,29 @@ TEST_F(SimulationTest, testInsertionOverlap) {
   EXPECT_EQ(autopas->getNumberOfParticles(), 2);
   // 1
   integrator->integrate();
-  //  auto dummy = autopas->updateContainer();
+  escapedParticles = autopas->updateContainer();
+  EXPECT_EQ(escapedParticles.size(), 0);
   delayedInsertion = simulation.checkedInsert(*autopas, delayedInsertion, autopas->getCutoff());
   EXPECT_EQ(delayedInsertion.size(), 1);
   EXPECT_EQ(autopas->getNumberOfParticles(), 3);
   // 2
   integrator->integrate();
-  //  dummy = autopas->updateContainer();
+  escapedParticles = autopas->updateContainer();
+  EXPECT_EQ(escapedParticles.size(), 0);
   delayedInsertion = simulation.checkedInsert(*autopas, delayedInsertion, autopas->getCutoff());
   EXPECT_EQ(delayedInsertion.size(), 1);
   EXPECT_EQ(autopas->getNumberOfParticles(), 3);
   // 3
   integrator->integrate();
-  //  dummy = autopas->updateContainer();
+  escapedParticles = autopas->updateContainer();
+  EXPECT_EQ(escapedParticles.size(), 0);
   delayedInsertion = simulation.checkedInsert(*autopas, delayedInsertion, autopas->getCutoff());
   EXPECT_EQ(delayedInsertion.size(), 0);
   EXPECT_EQ(autopas->getNumberOfParticles(), 4);
   // 4
   integrator->integrate();
-  //  dummy = autopas->updateContainer();
+  escapedParticles = autopas->updateContainer();
+  EXPECT_EQ(escapedParticles.size(), 0);
   delayedInsertion = simulation.checkedInsert(*autopas, delayedInsertion, autopas->getCutoff());
   EXPECT_EQ(delayedInsertion.size(), 0);
   EXPECT_EQ(autopas->getNumberOfParticles(), 4);

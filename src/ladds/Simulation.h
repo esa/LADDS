@@ -16,6 +16,9 @@
 #include <memory>
 
 #include "CollisionFunctor.h"
+#include "TypeDefinitions.h"
+#include "ladds/io/ConjunctionLogger.h"
+#include "ladds/io/Timers.h"
 #include "ladds/particle/Constellation.h"
 #include "ladds/particle/Particle.h"
 
@@ -27,8 +30,6 @@ extern template bool autopas::AutoPas<Particle>::iteratePairwise(CollisionFuncto
  */
 class Simulation {
  public:
-  using AutoPas_t = autopas::AutoPas<Particle>;
-
   /**
    * Constructor.
    * @param logger The class stores a reference to a logger but does not take ownership.
@@ -62,21 +63,26 @@ class Simulation {
   initIntegrator(AutoPas_t &autopas, const YAML::Node &config);
 
   /**
-   * Load the particles from the input csv files in the config as particles into AutoPas.
-   *
-   * @note Paths for csv files are relative to ladds/data!
-   *
+   * Tick constellation state machines and if applicable insert new satellites as well as delayed ones from previous
+   * launch phase.
    * @param autopas
-   * @param config
+   * @param constellations
+   * @param delayedInsertion Vector of satellites that could not be inserted in the last phase. This is an in/out
+   * parameter!
    */
-  void loadSatellites(AutoPas_t &autopas, const YAML::Node &config);
+  void updateConstellation(AutoPas_t &autopas,
+                           std::vector<Constellation> constellations,
+                           std::vector<Particle> &delayedInsertion);
 
   /**
-   * Parse constellation information and prepare satellites for insertion.
-   * @param config
-   * @return Vector of Constellations
+   * Check for collisions / conjunctions and write statistics about them.
+   * @param autopas
    */
-  std::vector<Constellation> loadConstellations(const YAML::Node &config);
+  void collisionDetection(size_t iteration,
+                          AutoPas_t &autopas,
+                          ConjunctionLogger &conjunctionLogger,
+                          size_t &totalConjunctions,
+                          size_t progressOutputFrequency);
 
   /**
    * The main loop.
@@ -101,27 +107,6 @@ class Simulation {
                                       double cutoff);
 
   /**
-   * Print timer information to stdout.
-   * @param config
-   */
-  void printTimers(const YAML::Node &config) const;
-
-  /**
-   * Helper function to pretty-print timers.
-   * @param name
-   * @param timeNS
-   * @param numberWidth
-   * @param maxTime
-   * @return
-   */
-  static std::string timerToString(const std::string &name, long timeNS, int numberWidth = 0, long maxTime = 0ul);
-
-  /**
-   * Floating point precision for command line output.
-   */
-  static constexpr int floatStringPrecision = 3;
-
-  /**
    * One logger to log them all.
    */
   Logger &logger;
@@ -129,14 +114,5 @@ class Simulation {
   /**
    * All timers used throughout the simulation.
    */
-  struct Timers {
-    autopas::utils::Timer total{};
-    autopas::utils::Timer initialization{};
-    autopas::utils::Timer simulation{};
-    autopas::utils::Timer integrator{};
-    autopas::utils::Timer constellationInsertion{};
-    autopas::utils::Timer collisionDetection{};
-    autopas::utils::Timer containerUpdate{};
-    autopas::utils::Timer output{};
-  } __attribute__((aligned(128))) timers{};
+  Timers timers{};
 };
