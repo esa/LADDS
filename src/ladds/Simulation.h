@@ -17,6 +17,7 @@
 
 #include "CollisionFunctor.h"
 #include "ladds/io/ConjunctionLogger.h"
+#include "ladds/io/Timers.h"
 #include "ladds/particle/Constellation.h"
 #include "ladds/particle/Particle.h"
 
@@ -131,27 +132,6 @@ class Simulation {
                                       double cutoff);
 
   /**
-   * Print timer information to stdout.
-   * @param config
-   */
-  void printTimers(const YAML::Node &config) const;
-
-  /**
-   * Helper function to pretty-print timers.
-   * @param name
-   * @param timeNS
-   * @param numberWidth
-   * @param maxTime
-   * @return
-   */
-  static std::string timerToString(const std::string &name, long timeNS, int numberWidth = 0, long maxTime = 0ul);
-
-  /**
-   * Floating point precision for command line output.
-   */
-  static constexpr int floatStringPrecision = 3;
-
-  /**
    * One logger to log them all.
    */
   Logger &logger;
@@ -159,14 +139,5 @@ class Simulation {
   /**
    * All timers used throughout the simulation.
    */
-  struct Timers {
-    autopas::utils::Timer total{};
-    autopas::utils::Timer initialization{};
-    autopas::utils::Timer simulation{};
-    autopas::utils::Timer integrator{};
-    autopas::utils::Timer constellationInsertion{};
-    autopas::utils::Timer collisionDetection{};
-    autopas::utils::Timer containerUpdate{};
-    autopas::utils::Timer output{};
-  } __attribute__((aligned(128))) timers{};
+  Timers timers{};
 };

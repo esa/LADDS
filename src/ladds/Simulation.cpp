@@ -325,58 +325,6 @@ void Simulation::writeVTK(size_t iteration, const AutoPas_t &autopas) {
   vtkWriter.printResult(allParticles);
 }
 
-void Simulation::printTimers(const YAML::Node &config) const {
-  const auto iterations = config["sim"]["iterations"].as<size_t>();
-
-  const auto timeTotal = timers.total.getTotalTime();
-  const auto timeSim = timers.simulation.getTotalTime();
-  const auto maximumNumberOfDigits = static_cast<int>(std::to_string(timeTotal).length());
-  std::cout << timerToString("Total                       ", timeTotal, maximumNumberOfDigits);
-  std::cout << timerToString(
-      "  Initialization            ", timers.initialization.getTotalTime(), maximumNumberOfDigits, timeTotal);
-  std::cout << timerToString("  Simulation            ", timeSim, maximumNumberOfDigits, timeTotal);
-  std::cout << timerToString(
-      "    Integrator              ", timers.integrator.getTotalTime(), maximumNumberOfDigits, timeSim);
-  std::cout << timerToString(
-      "    Constellation insertion ", timers.constellationInsertion.getTotalTime(), maximumNumberOfDigits, timeSim);
-  std::cout << timerToString(
-      "    Collision detection     ", timers.collisionDetection.getTotalTime(), maximumNumberOfDigits, timeSim);
-  std::cout << timerToString(
-      "    Container update        ", timers.containerUpdate.getTotalTime(), maximumNumberOfDigits, timeSim);
-  std::cout << timerToString(
-      "    Output                  ", timers.output.getTotalTime(), maximumNumberOfDigits, timeTotal);
-  std::cout << timerToString("One iteration               ", timeSim / iterations, maximumNumberOfDigits, timeTotal);
-}
-
-/**
- * Turns the timers into a human readable string.
- * @param name: The timer's name.
- * @param timeNS: The time in nano seconds.
- * @param numberWidth: The precision of the printed number.
- * @param maxTime: The simulation's total execution time.
- * @return All information of the timer in a human readable string.
- *
- * @note Taken from md-flexible.
- */
-std::string Simulation::timerToString(const std::string &name, long timeNS, int numberWidth, long maxTime) {
-  // only print timers that were actually used
-  if (timeNS == 0) {
-    return "";
-  }
-
-  std::ostringstream ss;
-  ss << std::fixed << std::setprecision(floatStringPrecision) << name << " : " << std::setw(numberWidth) << std::right
-     << timeNS
-     << " ns ("
-     // min width of the representation of seconds is numberWidth - 9 (from conversion) + 4 (for dot and digits after)
-     << std::setw(numberWidth - 5) << ((double)timeNS * 1e-9) << "s)";
-  if (maxTime != 0) {
-    ss << " =" << std::setw(7) << std::right << ((double)timeNS / (double)maxTime * 100) << "%";
-  }
-  ss << std::endl;
-  return ss.str();
-}
-
 void Simulation::run(const YAML::Node &config) {
   timers.total.start();
 
@@ -393,5 +341,5 @@ void Simulation::run(const YAML::Node &config) {
   timers.simulation.stop();
 
   timers.total.stop();
-  printTimers(config);
+  timers.printTimers(config);
 }
