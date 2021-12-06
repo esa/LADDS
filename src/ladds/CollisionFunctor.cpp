@@ -4,11 +4,13 @@
  * @date 28.06.21
  */
 
-#include "CollisionFunctor.h"
-
+#include <autopas/utils/ArrayMath.h>
 #include <autopas/utils/WrapOpenMP.h>
 
-CollisionFunctor::CollisionFunctor(double cutoff) : Functor(cutoff), _cutoffSquare(cutoff * cutoff) {
+#include "CollisionFunctor.h"
+
+CollisionFunctor::CollisionFunctor(double cutoff, double dt)
+    : Functor(cutoff), _cutoffSquare(cutoff * cutoff), _dt(dt) {
   _threadData.resize(autopas::autopas_get_max_threads());
 }
 
@@ -30,6 +32,11 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   if (distanceSquare > _cutoffSquare) {
     return;
   }
+
+  // if distance is smaller we compute the minimum distance between the linear interpolations
+  // of the particle trajectory over the last timestep
+  auto old_r_i = autopas::utils::ArrayMath::sub(i.getR(), autopas::utils::ArrayMath::mulScalar(i.getVelocity(), _dt));
+  auto old_r_j = autopas::utils::ArrayMath::sub(j.getR(), autopas::utils::ArrayMath::mulScalar(j.getVelocity(), _dt));
 
   // store pointers to colliding pair
   if (i.getID() < j.getID()) {

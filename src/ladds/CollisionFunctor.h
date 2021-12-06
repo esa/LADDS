@@ -20,7 +20,7 @@
  */
 class CollisionFunctor final : public autopas::Functor<Particle, CollisionFunctor> {
  public:
-  explicit CollisionFunctor(double cutoff);
+  explicit CollisionFunctor(double cutoff, double dt);
 
   [[nodiscard]] bool isRelevantForTuning() final {
     return true;
@@ -85,4 +85,5 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
   // key = particle with the smaller id
   std::unordered_map<Particle *, Particle *> _collisions{};
   const double _cutoffSquare;
+  const double _dt;
 };

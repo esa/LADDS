@@ -24,7 +24,7 @@ io:
 
 autopas:
   logLevel: off
-  cutoff: 1.0 # Cutoff for autopas force interaction
+  cutoff: 80.0 # Cutoff for autopas force interaction
   skin: 160.0 # twice the maximum distance a particle can travel between two list rebuilds
   rebuildFrequency: 20
   desiredCellsPerDimension: 32 # Desired number of cells per dimension
