@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include "Logger.h"
 #include "ladds/TypeDefinitions.h"
 #include "ladds/particle/Constellation.h"
 #include "yaml-cpp/yaml.h"
-#include "Logger.h"
 
 namespace SatelliteLoader {
 /**

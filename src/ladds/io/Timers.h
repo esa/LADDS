@@ -20,7 +20,6 @@ class Timers {
   autopas::utils::Timer containerUpdate{};
   autopas::utils::Timer output{};
 
-
   /**
    * Print timer information to stdout.
    * @param config
@@ -42,5 +41,4 @@ class Timers {
    * Floating point precision for command line output.
    */
   static constexpr int floatStringPrecision = 3;
-
 };
