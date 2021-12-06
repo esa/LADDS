@@ -4,13 +4,13 @@
  * @date 05/07/2021
  */
 
-#include "CollisionFunctorIntegrationTest.h"
-
 #include <autopas/AutoPas.h>
 #include <autopasTools/generators/RandomGenerator.h>
 #include <gmock/gmock-matchers.h>
 #include <gmock/gmock-more-matchers.h>
 #include <ladds/CollisionFunctor.h>
+
+#include "CollisionFunctorIntegrationTest.h"
 
 extern template class autopas::AutoPas<Particle>;
 extern template bool autopas::AutoPas<Particle>::iteratePairwise(CollisionFunctor *);
@@ -71,7 +71,7 @@ TEST_P(CollisionFunctorIntegrationTest, testAutoPasAlgorithm) {
 
   const auto &[traversal, dataLayout, newton3, cellSizeFactor] = GetParam();
 
-  CollisionFunctor functor(_cutoff);
+  CollisionFunctor functor(_cutoff, 10.0, 0.1 * _cutoff);
 
   // configure the AutoPas container
   autopas::AutoPas<Particle> autopas;
@@ -102,7 +102,8 @@ TEST_P(CollisionFunctorIntegrationTest, testAutoPasAlgorithm) {
   auto collisionPtrs = functor.getCollisions();
   std::vector<std::pair<size_t, size_t>> collisionIDs;
   collisionIDs.reserve(collisionPtrs.size());
-  for (const auto &[pi, pj] : collisionPtrs) {
+  for (const auto &[pi, pjAndDist] : collisionPtrs) {
+    const auto &[pj, dist] = pjAndDist;
     collisionIDs.emplace_back(pi->getID(), pj->getID());
   }
 

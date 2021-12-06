@@ -85,6 +85,6 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
   // key = particle with the smaller id
   std::unordered_map<Particle *, std::tuple<Particle *, double>> _collisions{};
   const double _cutoffSquare;
-  const double _minorCutoffSquare;
   const double _dt;
+  const double _minorCutoffSquare;
 };

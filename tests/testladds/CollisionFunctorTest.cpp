@@ -4,10 +4,9 @@
  * @date 05/07/2021
  */
 
-#include "CollisionFunctorTest.h"
-
 #include <gmock/gmock-matchers.h>
 
+#include "CollisionFunctorTest.h"
 #include "ladds/CollisionFunctor.h"
 #include "ladds/particle/Particle.h"
 
@@ -28,7 +27,7 @@ TEST(CollisionFunctorTest, ThreeParticles) {
     debris.emplace_back(std::array<double, 3>{static_cast<double>(i), 0., 0.}, std::array<double, 3>{0., 0., 0.}, i);
   }
 
-  CollisionFunctor collisionFunctor(cutoff,10.0,0.1*cutoff);
+  CollisionFunctor collisionFunctor(cutoff, 10.0, 0.1 * cutoff);
 
   for (auto &di : debris) {
     for (auto &dj : debris) {
@@ -45,8 +44,8 @@ TEST(CollisionFunctorTest, ThreeParticles) {
   auto collisions = collisionFunctor.getCollisions();
 
   decltype(collisions) expected{
-      {&debris[0], &debris[1]},
-      {&debris[1], &debris[2]},
+      {&debris[0], {&debris[1], 42.0}},
+      {&debris[1], {&debris[2], 42.0}},
   };
 
   EXPECT_THAT(collisionFunctor.getCollisions(), ::testing::UnorderedElementsAreArray(expected));

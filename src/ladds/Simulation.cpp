@@ -138,16 +138,17 @@ void Simulation::collisionDetection(size_t iteration,
                                     AutoPas_t &autopas,
                                     ConjunctionLogger &conjunctionLogger,
                                     size_t &totalConjunctions,
-                                    size_t progressOutputFrequency) {
+                                    size_t progressOutputFrequency,
+                                    double deltaT) {
   // pairwise interaction
-  CollisionFunctor collisionFunctor(autopas.getCutoff());
+  CollisionFunctor collisionFunctor(autopas.getCutoff(), deltaT, 0.1 * autopas.getCutoff());
   autopas.iteratePairwise(&collisionFunctor);
   auto collisions = collisionFunctor.getCollisions();
-  SPDLOG_LOGGER_INFO(logger.get(), "Iteration {} - Close encounters: {}", iteration, collisions.size());
-  for (const auto &[p1, p2] : collisions) {
+  for (const auto &[p1, p2AndDistance] : collisions) {
     totalConjunctions++;
-    conjunctionLogger.log(iteration, *p1, *p2);
-    SPDLOG_LOGGER_DEBUG(logger.get(), "{} | {}", p1->getID(), p2->getID());
+    const auto &[p2, distance] = p2AndDistance;
+    conjunctionLogger.log(iteration, *p1, *p2, distance);
+    SPDLOG_LOGGER_DEBUG(logger.get(), "{} | {} | distance={}", p1->getID(), p2->getID(), distance);
   }
   if (iteration % progressOutputFrequency == 0) {
     SPDLOG_LOGGER_INFO(
@@ -165,6 +166,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
       config["io"]["constellationFrequency"].IsDefined() ? config["io"]["constellationFrequency"].as<int>() : 1;
   const auto progressOutputFrequency =
       config["io"]["progressOutputFrequency"].IsDefined() ? config["io"]["progressOutputFrequency"].as<int>() : 50;
+  const auto deltaT = config["sim"]["deltaT"].as<double>();
   std::vector<Particle> delayedInsertion;
 
   size_t totalConjunctions{0ul};
@@ -196,7 +198,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     // TODO Check for particles that burn up
 
     timers.collisionDetection.start();
-    collisionDetection(i, autopas, conjunctionLogger, totalConjunctions, progressOutputFrequency);
+    collisionDetection(i, autopas, conjunctionLogger, totalConjunctions, progressOutputFrequency, deltaT);
     timers.collisionDetection.stop();
 
     // TODO insert breakup model here

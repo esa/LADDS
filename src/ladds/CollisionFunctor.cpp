@@ -56,39 +56,39 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   const auto nominator = vi_rj + vj_ri - vi_ri - vj_rj;
 
   // Compute denominator dot products
-  const auto two_vi_vj = mulScalar(dot(i.getVelocity(), j.getVelocity()), 2.);
+  const auto two_vi_vj = 2.0 * dot(i.getVelocity(), j.getVelocity());
   const auto vi_square = dot(i.getVelocity(), i.getVelocity());
   const auto vj_square = dot(j.getVelocity(), j.getVelocity());
 
   const auto denominator = vi_square + vj_square - two_vi_vj;
 
   // Compute t at minimal distance
-  const auto t = nominator / denominator;
+  auto t = nominator / denominator;
 
   // If in the past, minimum is at t = 0
-  if (t < 0) t = 0.;
-  // If in future timesteps, minimum for this is at t = 10
+  // Else If in future timesteps, minimum for this is at t = 10
+  if (t < 0)
+    t = 0.;
   else if (t > _dt)
     t = _dt;
 
   // Compute actual distance by propagating along the line to t
-  const auto p1 = add(old_r_i, mulScalar(i.getVelocity, t));
-  const auto p2 = add(old_r_j, mulScalar(j.getVelocity, t));
+  const auto p1 = add(old_r_i, mulScalar(i.getVelocity(), t));
+  const auto p2 = add(old_r_j, mulScalar(j.getVelocity(), t));
 
   const auto dr_lines = sub(p1, p2);
-  const auto distanceSquare_lines = dot(dr, dr);
+  const auto distanceSquare_lines = dot(dr_lines, dr_lines);
 
-  if
+  if (distanceSquare_lines > _minorCutoffSquare) return;
 
-    // store pointers to colliding pair
-    if (i.getID() < j.getID()) {
-      _threadData[autopas::autopas_get_thread_num()].collisions[i.get<Particle::AttributeNames::ptr>()] = {
-          j.get<Particle::AttributeNames::ptr>(), distanceSquare_lines};
-    } else {
-      _threadData[autopas::autopas_get_thread_num()]
-          .collisions[j.get<Particle::AttributeNames::ptr>()] = {i.get<Particle::AttributeNames::ptr>()},
-       distanceSquare_lines;
-    }
+  // store pointers to colliding pair
+  if (i.getID() < j.getID()) {
+    _threadData[autopas::autopas_get_thread_num()].collisions[i.get<Particle::AttributeNames::ptr>()] = {
+        j.get<Particle::AttributeNames::ptr>(), distanceSquare_lines};
+  } else {
+    _threadData[autopas::autopas_get_thread_num()].collisions[j.get<Particle::AttributeNames::ptr>()] = {
+        i.get<Particle::AttributeNames::ptr>(), distanceSquare_lines};
+  }
 }
 
 void CollisionFunctor::SoAFunctorSingle(autopas::SoAView<SoAArraysType> soa, bool newton3) {
@@ -112,7 +112,7 @@ void CollisionFunctor::SoAFunctorPair(autopas::SoAView<SoAArraysType> soa1,
 
     // inner loop over SoA2
     // custom reduction for unordered maps
-#pragma omp declare reduction(mapMerge : std::unordered_map<Particle *, Particle *> : omp_out.insert(omp_in.begin(), omp_in.end()))
+#pragma omp declare reduction(mapMerge : std::unordered_map<Particle *, std::tuple<Particle *,double>> : omp_out.insert(omp_in.begin(), omp_in.end()))
     // alias because OpenMP needs it
     auto &thisCollisions = _threadData[autopas::autopas_get_thread_num()].collisions;
 #pragma omp simd reduction(mapMerge : thisCollisions)
@@ -176,9 +176,9 @@ void CollisionFunctor::SoAKernel(
 
   // store pointers to colliding pair
   if (id1ptr[i] < id2ptr[j]) {
-    _threadData[autopas::autopas_get_thread_num()].collisions[ptr1ptr[i]] = ptr2ptr[j];
+    _threadData[autopas::autopas_get_thread_num()].collisions[ptr1ptr[i]] = {ptr2ptr[j], dr2};
   } else {
-    _threadData[autopas::autopas_get_thread_num()].collisions[ptr2ptr[j]] = ptr1ptr[i];
+    _threadData[autopas::autopas_get_thread_num()].collisions[ptr2ptr[j]] = {ptr1ptr[i], dr2};
   }
 }
 void CollisionFunctor::initTraversal() {

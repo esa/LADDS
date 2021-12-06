@@ -82,7 +82,8 @@ class Simulation {
                           AutoPas_t &autopas,
                           ConjunctionLogger &conjunctionLogger,
                           size_t &totalConjunctions,
-                          size_t progressOutputFrequency);
+                          size_t progressOutputFrequency,
+                          double deltaT);
 
   /**
    * The main loop.

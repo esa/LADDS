@@ -24,12 +24,8 @@ ConjunctionLogger::~ConjunctionLogger() {
   spdlog::drop(_loggerName);
 }
 
-void ConjunctionLogger::log(size_t iteration, const Particle &p1, const Particle &p2) {
+void ConjunctionLogger::log(size_t iteration, const Particle &p1, const Particle &p2, const double distance) {
   // compute the squared distance inside a lambda inside the macro so it will not be executed when the logger is
   // compile-disabled
-  SPDLOG_LOGGER_INFO(spdlog::get(_loggerName), "{},{},{},{}", iteration, p1.getID(), p2.getID(), [&]() {
-    const auto dr = autopas::utils::ArrayMath::sub(p1.getR(), p2.getR());
-    // distanceSquare
-    return autopas::utils::ArrayMath::dot(dr, dr);
-  }());
+  SPDLOG_LOGGER_INFO(spdlog::get(_loggerName), "{},{},{},{}", iteration, p1.getID(), p2.getID(), distance);
 }
