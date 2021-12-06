@@ -93,6 +93,11 @@ class Simulation {
                            std::vector<Particle> &delayedInsertion);
 
   /**
+   * Write a vtk file with the current state of the simulation.
+   */
+  void writeVTK(size_t iteration, const AutoPas_t &autopas);
+
+  /**
    * The main loop.
    * @param autopas
    * @param integrator
