@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "ladds/io/ConjunctionLogger.h"
+#include "ladds/io/SatelliteLoader.h"
 #include "ladds/particle/Constellation.h"
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
@@ -118,72 +119,6 @@ Simulation::initIntegrator(AutoPas_t &autopas, const YAML::Node &config) {
   auto integrator = std::make_unique<Integrator<AutoPas_t>>(autopas, *accumulator, deltaT);
 
   return std::make_tuple<>(std::move(csvWriter), std::move(accumulator), std::move(integrator));
-}
-
-void Simulation::loadSatellites(AutoPas_t &autopas, const YAML::Node &config) {
-  // Read in scenario
-  auto actualSatellites =
-      DatasetReader::readDataset(std::string(DATADIR) + config["io"]["posFileName"].as<std::string>(),
-                                 std::string(DATADIR) + config["io"]["velFileName"].as<std::string>());
-  SPDLOG_LOGGER_DEBUG(logger.get(), "Parsed {} satellites", actualSatellites.size());
-
-  const auto maxAltitude = config["sim"]["maxAltitude"].as<double>();
-  double minAltitudeFound{std::numeric_limits<double>::max()};
-  double maxAltitudeFound{0.};
-  // Convert satellites to particles
-  for (const auto &particle : actualSatellites) {
-    auto pos = particle.getPosition();
-    double altitude = sqrt(pos[0] * pos[0] + pos[1] * pos[1] + pos[2] * pos[2]);
-    minAltitudeFound = std::min(minAltitudeFound, altitude);
-    maxAltitudeFound = std::max(maxAltitudeFound, altitude);
-    if (altitude < maxAltitude) {
-      autopas.addParticle(particle);
-    }
-  }
-  SPDLOG_LOGGER_INFO(logger.get(), "Min altitude is {}", minAltitudeFound);
-  SPDLOG_LOGGER_INFO(logger.get(), "Max altitude is {}", maxAltitudeFound);
-  SPDLOG_LOGGER_INFO(logger.get(), "Number of particles: {}", autopas.getNumberOfParticles());
-}
-
-std::vector<Constellation> Simulation::loadConstellations(const YAML::Node &config) {
-  std::vector<Constellation> constellations;
-
-  if (config["io"]["constellationList"].IsDefined()) {
-    const auto insertionFrequency =
-        config["io"]["constellationFrequency"].IsDefined() ? config["io"]["constellationFrequency"].as<int>() : 1;
-    auto constellationDataStr = config["io"]["constellationList"].as<std::string>();
-    // count constellation by counting ';'
-    int nConstellations = 1;
-    for (char con : constellationDataStr) {
-      if (con == ';') {
-        nConstellations++;
-      }
-    }
-
-    // parse constellation info
-    constellations.reserve(nConstellations);
-    for (int i = 0; i < nConstellations; ++i) {
-      unsigned long offset = constellationDataStr.find(';', 0);
-      if (offset == 0) {
-        constellations.emplace_back(Constellation(constellationDataStr, insertionFrequency));
-        break;
-      } else {
-        constellations.emplace_back(Constellation(constellationDataStr.substr(0, offset), insertionFrequency));
-        constellationDataStr.erase(0, offset + 1);
-      }
-    }
-
-    size_t constellationTotalNumSatellites = 0;
-    for (const auto &constellation : constellations) {
-      constellationTotalNumSatellites += constellation.getConstellationSize();
-    }
-
-    SPDLOG_LOGGER_INFO(logger.get(),
-                       "{} more particles will be added from {} constellations",
-                       constellationTotalNumSatellites,
-                       nConstellations);
-  }
-  return constellations;
 }
 
 void Simulation::updateConstellation(AutoPas_t &autopas,
@@ -332,8 +267,8 @@ void Simulation::run(const YAML::Node &config) {
   auto autopas = initAutoPas(config);
   // need to keep csvWriter and accumulator alive bc integrator relies on pointers to them but does not take ownership
   auto [csvWriter, accumulator, integrator] = initIntegrator(*autopas, config);
-  loadSatellites(*autopas, config);
-  auto constellations = loadConstellations(config);
+  SatelliteLoader::loadSatellites(*autopas, config, logger);
+  auto constellations = SatelliteLoader::loadConstellations(config, logger);
   timers.initialization.stop();
 
   timers.simulation.start();

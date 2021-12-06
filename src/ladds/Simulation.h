@@ -63,23 +63,6 @@ class Simulation {
   initIntegrator(AutoPas_t &autopas, const YAML::Node &config);
 
   /**
-   * Load the particles from the input csv files in the config as particles into AutoPas.
-   *
-   * @note Paths for csv files are relative to ladds/data!
-   *
-   * @param autopas
-   * @param config
-   */
-  void loadSatellites(AutoPas_t &autopas, const YAML::Node &config);
-
-  /**
-   * Parse constellation information and prepare satellites for insertion.
-   * @param config
-   * @return Vector of Constellations
-   */
-  std::vector<Constellation> loadConstellations(const YAML::Node &config);
-
-  /**
    * Tick constellation state machines and if applicable insert new satellites as well as delayed ones from previous
    * launch phase.
    * @param autopas
