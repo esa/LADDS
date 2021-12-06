@@ -16,6 +16,7 @@
 #include <memory>
 
 #include "CollisionFunctor.h"
+#include "TypeDefinitions.h"
 #include "ladds/io/ConjunctionLogger.h"
 #include "ladds/io/Timers.h"
 #include "ladds/particle/Constellation.h"
@@ -29,8 +30,6 @@ extern template bool autopas::AutoPas<Particle>::iteratePairwise(CollisionFuncto
  */
 class Simulation {
  public:
-  using AutoPas_t = autopas::AutoPas<Particle>;
-
   /**
    * Constructor.
    * @param logger The class stores a reference to a logger but does not take ownership.
@@ -99,7 +98,7 @@ class Simulation {
    * @param autopas
    */
   void collisionDetection(size_t iteration,
-                          Simulation::AutoPas_t &autopas,
+                          AutoPas_t &autopas,
                           ConjunctionLogger &conjunctionLogger,
                           size_t &totalConjunctions,
                           size_t progressOutputFrequency);

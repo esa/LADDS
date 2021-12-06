@@ -44,7 +44,7 @@ void setAutoPasOption(const YAML::Node &node, F setterFun, const std::set<Option
 }
 }  // namespace
 
-std::unique_ptr<Simulation::AutoPas_t> Simulation::initAutoPas(const YAML::Node &config) {
+std::unique_ptr<AutoPas_t> Simulation::initAutoPas(const YAML::Node &config) {
   auto autopas = std::make_unique<AutoPas_t>();
 
   const auto maxAltitude = config["sim"]["maxAltitude"].as<double>();
@@ -91,9 +91,9 @@ std::unique_ptr<Simulation::AutoPas_t> Simulation::initAutoPas(const YAML::Node 
   return autopas;
 }
 
-std::tuple<std::unique_ptr<FileOutput<Simulation::AutoPas_t>>,
-           std::unique_ptr<Acceleration::AccelerationAccumulator<Simulation::AutoPas_t>>,
-           std::unique_ptr<Integrator<Simulation::AutoPas_t>>>
+std::tuple<std::unique_ptr<FileOutput<AutoPas_t>>,
+           std::unique_ptr<Acceleration::AccelerationAccumulator<AutoPas_t>>,
+           std::unique_ptr<Integrator<AutoPas_t>>>
 Simulation::initIntegrator(AutoPas_t &autopas, const YAML::Node &config) {
   // initialization of the integrator
   std::array<bool, 8> selectedPropagatorComponents{};
@@ -201,7 +201,7 @@ void Simulation::updateConstellation(AutoPas_t &autopas,
 }
 
 void Simulation::collisionDetection(size_t iteration,
-                                    Simulation::AutoPas_t &autopas,
+                                    AutoPas_t &autopas,
                                     ConjunctionLogger &conjunctionLogger,
                                     size_t &totalConjunctions,
                                     size_t progressOutputFrequency) {
