@@ -7,6 +7,7 @@
 #pragma once
 
 #include <string>
+
 #include "ladds/particle/Particle.h"
 /**
  * Helper to log data for individual conjunctions to a csv file for easier analysis.
