@@ -29,7 +29,9 @@ jobs:
             libomp-dev \
             libtbb-dev \
             doxygen \
-            graphviz
+            graphviz \
+            python3-numpy \
+            python3-vtk7
     - name: Build project
       run: |
         mkdir build
@@ -40,7 +42,7 @@ jobs:
       run: |
         cd build
         # disable all irrelevant functor tests. We need to change this if we switch configuration
-        ctest -j 4 --output-on-failure -E 'CollisionFunctorIntegration.*\/.[^v]' 
+        ctest -j 4 --output-on-failure -C validation -E 'CollisionFunctorIntegration.*\/.[^v]' 
 
   test_ASAN:
     runs-on: ubuntu-latest
@@ -56,7 +58,9 @@ jobs:
               clang \
               cmake \
               libomp-dev \
-              libtbb-dev
+              libtbb-dev \
+              python3-numpy \
+              python3-vtk7
       - name: Build project
         run: |
           mkdir build
@@ -71,7 +75,7 @@ jobs:
         run: |
           cd build
           # disable all irrelevant functor tests. We need to change this if we switch configuration
-          ctest -j 4 --output-on-failure -E 'CollisionFunctorIntegration.*\/.[^v]' 
+          ctest -j 4 --output-on-failure -C validation -E 'CollisionFunctorIntegration.*\/.[^v]' 
 
   test_TSAN:
     runs-on: ubuntu-latest
@@ -85,7 +89,9 @@ jobs:
         run: |
           apt-get update
           apt-get install -y \
-              libtbb-dev
+              libtbb-dev \
+              python3-numpy \
+              python3-vtk7
       - name: Build project
         run: |
           mkdir build
@@ -100,7 +106,8 @@ jobs:
         run: |
           cd build
           # disable all irrelevant functor tests. We need to change this if we switch configuration
-          ctest -j 4 --output-on-failure -E 'CollisionFunctorIntegration.*\/.[^v]'
+          ctest -j 4 --output-on-failure -C validation -E 'CollisionFunctorIntegration.*\/.[^v]'
+
   format_check:
     runs-on: ubuntu-latest
     steps:

@@ -10,7 +10,7 @@
 #include <autopas/options/Newton3Option.h>
 #include <autopas/options/TraversalOption.h>
 #include <gtest/gtest.h>
-#include <ladds/Particle.h>
+#include <ladds/particle/Particle.h>
 
 #include "tuple"
 #include "vector"

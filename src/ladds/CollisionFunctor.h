@@ -12,7 +12,7 @@
 
 #include <array>
 
-#include "Particle.h"
+#include "ladds/particle/Particle.h"
 
 /**
  * Class describing the pairwise particle computation for determining whether a collision occured.

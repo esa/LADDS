@@ -1,12 +1,17 @@
-//
-// Created by albert on 12.11.21.
-//
+/**
+ * @file Constellation.cpp
+ * @author albert
+ * @date 12.11.21
+ */
 
 #include "Constellation.h"
+
+#include <breakupModel/input/CSVReader.h>
 
 #include <cstdlib>
 #include <iostream>
 #include <string>
+
 Constellation::Constellation(const std::string &constellation_data_str, int interval) : interval(interval) {
   // split the 3 comma seperated arguments
   auto seperator1 = constellation_data_str.find(',', 0);
