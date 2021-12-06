@@ -23,7 +23,7 @@ exit_code = sim.wait()
 if exit_code != 0 :
     sys.exit('An error occured during the simulation')
 
-output_path='output_10.vtu'
+output_path='output_99.vtu'
 # path to the given reference vtu
 reference_path=sys.argv[3]
 
@@ -44,14 +44,15 @@ v_ref = VN.vtk_to_numpy(reference.GetPointData().GetArray('velocity')).astype('d
 r_ref = VN.vtk_to_numpy(reference.GetPoints().GetData()).astype('double')
 
 # perform similarity checks on all loaded data
+# Tolerances are empirically determined as tight as possible.
 allTestsOk = True
 if not (len(r_out) == len(r_ref)) :
     print('Number of particles differs!')
     allTestsOk = False
-if not np.allclose(v_out, v_ref) :
+if not np.allclose(v_out, v_ref, atol=1, rtol=0) :
     print('Velocities differ!')
     allTestsOk = False
-if not np.allclose(r_out, r_ref) :
+if not np.allclose(r_out, r_ref, atol=4, rtol=0) :
     print('Positions differ!')
     allTestsOk = False
 

@@ -40,10 +40,22 @@ target_include_directories(
     ${LADDS_SOURCE_DIR}/src
 )
 
+target_compile_definitions(${TEST_EXECUTABLE_NAME}
+    PUBLIC
+    SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_${LADDS_MAX_LOGLVL}
+    DATADIR=\"${PROJECT_SOURCE_DIR}/data/\"
+    CFGDIR=\"${PROJECT_SOURCE_DIR}/cfg/\"
+    CFGDIRTEST=\"${PROJECT_SOURCE_DIR}/cfg/\"
+)
 
 gtest_discover_tests(${TEST_EXECUTABLE_NAME})
 
-target_compile_definitions(${TEST_EXECUTABLE_NAME}
-        PUBLIC
-        DATADIR=\"${PROJECT_SOURCE_DIR}/data/\"
-        )
+add_test(
+        NAME validationtest.testValidation.yaml
+        COMMAND
+        ${PROJECT_SOURCE_DIR}/tests/validationtest.py
+        ${CMAKE_BINARY_DIR}/src/ladds/ladds
+        ${PROJECT_SOURCE_DIR}/cfg/testValidation.yaml
+        ${PROJECT_SOURCE_DIR}/tests/data/reference_10.vtu
+        CONFIGURATIONS validation
+)

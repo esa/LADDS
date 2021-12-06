@@ -11,7 +11,7 @@
 #include <autopas/AutoPasImpl.h>
 
 #include "ladds/CollisionFunctor.h"
-#include "ladds/Particle.h"
+#include "ladds/particle/Particle.h"
 
 //! @cond Doxygen_Suppress
 template bool autopas::AutoPas<Particle>::iteratePairwise(CollisionFunctor *);

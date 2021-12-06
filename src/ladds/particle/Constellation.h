@@ -1,15 +1,15 @@
-//
-// Created by albert on 12.11.21.
-//
-#pragma once
-#include <breakupModel/input/CSVReader.h>
-#include <breakupModel/output/VTKWriter.h>
+/**
+ * @file Constellation.h
+ * @author albert
+ * @date 12.11.21
+ */
 
+#pragma once
 #include <array>
 #include <deque>
 #include <iostream>
 
-#include "Particle.h"
+#include "ladds/particle/Particle.h"
 
 /**
  * The Constellation class contains a collection of Particles that inserts these particles to
