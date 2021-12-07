@@ -4,10 +4,10 @@
  * @date 28.06.21
  */
 
+#include "CollisionFunctor.h"
+
 #include <autopas/utils/ArrayMath.h>
 #include <autopas/utils/WrapOpenMP.h>
-
-#include "CollisionFunctor.h"
 
 CollisionFunctor::CollisionFunctor(double cutoff, double dt, double minorCutoff)
     : Functor(cutoff), _cutoffSquare(cutoff * cutoff), _dt(dt), _minorCutoffSquare(minorCutoff * minorCutoff) {
@@ -140,9 +140,9 @@ void CollisionFunctor::SoAFunctorVerlet(autopas::SoAView<SoAArraysType> soa,
 
 void CollisionFunctor::SoAKernel(
     size_t i, size_t j, autopas::SoAView<SoAArraysType> &soa1, autopas::SoAView<SoAArraysType> &soa2, bool newton3) {
+  throw std::runtime_error(
+      "SoA kernel not up to date with AoS Kernel as it lacks the new linear interpolation distance.");
 
-  throw std::runtime_error("SoA kernel not up to date with AoS Kernel as it lacks the new linear interpolation distance.");
-    
   // get pointers to the SoAs
   const auto *const __restrict x1ptr = soa1.template begin<Particle::AttributeNames::posX>();
   const auto *const __restrict y1ptr = soa1.template begin<Particle::AttributeNames::posY>();
