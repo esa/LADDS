@@ -18,6 +18,7 @@
 
 #include "CollisionFunctor.h"
 #include "Constellation.h"
+#include "ConstellationGeneration.h"
 #include "DatasetReader.h"
 #include "LoadConfig.h"
 #include "Logger.h"
@@ -160,38 +161,22 @@ int main(int argc, char **argv) {
   logger.log(Logger::Level::info, "Number of initial particles: {}", autopas.getNumberOfParticles());
 
   // non initial constellations are added
-  std::vector<Constellation> constellations;
-  int interval =
-      config["io"]["constellationFrequency"].IsDefined() ? config["io"]["constellationFrequency"].as<int>() : 1;
-  if (config["io"]["constellationList"].IsDefined()) {
-    auto cons = config["io"]["constellationList"].as<std::string>();
-    int nConstellations = 1;
-    for (char con : cons) {
-      if (con == ';') {
-        nConstellations++;
-      }
-    }
-    for (int i = 0; i < nConstellations; i++) {
-      unsigned long offset = cons.find(';', 0);
-      if (offset == 0) {
-        constellations.emplace_back(Constellation(cons, interval));
-        break;
-      } else {
-        constellations.emplace_back(Constellation(cons.substr(0, offset), interval));
-        cons.erase(0, offset + 1);
-      }
-    }
-    size_t satellitesToInsert = 0;
-    for (int i = 0; i < nConstellations; i++) {
-      satellitesToInsert += constellations[i].getConstellationSize();
-    }
+  const auto constellationList =
+      config["io"]["constellationList"].IsNull() ? "" : config["io"]["constellationList"].as<std::string>();
+  const auto constellationFrequency = config["io"]["constellationFrequency"].as<size_t>();
+  const auto constellationCutoff = config["io"]["constellationCutoff"].as<double>();
+  const auto altitudeSpread = config["io"]["altitudeSpread"].as<double>();
 
-    logger.log(Logger::Level::info,
-               "{} more particles will be added from {} constellations",
-               satellitesToInsert,
-               nConstellations);
-  }
-  std::vector<Particle> delayedInsertion;
+  auto constellationGeneration =
+      ConstellationGeneration::generateConstellations(constellationList, constellationFrequency, altitudeSpread);
+  std::vector<Constellation> &constellations = constellationGeneration.first;
+  int interval = config["io"]["constellationFrequency"].as<int>();
+  std::vector<Particle> delayedInsertionTotal;
+
+  logger.log(Logger::Level::info,
+             "{} more particles will be added from {} constellations",
+             constellationGeneration.second,
+             constellations.size());
 
   timers.initialization.stop();
 
@@ -222,13 +207,16 @@ int main(int argc, char **argv) {
     timers.constellationInsertion.start();
     // new satellites from constellations inserted over time
     if (i % interval == 0) {
+      // first insert delayed particles from previous insertion and collect the repeatedly delayed
+      delayedInsertionTotal = SafeInsertion::insert(autopas, delayedInsertionTotal, constellationCutoff);
+      // container collecting delayed particles from one constellation at a time in order to append them to
+      // totalDelayedInsertion
+      std::vector<Particle> delayedInsertion;
       for (auto &constellation : constellations) {
         // new satellites are gradually added to the simulation according to their starting time and operation duration
         std::vector<Particle> newSatellites = constellation.tick();
-
-        // add waiting satellites to newSatellites
-        newSatellites.insert(newSatellites.end(), delayedInsertion.begin(), delayedInsertion.end());
-        delayedInsertion = SafeInsertion::insert(autopas, newSatellites, cutoff);
+        delayedInsertion = SafeInsertion::insert(autopas, newSatellites, constellationCutoff);
+        delayedInsertionTotal.insert(delayedInsertionTotal.end(), delayedInsertion.begin(), delayedInsertion.end());
       }
     }
     timers.constellationInsertion.stop();

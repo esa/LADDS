@@ -27,8 +27,9 @@ class Constellation {
    * deployment is started, and the duration of the duration
    * @param interval : the interval of satellites being added to the simulation is
    * passed for internal logic
+   * @param variance :
    */
-  Constellation(const std::string &constellation_data_str, int interval);
+  Constellation(const std::string &constellation_data_str, size_t interval, double altitudeDeviation);
   /**
    * determines which satellites are being added to the simulation by adding each shell
    * within a time span proportional to the shells size. shells are added plane by plane
@@ -56,6 +57,14 @@ class Constellation {
                                                         const std::string &velocity_filepath);
 
   /**
+   * changes the pos vector by adding a random, normal distributed offset to the altitude
+   * (offset dependent on altitudeVariance)
+   * @param pos input position
+   * @return new position with random altitude
+   */
+  std::array<double, 3> randomDisplacement(std::array<double, 3> pos);
+
+  /**
    * iteration from which constellation starts being added to the simulation
    */
   int startTime = 0;
@@ -69,19 +78,19 @@ class Constellation {
    * internal clock that determines which satellites are added to the simulation,
    * starts the count when constellation is set to 'a' = active
    */
-  int timeActive = 0;
+  size_t timeActive = 0;
 
   /**
    * the interval of satellites being added to the simulation is
    * passed for internal logic
    */
-  int interval = 0;
+  size_t interval = 0;
 
   /**
    * multiples of interval. the constellations state is set to 'a' = active whenever
    * simulationTime reaches startTime
    */
-  int simulationTime = 0;
+  size_t simulationTime = 0;
 
   /**
    * The three different possible internal states of a constellation object:
@@ -130,4 +139,30 @@ class Constellation {
    * keeps track of which plane will be added next
    */
   int planesDeployed = 0;
+
+  /**
+   * deviation parameter of the normal distribution that determines the deviation
+   * of the satellites base altitude
+   */
+  double altitudeDeviation;
+
+  /**
+   * seed determining the behaviour of the (pseudo-) random number generator of
+   * the constellation. Constellations share the seed variable and increment
+   * the value during construction so that each constellation is seeded
+   * differently
+   */
+  static int seed;
+
+  /**
+   * seeded/deterministic random number generator used to add noise to the
+   * altitudes of satellites
+   */
+  std::mt19937 generator;
+
+  /**
+   * normal distribution that determines the deviation of the satellites base
+   * altitude. uses altitudeDeviation as parameter
+   */
+  std::normal_distribution<double> distribution;
 };

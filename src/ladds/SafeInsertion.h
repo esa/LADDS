@@ -21,10 +21,9 @@ namespace SafeInsertion {
  */
 std::vector<Particle> insert(autopas::AutoPas<Particle> &autopas,
                              const std::vector<Particle> &newSatellites,
-                             double cutoff) {
+                             const double collisionRadius) {
   std::vector<Particle> delayedInsertion = {};
 
-  const double collisionRadius = 2 * cutoff;
   const double collisionRadiusSquared = collisionRadius * collisionRadius;
   const std::array<double, 3> boxSpan = {collisionRadius, collisionRadius, collisionRadius};
   for (const auto &nSat : newSatellites) {

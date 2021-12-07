@@ -19,8 +19,11 @@ io:
   posFileName: pos.csv # Name of the CSV file with satellite positions [km]
   velFileName: v.csv # Name of the CSV file with satellite velocities [km/s]
   vtkWriteFrequency: 1000 # Frequency of writing to vtk file [iterations]
-  #constellationList: StarlinkGen1,100,7200 # ';'-seperated constellations consisting of path (to constellation directory), start time, duration
-  #constellationFrequency: 10 # Frequency of adding satellites to simulation [iterations]
+
+  constellationList: AstraPhase1,100,10;AstraPhase2,300,200 # ';'-seperated constellations consisting of path , start time, duration
+  constellationFrequency: 1 # Frequency of adding satellites to simulation [iterations]
+  constellationCutoff: 0.1 # satellites of constellations are only inserted when there is no object within constellationCutoff range
+  altitudeSpread: 3.0 # [km] normal distributed altitude deviations are usually smaller than this value (~99.74% chance)
 
 autopas:
   logLevel: off

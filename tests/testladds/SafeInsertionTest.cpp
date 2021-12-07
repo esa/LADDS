@@ -29,7 +29,7 @@ TEST(SafeInsertionTest, testInsertionOverlap) {
   auto integrator = std::make_shared<Integrator<AutoPas_t>>(autopas, *accumulator, deltaT);
 
   const auto maxAltitude = 85000;
-  const auto cutoff = 0.02;
+  const auto cutoff = 0.04;
   const auto verletSkin = 0.20;
   const auto verletRebuildFrequency = 20;
   const auto desiredCellsPerDimension = 32;
@@ -125,7 +125,7 @@ TEST(SafeInsertionTest, testCriticalRangeInsertion1) {
   auto integrator = std::make_shared<Integrator<AutoPas_t>>(autopas, *accumulator, deltaT);
 
   const auto maxAltitude = 85000;
-  const auto cutoff = 0.02;
+  const auto cutoff = 0.04;
   const auto verletSkin = 0.20;
   const auto verletRebuildFrequency = 20;
   const auto desiredCellsPerDimension = 32;
@@ -191,7 +191,7 @@ TEST(SafeInsertionTest, testCriticalRangeInsertion2) {
   auto integrator = std::make_shared<Integrator<AutoPas_t>>(autopas, *accumulator, deltaT);
 
   const auto maxAltitude = 85000;
-  const auto cutoff = 0.02;
+  const auto cutoff = 0.04;
   const auto verletSkin = 0.20;
   const auto verletRebuildFrequency = 20;
   const auto desiredCellsPerDimension = 32;
@@ -258,7 +258,7 @@ TEST(SafeInsertionTest, testCriticalRangeInsertion3) {
   auto integrator = std::make_shared<Integrator<AutoPas_t>>(autopas, *accumulator, deltaT);
 
   const auto maxAltitude = 85000;
-  const auto cutoff = 0.02;
+  const auto cutoff = 0.04;
   const auto verletSkin = 0.20;
   const auto verletRebuildFrequency = 20;
   const auto desiredCellsPerDimension = 32;
@@ -325,7 +325,7 @@ TEST(SafeInsertionTest, testCriticalRangeInsertion4) {
   auto integrator = std::make_shared<Integrator<AutoPas_t>>(autopas, *accumulator, deltaT);
 
   const auto maxAltitude = 85000;
-  const auto cutoff = 0.02;
+  const auto cutoff = 0.04;
   const auto verletSkin = 0.20;
   const auto verletRebuildFrequency = 20;
   const auto desiredCellsPerDimension = 32;
@@ -392,7 +392,7 @@ TEST(SafeInsertionTest, testCriticalRangeInsertion5) {
   auto integrator = std::make_shared<Integrator<AutoPas_t>>(autopas, *accumulator, deltaT);
 
   const auto maxAltitude = 85000;
-  const auto cutoff = 0.02;
+  const auto cutoff = 0.04;
   const auto verletSkin = 0.20;
   const auto verletRebuildFrequency = 20;
   const auto desiredCellsPerDimension = 32;
@@ -459,7 +459,7 @@ TEST(SafeInsertionTest, testCriticalRangeInsertion6) {
   auto integrator = std::make_shared<Integrator<AutoPas_t>>(autopas, *accumulator, deltaT);
 
   const auto maxAltitude = 85000;
-  const auto cutoff = 0.02;
+  const auto cutoff = 0.04;
   const auto verletSkin = 0.20;
   const auto verletRebuildFrequency = 20;
   const auto desiredCellsPerDimension = 32;
@@ -526,7 +526,7 @@ TEST(SafeInsertionTest, testCriticalRangeInsertion7) {
   auto integrator = std::make_shared<Integrator<AutoPas_t>>(autopas, *accumulator, deltaT);
 
   const auto maxAltitude = 85000;
-  const auto cutoff = 0.02;
+  const auto cutoff = 0.04;
   const auto verletSkin = 0.20;
   const auto verletRebuildFrequency = 20;
   const auto desiredCellsPerDimension = 32;
@@ -592,7 +592,7 @@ TEST(SafeInsertionTest, testCriticalRangeInsertion8) {
   auto integrator = std::make_shared<Integrator<AutoPas_t>>(autopas, *accumulator, deltaT);
 
   const auto maxAltitude = 85000;
-  const auto cutoff = 0.02;
+  const auto cutoff = 0.04;
   const auto verletSkin = 0.20;
   const auto verletRebuildFrequency = 20;
   const auto desiredCellsPerDimension = 32;
@@ -658,7 +658,7 @@ TEST(SafeInsertionTest, testCriticalRangeInsertion9) {
   auto integrator = std::make_shared<Integrator<AutoPas_t>>(autopas, *accumulator, deltaT);
 
   const auto maxAltitude = 85000;
-  const auto cutoff = 0.02;
+  const auto cutoff = 0.04;
   const auto verletSkin = 0.20;
   const auto verletRebuildFrequency = 20;
   const auto desiredCellsPerDimension = 32;
