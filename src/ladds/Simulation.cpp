@@ -144,11 +144,11 @@ void Simulation::collisionDetection(size_t iteration,
   CollisionFunctor collisionFunctor(autopas.getCutoff(), deltaT, 0.1 * autopas.getCutoff());
   autopas.iteratePairwise(&collisionFunctor);
   auto collisions = collisionFunctor.getCollisions();
-  for (const auto &[p1, p2AndDistance] : collisions) {
+  for (const auto &[p1, p2AndDistanceSquare] : collisions) {
     totalConjunctions++;
-    const auto &[p2, distance] = p2AndDistance;
-    conjunctionLogger.log(iteration, *p1, *p2, distance);
-    SPDLOG_LOGGER_DEBUG(logger.get(), "{} | {} | distance={}", p1->getID(), p2->getID(), distance);
+    const auto &[p2, distanceSquare] = p2AndDistanceSquare;
+    conjunctionLogger.log(iteration, *p1, *p2, distanceSquare);
+    SPDLOG_LOGGER_DEBUG(logger.get(), "{} | {} | distanceSquare={}", p1->getID(), p2->getID(), distanceSquare);
   }
   if (iteration % progressOutputFrequency == 0) {
     SPDLOG_LOGGER_INFO(
