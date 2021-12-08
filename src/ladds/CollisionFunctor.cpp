@@ -43,8 +43,8 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   // according to wolfram alpha, should look like this:
   // https://www.wolframalpha.com/input/?i=solve+for+t+d%2Fdt%5Bsqrt%28%28-z_1+t+%2B+t+v_1+%2B+x_1+-+y_1%29%5E2+%2B+%28-z_2+t+%2B+t+v_2+%2B+x_2+-+y_2%29%5E2+%2B+%28t+v_3+-+t+z_3+%2B+x_3+-+y_3%29%5E2%29%5D
 
-  const auto & vi = i.getVelocity();
-  const auto & vj = j.getVelocity();
+  const auto &vi = i.getVelocity();
+  const auto &vj = j.getVelocity();
 
   // Get old time step position
   const auto old_r_i = sub(i.getR(), mulScalar(vi, _dt));
@@ -143,6 +143,8 @@ void CollisionFunctor::SoAFunctorVerlet(autopas::SoAView<SoAArraysType> soa,
 
 void CollisionFunctor::SoAKernel(
     size_t i, size_t j, autopas::SoAView<SoAArraysType> &soa1, autopas::SoAView<SoAArraysType> &soa2, bool newton3) {
+  // TODO: as soon as this exception is removed / the SoAFunctor properly implemented
+  // remove the GTEST_SKIP in CollisionFunctorIntegrationTest::testAutoPasAlgorithm!
   throw std::runtime_error(
       "SoA kernel not up to date with AoS Kernel as it lacks the new linear interpolation distance.");
 
