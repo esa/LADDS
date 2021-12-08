@@ -4,10 +4,12 @@
  * @date 28.06.21
  */
 
-#include "CollisionFunctor.h"
-
 #include <autopas/utils/ArrayMath.h>
 #include <autopas/utils/WrapOpenMP.h>
+
+#include <algorithm>
+
+#include "CollisionFunctor.h"
 
 CollisionFunctor::CollisionFunctor(double cutoff, double dt, double minorCutoff)
     : Functor(cutoff), _cutoffSquare(cutoff * cutoff), _dt(dt), _minorCutoffSquare(minorCutoff * minorCutoff) {

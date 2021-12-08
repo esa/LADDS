@@ -3,6 +3,7 @@ sim:
   iterations: 32000 # Number of simulation iterations
   maxAltitude: 10000 # Maximum satellite altitude [km]
   deltaT: 10.0 # [s]
+  conjunctionThreshold: 5.0 # [km]
 
   prop: # Which propagation model components should be applied
     useKEPComponent: true # Keplerian propagation

@@ -83,7 +83,8 @@ class Simulation {
                           ConjunctionLogger &conjunctionLogger,
                           size_t &totalConjunctions,
                           size_t progressOutputFrequency,
-                          double deltaT);
+                          double deltaT,
+                          double conjunctionThreshold);
 
   /**
    * The main loop.

@@ -4,8 +4,6 @@
  * @date 30.11.21
  */
 
-#include "Simulation.h"
-
 #include <breakupModel/output/VTKWriter.h>
 #include <ladds/io/DatasetReader.h>
 #include <ladds/particle/SatelliteToParticleConverter.h>
@@ -14,6 +12,7 @@
 #include <tuple>
 #include <vector>
 
+#include "Simulation.h"
 #include "ladds/io/ConjunctionLogger.h"
 #include "ladds/io/SatelliteLoader.h"
 #include "ladds/io/VTUWriter.h"
@@ -140,9 +139,10 @@ void Simulation::collisionDetection(size_t iteration,
                                     ConjunctionLogger &conjunctionLogger,
                                     size_t &totalConjunctions,
                                     size_t progressOutputFrequency,
-                                    double deltaT) {
+                                    double deltaT,
+                                    double conjunctionThreshold) {
   // pairwise interaction
-  CollisionFunctor collisionFunctor(autopas.getCutoff(), deltaT, 0.1 * autopas.getCutoff());
+  CollisionFunctor collisionFunctor(autopas.getCutoff(), deltaT, conjunctionThreshold);
   autopas.iteratePairwise(&collisionFunctor);
   auto collisions = collisionFunctor.getCollisions();
   for (const auto &[p1, p2AndDistanceSquare] : collisions) {
@@ -168,6 +168,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
   const auto progressOutputFrequency =
       config["io"]["progressOutputFrequency"].IsDefined() ? config["io"]["progressOutputFrequency"].as<int>() : 50;
   const auto deltaT = config["sim"]["deltaT"].as<double>();
+  const auto conjunctionThreshold = config["sim"]["conjunctionThreshold"].as<double>();
   std::vector<Particle> delayedInsertion;
 
   size_t totalConjunctions{0ul};
@@ -199,7 +200,8 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     // TODO Check for particles that burn up
 
     timers.collisionDetection.start();
-    collisionDetection(i, autopas, conjunctionLogger, totalConjunctions, progressOutputFrequency, deltaT);
+    collisionDetection(
+        i, autopas, conjunctionLogger, totalConjunctions, progressOutputFrequency, deltaT, conjunctionThreshold);
     timers.collisionDetection.stop();
 
     // TODO insert breakup model here
