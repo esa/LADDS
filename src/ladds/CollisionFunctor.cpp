@@ -72,7 +72,7 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
 
   // If in the past, minimum is at t = 0
   // Else If in future timesteps, minimum for this is at t = _dt
-  std::clamp(t, 0., _dt);
+  t = std::clamp(t, 0., _dt);
 
   // Compute actual distance by propagating along the line to t
   const auto p1 = add(old_r_i, mulScalar(vi, t));
