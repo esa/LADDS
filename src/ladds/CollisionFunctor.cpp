@@ -43,22 +43,25 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   // according to wolfram alpha, should look like this:
   // https://www.wolframalpha.com/input/?i=solve+for+t+d%2Fdt%5Bsqrt%28%28-z_1+t+%2B+t+v_1+%2B+x_1+-+y_1%29%5E2+%2B+%28-z_2+t+%2B+t+v_2+%2B+x_2+-+y_2%29%5E2+%2B+%28t+v_3+-+t+z_3+%2B+x_3+-+y_3%29%5E2%29%5D
 
+  const auto & vi = i.getVelocity();
+  const auto & vj = j.getVelocity();
+
   // Get old time step position
-  const auto old_r_i = sub(i.getR(), mulScalar(i.getVelocity(), _dt));
-  const auto old_r_j = sub(j.getR(), mulScalar(j.getVelocity(), _dt));
+  const auto old_r_i = sub(i.getR(), mulScalar(vi, _dt));
+  const auto old_r_j = sub(j.getR(), mulScalar(vj, _dt));
 
   // Compute nominator dot products
-  const auto vi_ri = dot(i.getVelocity(), old_r_i);
-  const auto vi_rj = dot(i.getVelocity(), old_r_j);
-  const auto vj_ri = dot(j.getVelocity(), old_r_i);
-  const auto vj_rj = dot(j.getVelocity(), old_r_j);
+  const auto vi_ri = dot(vi, old_r_i);
+  const auto vi_rj = dot(vi, old_r_j);
+  const auto vj_ri = dot(vj, old_r_i);
+  const auto vj_rj = dot(vj, old_r_j);
 
   const auto nominator = vi_rj + vj_ri - vi_ri - vj_rj;
 
   // Compute denominator dot products
-  const auto two_vi_vj = 2.0 * dot(i.getVelocity(), j.getVelocity());
-  const auto vi_square = dot(i.getVelocity(), i.getVelocity());
-  const auto vj_square = dot(j.getVelocity(), j.getVelocity());
+  const auto two_vi_vj = 2.0 * dot(vi, vj);
+  const auto vi_square = dot(vi, vi);
+  const auto vj_square = dot(vj, vj);
 
   const auto denominator = vi_square + vj_square - two_vi_vj;
 
@@ -73,8 +76,8 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
     t = _dt;
 
   // Compute actual distance by propagating along the line to t
-  const auto p1 = add(old_r_i, mulScalar(i.getVelocity(), t));
-  const auto p2 = add(old_r_j, mulScalar(j.getVelocity(), t));
+  const auto p1 = add(old_r_i, mulScalar(vi, t));
+  const auto p2 = add(old_r_j, mulScalar(vj, t));
 
   const auto dr_lines = sub(p1, p2);
   const auto distanceSquare_lines = dot(dr_lines, dr_lines);
