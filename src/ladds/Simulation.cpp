@@ -4,6 +4,8 @@
  * @date 30.11.21
  */
 
+#include "Simulation.h"
+
 #include <breakupModel/output/VTKWriter.h>
 #include <ladds/io/DatasetReader.h>
 #include <ladds/particle/SatelliteToParticleConverter.h>
@@ -12,7 +14,6 @@
 #include <tuple>
 #include <vector>
 
-#include "Simulation.h"
 #include "ladds/io/ConjunctionLogger.h"
 #include "ladds/io/SatelliteLoader.h"
 #include "ladds/io/VTUWriter.h"
