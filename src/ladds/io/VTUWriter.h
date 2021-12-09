@@ -13,5 +13,6 @@ namespace VTUWriter {
  * Write a vtk file with the current state of the simulation.
  */
 void writeVTK(size_t iteration, const AutoPas_t &autopas);
+void writeLegacyVTKBinary(size_t iteration, const AutoPas_t &autopas);
 
 }  // namespace VTUWriter

@@ -17,7 +17,7 @@ target_link_libraries(${EXECUTABLE_NAME}
         autopas
         debris_sim_lib
         breakupModel_lib
-        )
+)
 
 # note: in spdlog trace is the highest level
 set(
