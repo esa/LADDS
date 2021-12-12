@@ -123,16 +123,19 @@ Simulation::initIntegrator(AutoPas_t &autopas, const YAML::Node &config) {
 }
 
 void Simulation::updateConstellation(AutoPas_t &autopas,
-                                     std::vector<Constellation> constellations,
-                                     std::vector<Particle> &delayedInsertion) {
-  for (auto &constellation : constellations) {
-    // new satellites are gradually added to the simulation according to their starting time and operation duration
-    auto newSatellites = constellation.tick();
-
-    // add waiting satellites to newSatellites
-    newSatellites.insert(newSatellites.end(), delayedInsertion.begin(), delayedInsertion.end());
-    delayedInsertion = checkedInsert(autopas, newSatellites, autopas.getCutoff());
-  }
+                                     std::vector<Constellation>& constellations,
+                                     std::vector<Particle> &delayedInsertionTotal) {
+    // first insert delayed particles from previous insertion and collect the repeatedly delayed
+    delayedInsertionTotal = checkedInsert(autopas, delayedInsertionTotal, autopas.getCutoff());
+    // container collecting delayed particles from one constellation at a time in order to append them to
+    // totalDelayedInsertion
+    std::vector<Particle> delayedInsertion;
+    for (auto &constellation : constellations) {
+        // new satellites are gradually added to the simulation according to their starting time and operation duration
+        auto newSatellites = constellation.tick();
+        delayedInsertion = checkedInsert(autopas, newSatellites, autopas.getCutoff());
+        delayedInsertionTotal.insert(delayedInsertionTotal.end(), delayedInsertion.begin(), delayedInsertion.end());
+    }
 }
 
 void Simulation::collisionDetection(size_t iteration,

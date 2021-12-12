@@ -71,7 +71,7 @@ class Simulation {
    * parameter!
    */
   void updateConstellation(AutoPas_t &autopas,
-                           std::vector<Constellation> constellations,
+                           std::vector<Constellation>& constellations,
                            std::vector<Particle> &delayedInsertion);
 
   /**
