@@ -62,35 +62,35 @@ TEST_F(SimulationTest, testInsertionOverlap) {
   ASSERT_EQ(autopas->getNumberOfParticles(), 2) << "Container initialized wrong!";
 
   // 0
-  std::vector<Particle> delayedInsertion = simulation.checkedInsert(*autopas, newSatellites, autopas->getCutoff());
+  std::vector<Particle> delayedInsertion = simulation.checkedInsert(*autopas, newSatellites, config["io"]["constellationCutoff"].as<double>());
   EXPECT_EQ(delayedInsertion.size(), 2);
   EXPECT_EQ(autopas->getNumberOfParticles(), 2);
   // 1
   integrator->integrate();
   escapedParticles = autopas->updateContainer();
   EXPECT_EQ(escapedParticles.size(), 0);
-  delayedInsertion = simulation.checkedInsert(*autopas, delayedInsertion, autopas->getCutoff());
+  delayedInsertion = simulation.checkedInsert(*autopas, delayedInsertion, config["io"]["constellationCutoff"].as<double>());
   EXPECT_EQ(delayedInsertion.size(), 1);
   EXPECT_EQ(autopas->getNumberOfParticles(), 3);
   // 2
   integrator->integrate();
   escapedParticles = autopas->updateContainer();
   EXPECT_EQ(escapedParticles.size(), 0);
-  delayedInsertion = simulation.checkedInsert(*autopas, delayedInsertion, autopas->getCutoff());
+  delayedInsertion = simulation.checkedInsert(*autopas, delayedInsertion, config["io"]["constellationCutoff"].as<double>());
   EXPECT_EQ(delayedInsertion.size(), 1);
   EXPECT_EQ(autopas->getNumberOfParticles(), 3);
   // 3
   integrator->integrate();
   escapedParticles = autopas->updateContainer();
   EXPECT_EQ(escapedParticles.size(), 0);
-  delayedInsertion = simulation.checkedInsert(*autopas, delayedInsertion, autopas->getCutoff());
+  delayedInsertion = simulation.checkedInsert(*autopas, delayedInsertion, config["io"]["constellationCutoff"].as<double>());
   EXPECT_EQ(delayedInsertion.size(), 0);
   EXPECT_EQ(autopas->getNumberOfParticles(), 4);
   // 4
   integrator->integrate();
   escapedParticles = autopas->updateContainer();
   EXPECT_EQ(escapedParticles.size(), 0);
-  delayedInsertion = simulation.checkedInsert(*autopas, delayedInsertion, autopas->getCutoff());
+  delayedInsertion = simulation.checkedInsert(*autopas, delayedInsertion, config["io"]["constellationCutoff"].as<double>());
   EXPECT_EQ(delayedInsertion.size(), 0);
   EXPECT_EQ(autopas->getNumberOfParticles(), 4);
 }
@@ -130,7 +130,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion1) {
   std::vector<Particle> newSatellites;
   newSatellites.push_back(p1);
 
-  std::vector<Particle> delayedInsertion = simulation.checkedInsert(*autopas, newSatellites, autopas->getCutoff());
+  std::vector<Particle> delayedInsertion = simulation.checkedInsert(*autopas, newSatellites, config["io"]["constellationCutoff"].as<double>());
   EXPECT_EQ(autopas->getNumberOfParticles(), 2);
   EXPECT_EQ(delayedInsertion.size(), 0);
 }
@@ -172,7 +172,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion2) {
   std::vector<Particle> newSatellites;
   newSatellites.push_back(p2);
 
-  std::vector<Particle> delayedInsertion = simulation.checkedInsert(*autopas, newSatellites, autopas->getCutoff());
+  std::vector<Particle> delayedInsertion = simulation.checkedInsert(*autopas, newSatellites, config["io"]["constellationCutoff"].as<double>());
   EXPECT_EQ(autopas->getNumberOfParticles(), 1);
   EXPECT_EQ(delayedInsertion.size(), 1);
 }
@@ -214,7 +214,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion3) {
   std::vector<Particle> newSatellites;
   newSatellites.push_back(p3);
 
-  std::vector<Particle> delayedInsertion = simulation.checkedInsert(*autopas, newSatellites, autopas->getCutoff());
+  std::vector<Particle> delayedInsertion = simulation.checkedInsert(*autopas, newSatellites, config["io"]["constellationCutoff"].as<double>());
   EXPECT_EQ(autopas->getNumberOfParticles(), 2);
   EXPECT_EQ(delayedInsertion.size(), 0);
 }
@@ -256,7 +256,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion4) {
   std::vector<Particle> newSatellites;
   newSatellites.push_back(p4);
 
-  std::vector<Particle> delayedInsertion = simulation.checkedInsert(*autopas, newSatellites, autopas->getCutoff());
+  std::vector<Particle> delayedInsertion = simulation.checkedInsert(*autopas, newSatellites, config["io"]["constellationCutoff"].as<double>());
   EXPECT_EQ(autopas->getNumberOfParticles(), 1);
   EXPECT_EQ(delayedInsertion.size(), 1);
 }
@@ -298,7 +298,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion5) {
   std::vector<Particle> newSatellites;
   newSatellites.push_back(p5);
 
-  std::vector<Particle> delayedInsertion = simulation.checkedInsert(*autopas, newSatellites, autopas->getCutoff());
+  std::vector<Particle> delayedInsertion = simulation.checkedInsert(*autopas, newSatellites, config["io"]["constellationCutoff"].as<double>());
   EXPECT_EQ(autopas->getNumberOfParticles(), 1);
   EXPECT_EQ(delayedInsertion.size(), 1);
 }
@@ -340,7 +340,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion6) {
   std::vector<Particle> newSatellites;
   newSatellites.push_back(p6);
 
-  std::vector<Particle> delayedInsertion = simulation.checkedInsert(*autopas, newSatellites, autopas->getCutoff());
+  std::vector<Particle> delayedInsertion = simulation.checkedInsert(*autopas, newSatellites, config["io"]["constellationCutoff"].as<double>());
   EXPECT_EQ(autopas->getNumberOfParticles(), 1);
   EXPECT_EQ(delayedInsertion.size(), 1);
 }
@@ -381,7 +381,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion7) {
   std::vector<Particle> newSatellites;
   newSatellites.push_back(p7);
 
-  std::vector<Particle> delayedInsertion = simulation.checkedInsert(*autopas, newSatellites, autopas->getCutoff());
+  std::vector<Particle> delayedInsertion = simulation.checkedInsert(*autopas, newSatellites, config["io"]["constellationCutoff"].as<double>());
   EXPECT_EQ(autopas->getNumberOfParticles(), 1);
   EXPECT_EQ(delayedInsertion.size(), 1);
 }
@@ -422,7 +422,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion8) {
   std::vector<Particle> newSatellites;
   newSatellites.push_back(p8);
 
-  std::vector<Particle> delayedInsertion = simulation.checkedInsert(*autopas, newSatellites, autopas->getCutoff());
+  std::vector<Particle> delayedInsertion = simulation.checkedInsert(*autopas, newSatellites, config["io"]["constellationCutoff"].as<double>());
   EXPECT_EQ(autopas->getNumberOfParticles(), 1);
   EXPECT_EQ(delayedInsertion.size(), 1);
 }
@@ -463,7 +463,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion9) {
   std::vector<Particle> newSatellites;
   newSatellites.push_back(p9);
 
-  std::vector<Particle> delayedInsertion = simulation.checkedInsert(*autopas, newSatellites, autopas->getCutoff());
+  std::vector<Particle> delayedInsertion = simulation.checkedInsert(*autopas, newSatellites, config["io"]["constellationCutoff"].as<double>());
   EXPECT_EQ(autopas->getNumberOfParticles(), 2);
   EXPECT_EQ(delayedInsertion.size(), 0);
 }
