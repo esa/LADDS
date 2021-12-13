@@ -1,5 +1,5 @@
 /**
- * @file Constellation.cpp
+ * @file Constellation.h
  * @author albert
  * @date 12.11.21
  */
@@ -11,7 +11,7 @@
 #include <deque>
 #include <iostream>
 
-#include "Particle.h"
+#include "ladds/particle/Particle.h"
 
 /**
  * The Constellation class contains a collection of Particles that inserts these particles to
