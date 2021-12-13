@@ -1,8 +1,12 @@
-//
-// Created by albert on 12.11.21.
-//
+/**
+ * @file Constellation.cpp
+ * @author albert
+ * @date 12.11.21
+ */
 
 #include "Constellation.h"
+
+#include <breakupModel/input/CSVReader.h>
 
 #include <cstdlib>
 #include <iostream>
