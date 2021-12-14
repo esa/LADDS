@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "ladds/io/ConjunctionLogger.h"
+#include "ladds/io/HDF5Writer.h"
 #include "ladds/io/SatelliteLoader.h"
 #include "ladds/io/VTUWriter.h"
 #include "ladds/particle/Constellation.h"
@@ -172,6 +173,8 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
   const auto conjunctionThreshold = config["sim"]["conjunctionThreshold"].as<double>();
   std::vector<Particle> delayedInsertion;
 
+  HDF5Writer hdf5Writer("testfile.h5");
+
   size_t totalConjunctions{0ul};
   ConjunctionLogger conjunctionLogger("");
 
@@ -211,6 +214,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     // Visualization:
     if (i % vtkWriteFrequency == 0) {
       VTUWriter::writeVTK(i, autopas);
+      hdf5Writer.write(i, autopas);
     }
     timers.output.stop();
   }
