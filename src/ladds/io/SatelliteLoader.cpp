@@ -36,7 +36,8 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, const YAML::Node &confi
 
 std::vector<Constellation> SatelliteLoader::loadConstellations(const YAML::Node &config, const Logger &logger) {
   std::vector<Constellation> constellations;
-  auto constellationList = config["io"]["constellationList"].IsNull() ? "" : config["io"]["constellationList"].as<std::string>();
+  auto constellationList =
+      config["io"]["constellationList"].IsNull() ? "" : config["io"]["constellationList"].as<std::string>();
   auto altitudeDeviation = config["io"]["altitudeSpread"].as<double>() / 3.0;
   if (!constellationList.empty()) {
     const auto insertionFrequency =
@@ -53,25 +54,24 @@ std::vector<Constellation> SatelliteLoader::loadConstellations(const YAML::Node 
     // parse constellation info
     constellations.reserve(nConstellations);
     for (int i = 0; i < nConstellations; ++i) {
-      unsigned long offset = (i == nConstellations-1)?
-              constellationDataStr.size() :
-              constellationDataStr.find(';', 0);
-      std::string constellationDir = constellationDataStr.substr(0,offset);
+      unsigned long offset =
+          (i == nConstellations - 1) ? constellationDataStr.size() : constellationDataStr.find(';', 0);
+      std::string constellationDir = constellationDataStr.substr(0, offset);
 
       YAML::Node constellationConfig;
       try {
-          constellationConfig = YAML::LoadFile(std::string(DATADIR) + constellationDir + "/shells_" + constellationDir + ".yaml");
+        constellationConfig =
+            YAML::LoadFile(std::string(DATADIR) + constellationDir + "/shells_" + constellationDir + ".yaml");
       } catch (YAML::Exception &e) {
-          std::cout << e.msg << std::endl;
-          logger.log(Logger::Level::warn, "Error loading cfg, Exiting...");
-          exit(1);
+        std::cout << e.msg << std::endl;
+        logger.log(Logger::Level::warn, "Error loading cfg, Exiting...");
+        exit(1);
       }
 
       constellations.emplace_back(Constellation(constellationConfig, insertionFrequency, altitudeDeviation));
-      if(i != nConstellations-1){
-          constellationDataStr.erase(0, offset + 1);
+      if (i != nConstellations - 1) {
+        constellationDataStr.erase(0, offset + 1);
       }
-
     }
 
     size_t constellationTotalNumSatellites = 0;
