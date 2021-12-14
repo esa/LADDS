@@ -51,9 +51,14 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(const YAML::Node &config) {
 
   const auto maxAltitude = config["sim"]["maxAltitude"].as<double>();
   const auto cutoff = config["autopas"]["cutoff"].as<double>();
-  const auto verletSkin = config["autopas"]["skin"].as<double>();
-  const auto verletRebuildFrequency = config["autopas"]["rebuildFrequency"].as<unsigned int>();
   const auto desiredCellsPerDimension = config["autopas"]["desiredCellsPerDimension"].as<double>();
+  const auto deltaT = config["sim"]["deltaT"].as<double>();
+  const auto verletRebuildFrequency = config["autopas"]["rebuildFrequency"].as<unsigned int>();
+  // *8.5 : Assumed max km/s   TODO: get this from input?
+  // *2: because particles might flight directly towards each other
+  const auto verletSkin = 2 * 8.5 * deltaT * verletRebuildFrequency;
+
+  SPDLOG_LOGGER_DEBUG(logger.get(), "Verlet Skin: {}", verletSkin);
 
   autopas->setBoxMin({-maxAltitude, -maxAltitude, -maxAltitude});
   autopas->setBoxMax({maxAltitude, maxAltitude, maxAltitude});
