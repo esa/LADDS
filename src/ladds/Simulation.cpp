@@ -210,8 +210,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     timers.output.start();
     // Visualization:
     if (i % vtkWriteFrequency == 0) {
-      // VTUWriter::writeVTK(i, autopas);
-      VTUWriter::writeLegacyVTKBinary(i, autopas);
+      VTUWriter::writeVTK(i, autopas);
     }
     timers.output.stop();
   }

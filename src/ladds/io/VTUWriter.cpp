@@ -18,20 +18,24 @@ void swapEndianess(T &var) {
   }
 }
 
-template <class T, class F>
-void printScalar(const AutoPas_t &autopas, std::ofstream &file, F f) {
-  for (const auto &p : autopas) {
-    T entry = f(p);
-    swapEndianess(entry);
+template <class T, bool swap, class F>
+void printScalar(const AutoPas_t &autopas, std::ofstream &file, F fun) {
+  for (const auto &particle : autopas) {
+    T entry = fun(particle);
+    if (swap) {
+      swapEndianess(entry);
+    }
     file.write(reinterpret_cast<char *>(&entry), sizeof(T));
   }
 }
 
-template <class T, class F>
-void printArray(const AutoPas_t &autopas, std::ofstream &file, F f) {
-  for (const auto &p : autopas) {
-    for (T entry : f(p)) {
-      swapEndianess(entry);
+template <class T, bool swap, class F>
+void printArray(const AutoPas_t &autopas, std::ofstream &file, F fun) {
+  for (const auto &particle : autopas) {
+    for (T entry : fun(particle)) {
+      if (swap) {
+        swapEndianess(entry);
+      }
       file.write(reinterpret_cast<char *>(&entry), sizeof(T));
     }
   }
@@ -50,14 +54,14 @@ void VTUWriter::writeLegacyVTKBinary(size_t iteration, const AutoPas_t &autopas)
           "DIMENSIONS 1 1 1\n";
 
   file << "POINTS " << numParticles << " double\n";
-  printArray<float>(autopas, file, [](const auto &p) { return p.getR(); });
+  printArray<float, true>(autopas, file, [](const auto &p) { return p.getR(); });
   file << "POINT_DATA " << numParticles
        << "\n"
           "VECTORS velocities double\n";
-  printArray<float>(autopas, file, [](const auto &p) { return p.getV(); });
+  printArray<float, true>(autopas, file, [](const auto &p) { return p.getV(); });
   file << "SCALARS particleIds Int32\n"
        << "LOOKUP_TABLE default\n";
-  printScalar<unsigned short>(autopas, file, [](const auto &p) { return p.getID(); });
+  printScalar<unsigned short, true>(autopas, file, [](const auto &p) { return p.getID(); });
 
   file.close();
 }
