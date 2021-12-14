@@ -3,6 +3,7 @@ sim:
   iterations: 32000 # Number of simulation iterations
   maxAltitude: 10000 # Maximum satellite altitude [km]
   deltaT: 10.0 # [s]
+  conjunctionThreshold: 5.0 # [km]
 
   prop: # Which propagation model components should be applied
     useKEPComponent: true # Keplerian propagation
@@ -25,7 +26,7 @@ io:
 
 autopas:
   logLevel: off
-  cutoff: 1.0 # Cutoff for autopas force interaction
+  cutoff: 80.0 # Cutoff for autopas force interaction
   rebuildFrequency: 8
   desiredCellsPerDimension: 32 # Desired number of cells per dimension
   tuningMode: false
