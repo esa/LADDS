@@ -1,26 +1,20 @@
-option(LADDS_HDF5 "Add HDF5 and HighFive to support HDF5 output" ON)
+option(LADDS_HDF5 "Add HDF5 and h5pp to support HDF5 output" ON)
 
 if (LADDS_HDF5)
     #Select https(default) or ssh path.
-    set(highFiveRepoPath https://github.com/BlueBrain/HighFive.git)
+    set(h5ppRepoPath https://github.com/DavidAce/h5pp.git)
     if (GIT_SUBMODULES_SSH)
-        set(highFiveRepoPath git@github.com:BlueBrain/HighFive.git)
+        set(h5ppRepoPath git@github.com:DavidAce/h5pp.git)
     endif ()
 
     FetchContent_Declare(
-            highFive
-            GIT_REPOSITORY ${highFiveRepoPath}
-            GIT_TAG v2.3.1
+            h5pp
+            GIT_REPOSITORY ${h5ppRepoPath}
+            GIT_TAG v1.9.0
     )
 
-    set(HIGHFIVE_BUILD_DOCS OFF)
-    set(HIGHFIVE_EXAMPLES OFF)
-    set(HIGHFIVE_UNIT_TESTS OFF)
-    set(HIGHFIVE_USE_BOOST OFF)
-    # TODO: Maybe something to look into in the future
-    # set(HIGHFIVE_PARALLEL_HDF5 ON)
 
-    FetchContent_MakeAvailable(highFive)
+    FetchContent_MakeAvailable(h5pp)
 
     # TODO might be more ugly since this is an INTERFACE library
     # Disable warnings from the library target

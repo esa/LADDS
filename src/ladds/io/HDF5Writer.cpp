@@ -6,36 +6,31 @@
 
 #include "HDF5Writer.h"
 
-std::array<float, 3> toFloat(const std::array<double, 3> &arrDouble) {
-  std::array<float, 3> arrFloat{};
-  std::copy(arrDouble.begin(), arrDouble.end(), arrFloat.begin());
-  return arrFloat;
-}
-
 void HDF5Writer::write(size_t iteration, const AutoPas_t &autopas) {
+  struct point3D {
+    double x, y, z;
+  };
+
   //  std::vector<data_t> data;
   //  data.reserve(autopas.getNumberOfParticles());
-  std::vector<std::array<float, 3>> positions;
-  std::vector<std::array<float, 3>> velocities;
+  std::vector<point3D> positions;
+  std::vector<point3D> velocities;
   std::vector<size_t> ids;
   positions.reserve(autopas.getNumberOfParticles());
   velocities.reserve(autopas.getNumberOfParticles());
   ids.reserve(autopas.getNumberOfParticles());
 
   for (const auto &particle : autopas) {
-    //    data.emplace_back<data_t>({particle.getID(), particle.getR(), particle.getV()});
-    positions.push_back(toFloat(particle.getR()));
-    velocities.push_back(toFloat(particle.getV()));
+    const auto &pos = particle.getR();
+    positions.emplace_back<point3D>({pos[0], pos[1], pos[2]});
+    const auto &vel = particle.getV();
+    velocities.emplace_back<point3D>({vel[0], vel[1], vel[2]});
     ids.push_back(particle.getID());
   }
 
-  auto group = _file.createGroup("Iteration" + std::to_string(iteration));
-
-  auto datasetPos = group.createDataSet<float>("Positions", HighFive::DataSpace(autopas.getNumberOfParticles(), 3));
-  datasetPos.write(positions.data());
-  auto datasetV = group.createDataSet<float>("Velocities", HighFive::DataSpace(autopas.getNumberOfParticles(), 3));
-  datasetV.write(velocities.data());
-  auto datasetId = group.createDataSet("IDs", ids);
-
-  group.createAttribute("IterationNr", iteration);
+  const auto group = "Iteration" + std::to_string(iteration);
+  _file.writeDataset(positions, group + "/Positions");
+  _file.writeDataset(velocities, group + "/Velocities");
+  _file.writeDataset(ids, group + "/IDs");
+  _file.writeAttribute(iteration, "IterationNr", group);
 }
