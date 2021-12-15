@@ -58,11 +58,13 @@ Satellite constellations (e.g. Starlink, OneWeb) are usually described by a list
 An orbital shell is described by a 4-tuple with information about `altitude`, `inclination`, `number of
 planes`, and `number of satellites` per plane. We provide a notebook 
 `notebooks/ConstellationGeneration/ConstellationGeneration.ipynb` that can be used 
-to generate constellation data which can be processed by LADDS from orbital shells.
+to generate constellation data from orbital shell parameters.
 
 Quick guide:
-* `Initialize` the constellation by executing the first cell and providing metadata in the second cell
-* `create a shell` by providing the 4 shell arguments, and further parameters (extra params) if necessary (2.1).
+* Initialize the constellation by executing the first cell and providing metadata in the second cell (1)
+* create a shell by providing the 4 shell arguments, and further parameters (extra params) if necessary (2.1).
 Store the temporary shell data by executing the cell (2.2)
 * turn satellites into position and velocity vectors by executing cell (3)
 * write the files by executing cell (4) and save them by executing cell (5)
+
+A detailed guide is located in the directory of the notebook.
