@@ -173,7 +173,10 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
   const auto conjunctionThreshold = config["sim"]["conjunctionThreshold"].as<double>();
   std::vector<Particle> delayedInsertion;
 
-  HDF5Writer hdf5Writer("testfile.h5");
+  const auto hdf5CompressionLvl = config["io"]["hdf5"]["compressionLevel"].IsDefined()
+                                      ? config["io"]["hdf5"]["compressionLevel"].as<unsigned int>()
+                                      : 0u;
+  HDF5Writer hdf5Writer("testfile.h5", hdf5CompressionLvl);
 
   size_t totalConjunctions{0ul};
   ConjunctionLogger conjunctionLogger("");

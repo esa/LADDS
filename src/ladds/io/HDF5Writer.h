@@ -25,7 +25,7 @@ class HDF5Writer {
     H5Tinsert(ParticleDataH5Type, "vy", HOFFSET(ParticleData, vy), H5T_NATIVE_FLOAT);
     H5Tinsert(ParticleDataH5Type, "vz", HOFFSET(ParticleData, vz), H5T_NATIVE_FLOAT);
     H5Tinsert(ParticleDataH5Type, "id", HOFFSET(ParticleData, id), H5T_NATIVE_ULONG);
-    _file.setCompressionLevel(9);
+    _file.setCompressionLevel(compressionLevel);
   }
 
   void write(size_t iteration, const AutoPas_t &autopas);
