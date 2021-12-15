@@ -164,7 +164,6 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
                                 std::vector<Constellation> &constellations,
                                 const YAML::Node &config) {
   const auto iterations = config["sim"]["iterations"].as<size_t>();
-  const auto vtkWriteFrequency = config["io"]["vtkWriteFrequency"].as<size_t>();
   const auto constellationInsertionFrequency =
       config["io"]["constellationFrequency"].IsDefined() ? config["io"]["constellationFrequency"].as<int>() : 1;
   const auto progressOutputFrequency =
@@ -173,8 +172,14 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
   const auto conjunctionThreshold = config["sim"]["conjunctionThreshold"].as<double>();
   std::vector<Particle> delayedInsertion;
 
+  const auto vtkWriteFrequency =
+      config["io"]["vtk"]["writeFrequency"].IsDefined() ? config["io"]["vtk"]["writeFrequency"].as<size_t>() : 0ul;
+
   const auto hdf5CompressionLvl = config["io"]["hdf5"]["compressionLevel"].IsDefined()
                                       ? config["io"]["hdf5"]["compressionLevel"].as<unsigned int>()
+                                      : 0u;
+  const auto hdf5WriteFrequency = config["io"]["hdf5"]["writeFrequency"].IsDefined()
+                                      ? config["io"]["hdf5"]["writeFrequency"].as<unsigned int>()
                                       : 0u;
   HDF5Writer hdf5Writer("testfile.h5", hdf5CompressionLvl);
 
@@ -215,8 +220,10 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
 
     timers.output.start();
     // Visualization:
-    if (i % vtkWriteFrequency == 0) {
+    if (vtkWriteFrequency and i % vtkWriteFrequency == 0) {
       VTUWriter::writeVTK(i, autopas);
+    }
+    if (hdf5WriteFrequency and i % hdf5WriteFrequency == 0) {
       hdf5Writer.write(i, autopas);
     }
     timers.output.stop();
