@@ -12,9 +12,18 @@
 
 #include "ladds/TypeDefinitions.h"
 
+/**
+ * Wrapper for the whole logic of writing the HDF5 file.
+ * All data is written in 32 bit precision.
+ */
 class HDF5Writer {
  public:
-  explicit HDF5Writer(const std::string &filename)
+  /**
+   * Constructor setting up the file and creating the custom data type.
+   * @param filename
+   * @param compressionLevel
+   */
+  HDF5Writer(const std::string &filename, unsigned int compressionLevel)
       : _file(filename, h5pp::FilePermission::REPLACE),
         ParticleDataH5Type(H5Tcreate(H5T_COMPOUND, sizeof(ParticleData))) {
     // Register ParticleData type with HDF5
@@ -24,10 +33,15 @@ class HDF5Writer {
     H5Tinsert(ParticleDataH5Type, "vx", HOFFSET(ParticleData, vx), H5T_NATIVE_FLOAT);
     H5Tinsert(ParticleDataH5Type, "vy", HOFFSET(ParticleData, vy), H5T_NATIVE_FLOAT);
     H5Tinsert(ParticleDataH5Type, "vz", HOFFSET(ParticleData, vz), H5T_NATIVE_FLOAT);
-    H5Tinsert(ParticleDataH5Type, "id", HOFFSET(ParticleData, id), H5T_NATIVE_ULONG);
+    H5Tinsert(ParticleDataH5Type, "id", HOFFSET(ParticleData, id), H5T_NATIVE_UINT);
     _file.setCompressionLevel(compressionLevel);
   }
 
+  /**
+   * Write one dataset of all particle data in the current iteration.
+   * @param iteration
+   * @param autopas
+   */
   void write(size_t iteration, const AutoPas_t &autopas);
 
  private:
@@ -37,7 +51,7 @@ class HDF5Writer {
   struct ParticleData {
     float rx, ry, rz;
     float vx, vy, vz;
-    size_t id;
+    unsigned int id;
   };
 
   /**

@@ -13,13 +13,14 @@ void HDF5Writer::write(size_t iteration, const AutoPas_t &autopas) {
   for (const auto &particle : autopas) {
     const auto &pos = particle.getR();
     const auto &vel = particle.getV();
-    data.emplace_back<ParticleData>({static_cast<float>(pos[0]),
-                                     static_cast<float>(pos[1]),
-                                     static_cast<float>(pos[2]),
-                                     static_cast<float>(vel[0]),
-                                     static_cast<float>(vel[1]),
-                                     static_cast<float>(vel[2]),
-                                     particle.getID()});
+    // pack data and make sure it is of the correct type
+    data.emplace_back<ParticleData>({static_cast<decltype(ParticleData::rx)>(pos[0]),
+                                     static_cast<decltype(ParticleData::ry)>(pos[1]),
+                                     static_cast<decltype(ParticleData::rz)>(pos[2]),
+                                     static_cast<decltype(ParticleData::vx)>(vel[0]),
+                                     static_cast<decltype(ParticleData::vy)>(vel[1]),
+                                     static_cast<decltype(ParticleData::vz)>(vel[2]),
+                                     static_cast<decltype(ParticleData::id)>(particle.getID())});
   }
 
   const auto group = "Iteration" + std::to_string(iteration);
