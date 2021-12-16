@@ -1,6 +1,9 @@
 option(LADDS_HDF5 "Add HDF5 and h5pp to support HDF5 output" ON)
 
 if (LADDS_HDF5)
+
+    find_package(HDF5 1.8 COMPONENTS C HL REQUIRED)
+
     #Select https(default) or ssh path.
     set(h5ppRepoPath https://github.com/DavidAce/h5pp.git)
     if (GIT_SUBMODULES_SSH)
