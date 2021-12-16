@@ -18,9 +18,7 @@ target_link_libraries(${EXECUTABLE_NAME}
         autopas
         debris_sim_lib
         breakupModel_lib
-        hdf5::hdf5_hl
-        hdf5::hdf5
-        h5pp::h5pp
+        "$<$<BOOL:${LADDS_HDF5}>:hdf5::hdf5_hl;hdf5::hdf5;h5pp::h5pp>"
 )
 
 # note: in spdlog trace is the highest level
