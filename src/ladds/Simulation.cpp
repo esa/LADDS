@@ -221,7 +221,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     timers.output.start();
     // Visualization:
     if (vtkWriteFrequency and i % vtkWriteFrequency == 0) {
-      VTUWriter::writeVTK(i, autopas);
+      VTUWriter::writeVTU(i, autopas);
     }
     if (hdf5WriteFrequency and i % hdf5WriteFrequency == 0) {
       hdf5Writer.write(i, autopas);

@@ -66,7 +66,7 @@ void VTUWriter::writeLegacyVTKBinary(size_t iteration, const AutoPas_t &autopas)
   file.close();
 }
 
-void VTUWriter::writeVTK(size_t iteration, const AutoPas_t &autopas) {
+void VTUWriter::writeVTU(size_t iteration, const AutoPas_t &autopas) {
   VTKWriter vtkWriter("output_" + std::to_string(iteration) + ".vtu");
   std::vector<Satellite> allParticles;
   allParticles.reserve(autopas.getNumberOfParticles());
