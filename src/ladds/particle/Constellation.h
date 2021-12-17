@@ -63,7 +63,7 @@ class Constellation {
    * @param pos input position
    * @return new position with random altitude
    */
-  std::array<double, 3> randomDisplacement(std::array<double, 3> pos);
+  std::array<double, 3> randomDisplacement(const std::array<double, 3> &pos);
 
   /**
    * iteration from which constellation starts being added to the simulation
@@ -148,18 +148,10 @@ class Constellation {
   double altitudeDeviation;
 
   /**
-   * seed determining the behaviour of the (pseudo-) random number generator of
-   * the constellation. Constellations share the seed variable and increment
-   * the value during construction so that each constellation is seeded
-   * differently
-   */
-  static int seed;
-
-  /**
    * seeded/deterministic random number generator used to add noise to the
    * altitudes of satellites
    */
-  std::mt19937 generator;
+  static std::mt19937 generator;
 
   /**
    * normal distribution that determines the deviation of the satellites base
