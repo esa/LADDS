@@ -4,11 +4,10 @@
  * @date 12.11.21
  */
 #pragma once
-#include <random>
-
 #include <array>
 #include <deque>
 #include <iostream>
+#include <random>
 
 #include "ladds/particle/Particle.h"
 
@@ -28,7 +27,8 @@ class Constellation {
    * deployment is started, and the duration of the duration
    * @param interval : the interval of satellites being added to the simulation is
    * passed for internal logic
-   * @param variance :
+   * @param altitudeDeviation : used to create satellites with normally distributed
+   * altitudes. Equals the standard deviation of a normal distribution
    */
   Constellation(const std::string &constellation_data_str, size_t interval, double altitudeDeviation);
   /**
