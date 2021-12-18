@@ -24,9 +24,7 @@ class HDF5Writer {
    * @param compressionLevel
    */
   HDF5Writer(const std::string &filename, unsigned int compressionLevel)
-      : _file(filename, h5pp::FilePermission::REPLACE),
-        ParticleDataH5Type(H5Tcreate(H5T_COMPOUND, sizeof(ParticleData))) {
-    // Register ParticleData type with HDF5
+      : _file(filename, h5pp::FilePermission::REPLACE) {
     _file.setCompressionLevel(compressionLevel);
   }
 
@@ -43,18 +41,13 @@ class HDF5Writer {
   /**
    * This represents one line of data in the HDF5 file.
    */
-  struct ParticleData {
-    float rx, ry, rz;
-    float vx, vy, vz;
-    unsigned int id;
+  template <class T>
+  struct Vec3 {
+    T x, y, z;
   };
 
   /**
    * Actual file that will be created. All of the data this writer gets ends up in this one file.
    */
   h5pp::File _file;
-  /**
-   * Object representing the wrapper type HDF5 uses to understand the non-trivial struct ParticleData.
-   */
-  h5pp::hid::h5t ParticleDataH5Type;
 };

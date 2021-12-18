@@ -11,8 +11,8 @@ void HDF5Writer::write(size_t iteration, const AutoPas_t &autopas) {
   using floatType = float;
   using intType = unsigned int;
 
-  std::vector<std::array<floatType, 3>> vecPos;
-  std::vector<std::array<floatType, 3>> vecVel;
+  std::vector<Vec3<floatType>> vecPos;
+  std::vector<Vec3<floatType>> vecVel;
   std::vector<intType> vecId;
 
   vecPos.reserve(autopas.getNumberOfParticles());
@@ -23,9 +23,9 @@ void HDF5Writer::write(size_t iteration, const AutoPas_t &autopas) {
     const auto &pos = particle.getR();
     const auto &vel = particle.getV();
     // pack data and make sure it is of the correct type
-    vecPos.emplace_back<std::array<floatType, 3>>(
+    vecPos.emplace_back<Vec3<floatType>>(
         {static_cast<floatType>(pos[0]), static_cast<floatType>(pos[0]), static_cast<floatType>(pos[0])});
-    vecVel.emplace_back<std::array<floatType, 3>>(
+    vecVel.emplace_back<Vec3<floatType>>(
         {static_cast<floatType>(vel[0]), static_cast<floatType>(vel[0]), static_cast<floatType>(vel[0])});
     vecId.emplace_back(static_cast<intType>(particle.getID()));
   }
