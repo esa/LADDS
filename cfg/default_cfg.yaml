@@ -1,6 +1,6 @@
 sim:
   logLevel: info    # Available levels are off, critical, err, warn, info, debug, trace
-  iterations: 32000 # Number of simulation iterations
+  iterations: 100 # Number of simulation iterations
   maxAltitude: 10000 # Maximum satellite altitude [km]
   deltaT: 10.0 # [s]
   conjunctionThreshold: 5.0 # [km]
@@ -23,7 +23,7 @@ io:
   vtk:
     writeFrequency: 0 # Frequency of writing vtk files [iterations]
   hdf5:
-    writeFrequency: 1000 # Frequency of writing to the hdf5 file [iterations]
+    writeFrequency: 1 # Frequency of writing to the hdf5 file [iterations]
     CompressionLevel: 5 # Valid Levels: 0 (no compression) - 9 (max compression)
   #constellationList: StarlinkGen1,100,7200 # ';'-seperated constellations consisting of path (to constellation directory), start time, duration
   #constellationFrequency: 10 # Frequency of adding satellites to simulation [iterations]
