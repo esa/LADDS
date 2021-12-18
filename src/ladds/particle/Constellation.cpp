@@ -12,7 +12,10 @@
 #include <iostream>
 #include <string>
 
-Constellation::Constellation(const std::string &constellation_data_str, int interval) : interval(interval) {
+std::mt19937 Constellation::generator{42};
+
+Constellation::Constellation(const std::string &constellation_data_str, size_t interval, double altitudeDeviation)
+    : interval(interval), altitudeDeviation(altitudeDeviation) {
   // split the 3 comma seperated arguments
   auto seperator1 = constellation_data_str.find(',', 0);
   auto seperator2 = constellation_data_str.find(',', seperator1 + 1);
@@ -29,9 +32,12 @@ Constellation::Constellation(const std::string &constellation_data_str, int inte
   std::vector<Particle> sats =
       readDatasetConstellation(std::string(DATADIR) + argConstellationName + "/pos_" + argConstellationName + ".csv",
                                std::string(DATADIR) + argConstellationName + "/v_" + argConstellationName + ".csv");
+
+  distribution = std::normal_distribution<double>(0, this->altitudeDeviation);
   // convert vector to deque
   constellationSize = sats.size();
   for (size_t i = 0ul; i < constellationSize; ++i) {
+    sats[i].setPosition(randomDisplacement(sats[i].getPosition()));
     satellites.push_back(sats[i]);
   }
 
@@ -83,7 +89,8 @@ std::vector<Particle> Constellation::tick() {
       }
     case Status::active:
 
-      while (timeActive >= timestamps[currentShellIndex] + planesDeployed * timeSteps[currentShellIndex]) {
+      while (static_cast<double>(timeActive) >=
+             timestamps[currentShellIndex] + planesDeployed * timeSteps[currentShellIndex]) {
         int planeSize = static_cast<int>(shells[currentShellIndex][3]);
         particles.reserve(planeSize);
         for (int i = 0; i < planeSize; i++) {
@@ -145,4 +152,14 @@ std::vector<Particle> Constellation::readDatasetConstellation(const std::string 
                    return Particle(posArray, velArray, particleId++);
                  });
   return particleCollection;
+}
+
+std::array<double, 3> Constellation::randomDisplacement(const std::array<double, 3> &pos) {
+  // the position pos is already the same as the direction vector from origin to pos
+  // u = 1/length*pos
+  std::array<double, 3> unitVector = autopas::utils::ArrayMath::normalize(pos);
+  //
+  double offset = distribution(generator);
+  // npos = pos + offset * u
+  return autopas::utils::ArrayMath::add(pos, autopas::utils::ArrayMath::mulScalar(unitVector, offset));
 }

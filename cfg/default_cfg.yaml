@@ -25,14 +25,15 @@ io:
   hdf5:
     writeFrequency: 1 # Frequency of writing to the hdf5 file [iterations]
     compressionLevel: 0 # Valid Levels: 0 (no compression) - 9 (max compression)
-  #constellationList: StarlinkGen1,100,7200 # ';'-seperated constellations consisting of path (to constellation directory), start time, duration
-  #constellationFrequency: 10 # Frequency of adding satellites to simulation [iterations]
+
+  #constellationList: AstraPhase2,100,7200 # ';'-seperated constellations consisting of path (to constellation directory), start time, duration
+  constellationFrequency: 10 # Frequency of adding satellites to simulation [iterations]
+  altitudeSpread: 1.0 # [km] normal distributed altitude deviations are usually smaller than this value (~99.74% chance)
 
 autopas:
   logLevel: off
   cutoff: 80.0 # Cutoff for autopas force interaction
-  skin: 160.0 # twice the maximum distance a particle can travel between two list rebuilds
-  rebuildFrequency: 20
+  rebuildFrequency: 8
   desiredCellsPerDimension: 32 # Desired number of cells per dimension
   tuningMode: false
 #  Newton3: "enabled, disabled"

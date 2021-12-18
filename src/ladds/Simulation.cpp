@@ -52,9 +52,14 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(const YAML::Node &config) {
 
   const auto maxAltitude = config["sim"]["maxAltitude"].as<double>();
   const auto cutoff = config["autopas"]["cutoff"].as<double>();
-  const auto verletSkin = config["autopas"]["skin"].as<double>();
-  const auto verletRebuildFrequency = config["autopas"]["rebuildFrequency"].as<unsigned int>();
   const auto desiredCellsPerDimension = config["autopas"]["desiredCellsPerDimension"].as<double>();
+  const auto deltaT = config["sim"]["deltaT"].as<double>();
+  const auto verletRebuildFrequency = config["autopas"]["rebuildFrequency"].as<unsigned int>();
+  // *8.5 : Assumed max km/s   TODO: get this from input?
+  // *2: because particles might flight directly towards each other
+  const auto verletSkin = 2 * 8.5 * deltaT * verletRebuildFrequency;
+
+  SPDLOG_LOGGER_DEBUG(logger.get(), "Verlet Skin: {}", verletSkin);
 
   autopas->setBoxMin({-maxAltitude, -maxAltitude, -maxAltitude});
   autopas->setBoxMax({maxAltitude, maxAltitude, maxAltitude});
@@ -124,15 +129,18 @@ Simulation::initIntegrator(AutoPas_t &autopas, const YAML::Node &config) {
 }
 
 void Simulation::updateConstellation(AutoPas_t &autopas,
-                                     std::vector<Constellation> constellations,
-                                     std::vector<Particle> &delayedInsertion) {
+                                     std::vector<Constellation> &constellations,
+                                     std::vector<Particle> &delayedInsertionTotal) {
+  // first insert delayed particles from previous insertion and collect the repeatedly delayed
+  delayedInsertionTotal = checkedInsert(autopas, delayedInsertionTotal, autopas.getCutoff());
+  // container collecting delayed particles from one constellation at a time in order to append them to
+  // totalDelayedInsertion
+  std::vector<Particle> delayedInsertion;
   for (auto &constellation : constellations) {
     // new satellites are gradually added to the simulation according to their starting time and operation duration
     auto newSatellites = constellation.tick();
-
-    // add waiting satellites to newSatellites
-    newSatellites.insert(newSatellites.end(), delayedInsertion.begin(), delayedInsertion.end());
     delayedInsertion = checkedInsert(autopas, newSatellites, autopas.getCutoff());
+    delayedInsertionTotal.insert(delayedInsertionTotal.end(), delayedInsertion.begin(), delayedInsertion.end());
   }
 }
 
