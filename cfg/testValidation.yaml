@@ -22,7 +22,7 @@ io:
   #progressOutputFrequency : 50 # Frequency of writing iteration number and encounter info to std::out.
   vtkWriteFrequency: 99 # Frequency of writing to vtk file [iterations]
 
-  constellationList: #AstraPhase2,100,7200 # ';'-seperated constellations consisting of path (to constellation directory), start time, duration
+  #constellationList: AstraPhase2,100,7200 # ';'-seperated constellations consisting of path (to constellation directory), start time, duration
   constellationFrequency: 10 # Frequency of adding satellites to simulation [iterations]
   altitudeSpread: 1.0 # [km] normal distributed altitude deviations are usually smaller than this value (~99.74% chance)
 
