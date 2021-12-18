@@ -7,22 +7,32 @@
 #include "HDF5Writer.h"
 
 void HDF5Writer::write(size_t iteration, const AutoPas_t &autopas) {
-  std::vector<ParticleData> data;
-  data.reserve(autopas.getNumberOfParticles());
+  // Data will be casted to these types before writing
+  using floatType = float;
+  using intType = unsigned int;
+
+  std::vector<std::array<floatType, 3>> vecPos;
+  std::vector<std::array<floatType, 3>> vecVel;
+  std::vector<intType> vecId;
+
+  vecPos.reserve(autopas.getNumberOfParticles());
+  vecVel.reserve(autopas.getNumberOfParticles());
+  vecId.reserve(autopas.getNumberOfParticles());
 
   for (const auto &particle : autopas) {
     const auto &pos = particle.getR();
     const auto &vel = particle.getV();
     // pack data and make sure it is of the correct type
-    data.emplace_back<ParticleData>({static_cast<decltype(ParticleData::rx)>(pos[0]),
-                                     static_cast<decltype(ParticleData::ry)>(pos[1]),
-                                     static_cast<decltype(ParticleData::rz)>(pos[2]),
-                                     static_cast<decltype(ParticleData::vx)>(vel[0]),
-                                     static_cast<decltype(ParticleData::vy)>(vel[1]),
-                                     static_cast<decltype(ParticleData::vz)>(vel[2]),
-                                     static_cast<decltype(ParticleData::id)>(particle.getID())});
+    vecPos.emplace_back<std::array<floatType, 3>>(
+        {static_cast<floatType>(pos[0]), static_cast<floatType>(pos[0]), static_cast<floatType>(pos[0])});
+    vecVel.emplace_back<std::array<floatType, 3>>(
+        {static_cast<floatType>(vel[0]), static_cast<floatType>(vel[0]), static_cast<floatType>(vel[0])});
+    vecId.emplace_back(static_cast<intType>(particle.getID()));
   }
 
   const auto group = groupParticleData + std::to_string(iteration);
-  _file.writeDataset(data, group + "/Particles", ParticleDataH5Type);
+  const auto &compressionLvl = _file.getCompressionLevel();
+  _file.writeDataset_compressed(vecPos, group + "/Particles/Positions", compressionLvl);
+  _file.writeDataset_compressed(vecVel, group + "/Particles/Velocities", compressionLvl);
+  _file.writeDataset_compressed(vecId, group + "/Particles/IDs", compressionLvl);
 }

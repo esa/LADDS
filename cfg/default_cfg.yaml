@@ -24,7 +24,7 @@ io:
     writeFrequency: 0 # Frequency of writing vtk files [iterations]
   hdf5:
     writeFrequency: 1 # Frequency of writing to the hdf5 file [iterations]
-    CompressionLevel: 5 # Valid Levels: 0 (no compression) - 9 (max compression)
+    compressionLevel: 4 # Valid Levels: 0 (no compression) - 9 (max compression)
   #constellationList: StarlinkGen1,100,7200 # ';'-seperated constellations consisting of path (to constellation directory), start time, duration
   #constellationFrequency: 10 # Frequency of adding satellites to simulation [iterations]
 

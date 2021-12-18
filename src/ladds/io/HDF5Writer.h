@@ -27,13 +27,6 @@ class HDF5Writer {
       : _file(filename, h5pp::FilePermission::REPLACE),
         ParticleDataH5Type(H5Tcreate(H5T_COMPOUND, sizeof(ParticleData))) {
     // Register ParticleData type with HDF5
-    H5Tinsert(ParticleDataH5Type, "rx", HOFFSET(ParticleData, rx), H5T_NATIVE_FLOAT);
-    H5Tinsert(ParticleDataH5Type, "ry", HOFFSET(ParticleData, ry), H5T_NATIVE_FLOAT);
-    H5Tinsert(ParticleDataH5Type, "rz", HOFFSET(ParticleData, rz), H5T_NATIVE_FLOAT);
-    H5Tinsert(ParticleDataH5Type, "vx", HOFFSET(ParticleData, vx), H5T_NATIVE_FLOAT);
-    H5Tinsert(ParticleDataH5Type, "vy", HOFFSET(ParticleData, vy), H5T_NATIVE_FLOAT);
-    H5Tinsert(ParticleDataH5Type, "vz", HOFFSET(ParticleData, vz), H5T_NATIVE_FLOAT);
-    H5Tinsert(ParticleDataH5Type, "id", HOFFSET(ParticleData, id), H5T_NATIVE_UINT);
     _file.setCompressionLevel(compressionLevel);
   }
 
