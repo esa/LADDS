@@ -45,6 +45,9 @@ class HDF5Writer {
   void write(size_t iteration, const AutoPas_t &autopas);
 
  private:
+
+  constexpr static groupParticleData{"ParticleData/"}
+
   /**
    * This represents one line of data in the HDF5 file.
    */

@@ -23,7 +23,6 @@ void HDF5Writer::write(size_t iteration, const AutoPas_t &autopas) {
                                      static_cast<decltype(ParticleData::id)>(particle.getID())});
   }
 
-  const auto group = "Iteration" + std::to_string(iteration);
+  const auto group = groupParticleData + std::to_string(iteration);
   _file.writeDataset(data, group + "/Particles", ParticleDataH5Type);
-  _file.writeAttribute(iteration, "IterationNr", group);
 }
