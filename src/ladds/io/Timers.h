@@ -9,6 +9,8 @@
 #include <autopas/utils/Timer.h>
 #include <yaml-cpp/yaml.h>
 
+#include "ConfigReader.h"
+
 class Timers {
  public:
   autopas::utils::Timer total{};
@@ -24,7 +26,7 @@ class Timers {
    * Print timer information to stdout.
    * @param config
    */
-  void printTimers(const YAML::Node &config) const;
+  void printTimers(ConfigReader &config) const;
 
  private:
   /**
