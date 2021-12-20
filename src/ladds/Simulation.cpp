@@ -150,17 +150,25 @@ void Simulation::collisionDetection(size_t iteration,
                                     size_t &totalConjunctions,
                                     size_t progressOutputFrequency,
                                     double deltaT,
-                                    double conjunctionThreshold) {
+                                    double conjunctionThreshold,
+                                    HDF5Writer *hdf5Writer) {
   // pairwise interaction
   CollisionFunctor collisionFunctor(autopas.getCutoff(), deltaT, conjunctionThreshold);
   autopas.iteratePairwise(&collisionFunctor);
   auto collisions = collisionFunctor.getCollisions();
-  for (const auto &[p1, p2AndDistanceSquare] : collisions) {
-    totalConjunctions++;
-    const auto &[p2, distanceSquare] = p2AndDistanceSquare;
-    conjunctionLogger.log(iteration, *p1, *p2, distanceSquare);
-    SPDLOG_LOGGER_DEBUG(logger.get(), "{} | {} | distanceSquare={}", p1->getID(), p2->getID(), distanceSquare);
+  totalConjunctions += collisions.size();
+
+  // if a hdf5 writer is available use it instead of the legacy csv writer
+  if (hdf5Writer) {
+    hdf5Writer->writeCollisions(iteration, collisions);
+  } else {
+    for (const auto &[p1, p2AndDistanceSquare] : collisions) {
+      const auto &[p2, distanceSquare] = p2AndDistanceSquare;
+      conjunctionLogger.log(iteration, *p1, *p2, distanceSquare);
+      SPDLOG_LOGGER_DEBUG(logger.get(), "{} | {} | distanceSquare={}", p1->getID(), p2->getID(), distanceSquare);
+    }
   }
+
   if (iteration % progressOutputFrequency == 0) {
     SPDLOG_LOGGER_INFO(
         logger.get(), "It {} - Encounters:{} Total conjunctions:{}", iteration, collisions.size(), totalConjunctions);
@@ -220,8 +228,14 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     // TODO Check for particles that burn up
 
     timers.collisionDetection.start();
-    collisionDetection(
-        i, autopas, conjunctionLogger, totalConjunctions, progressOutputFrequency, deltaT, conjunctionThreshold);
+    collisionDetection(i,
+                       autopas,
+                       conjunctionLogger,
+                       totalConjunctions,
+                       progressOutputFrequency,
+                       deltaT,
+                       conjunctionThreshold,
+                       hdf5WriteFrequency != 0 ? &hdf5Writer : nullptr);
     timers.collisionDetection.stop();
 
     // TODO insert breakup model here
@@ -232,7 +246,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
       VTUWriter::writeVTU(i, autopas);
     }
     if (hdf5WriteFrequency and i % hdf5WriteFrequency == 0) {
-      hdf5Writer.write(i, autopas);
+      hdf5Writer.writeParticles(i, autopas);
     }
     timers.output.stop();
   }

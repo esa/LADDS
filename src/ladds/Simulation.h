@@ -21,6 +21,7 @@
 #include "ladds/io/Timers.h"
 #include "ladds/particle/Constellation.h"
 #include "ladds/particle/Particle.h"
+#include "ladds/io/HDF5Writer.h"
 
 extern template class autopas::AutoPas<Particle>;
 extern template bool autopas::AutoPas<Particle>::iteratePairwise(CollisionFunctor *);
@@ -84,7 +85,8 @@ class Simulation {
                           size_t &totalConjunctions,
                           size_t progressOutputFrequency,
                           double deltaT,
-                          double conjunctionThreshold);
+                          double conjunctionThreshold,
+                          HDF5Writer *hdf5Writer);
 
   /**
    * The main loop.

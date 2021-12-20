@@ -23,23 +23,35 @@ class HDF5Writer {
    * @param filename
    * @param compressionLevel
    */
-  HDF5Writer(const std::string &filename, unsigned int compressionLevel)
-      : _file(filename, h5pp::FilePermission::REPLACE) {
-    _file.setCompressionLevel(compressionLevel);
-  }
+  HDF5Writer(const std::string &filename, unsigned int compressionLevel);
 
   /**
    * Write one dataset of all particle data in the current iteration.
    * @param iteration
    * @param autopas
    */
-  void write(size_t iteration, const AutoPas_t &autopas);
-
- private:
-  const std::string groupParticleData = "ParticleData/";
+  void writeParticles(size_t iteration, const AutoPas_t &autopas);
 
   /**
-   * This represents one line of data in the HDF5 file.
+   * Write collisions of the current iteration to the HDF5 file. If collisions is empty, nothing is written.
+   * @param iteration
+   * @param collisions
+   */
+  void writeCollisions(size_t iteration,
+                       const std::unordered_map<Particle *, std::tuple<Particle *, double>> &collisions);
+
+ private:
+  /**
+   * Actual file that will be created. All of the data this writer gets ends up in this one file.
+   */
+  h5pp::File _file;
+
+  const std::string groupParticleData = "ParticleData/";
+
+  const std::string groupCollisionData = "CollisionData/";
+
+  /**
+   * This represents one line of 3D vector data in the HDF5 file.
    */
   template <class T>
   struct Vec3 {
@@ -47,7 +59,15 @@ class HDF5Writer {
   };
 
   /**
-   * Actual file that will be created. All of the data this writer gets ends up in this one file.
+   * Type for the information of a single collision.
    */
-  h5pp::File _file;
+  struct CollisionInfo {
+    unsigned int idA, idB;
+    float distanceSquared;
+  };
+
+  /*
+   *
+   */
+  h5pp::hid::h5t collisionInfoH5Type;
 };

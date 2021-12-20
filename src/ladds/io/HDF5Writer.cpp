@@ -6,7 +6,25 @@
 
 #include "HDF5Writer.h"
 
-void HDF5Writer::write(size_t iteration, const AutoPas_t &autopas) {
+HDF5Writer::HDF5Writer(const std::string &filename, unsigned int compressionLevel)
+    : _file(filename, h5pp::FilePermission::REPLACE),
+      collisionInfoH5Type(H5Tcreate(H5T_COMPOUND, sizeof(CollisionInfo))) {
+  _file.setCompressionLevel(compressionLevel);
+  H5Tinsert(collisionInfoH5Type,
+            "idA",
+            HOFFSET(CollisionInfo, idA),
+            h5pp::type::getH5NativeType<decltype(CollisionInfo::idA)>());
+  H5Tinsert(collisionInfoH5Type,
+            "idB",
+            HOFFSET(CollisionInfo, idB),
+            h5pp::type::getH5NativeType<decltype(CollisionInfo::idB)>());
+  H5Tinsert(collisionInfoH5Type,
+            "distanceSquared",
+            HOFFSET(CollisionInfo, distanceSquared),
+            h5pp::type::getH5NativeType<decltype(CollisionInfo::distanceSquared)>());
+}
+
+void HDF5Writer::writeParticles(size_t iteration, const AutoPas_t &autopas) {
   // Data will be casted to these types before writing
   using floatType = float;
   using intType = unsigned int;
@@ -35,4 +53,22 @@ void HDF5Writer::write(size_t iteration, const AutoPas_t &autopas) {
   _file.writeDataset_compressed(vecPos, group + "/Particles/Positions", compressionLvl);
   _file.writeDataset_compressed(vecVel, group + "/Particles/Velocities", compressionLvl);
   _file.writeDataset_compressed(vecId, group + "/Particles/IDs", compressionLvl);
+}
+
+void HDF5Writer::writeCollisions(size_t iteration,
+                                 const std::unordered_map<Particle *, std::tuple<Particle *, double>> &collisions) {
+  if (collisions.empty()) {
+    return;
+  }
+  std::vector<CollisionInfo> data;
+  data.reserve(collisions.size());
+
+  for (const auto &[p1, p2AndDistanceSquare] : collisions) {
+    const auto &[p2, distanceSquare] = p2AndDistanceSquare;
+    data.emplace_back<CollisionInfo>({static_cast<decltype(CollisionInfo::idA)>(p1->getID()),
+                                      static_cast<decltype(CollisionInfo::idB)>(p2->getID()),
+                                      static_cast<decltype(CollisionInfo::distanceSquared)>(distanceSquare)});
+  }
+  const auto group = groupCollisionData + std::to_string(iteration);
+  _file.writeDataset(data, group + "/Collisions", collisionInfoH5Type);
 }
