@@ -158,6 +158,7 @@ void Simulation::collisionDetection(size_t iteration,
   auto collisions = collisionFunctor.getCollisions();
   totalConjunctions += collisions.size();
 
+  timers.collisionWriting.start();
   // if a hdf5 writer is available use it instead of the legacy csv writer
   if (hdf5Writer) {
     hdf5Writer->writeCollisions(iteration, collisions);
@@ -168,6 +169,7 @@ void Simulation::collisionDetection(size_t iteration,
       SPDLOG_LOGGER_DEBUG(logger.get(), "{} | {} | distanceSquare={}", p1->getID(), p2->getID(), distanceSquare);
     }
   }
+  timers.collisionWriting.stop();
 
   if (iteration % progressOutputFrequency == 0) {
     SPDLOG_LOGGER_INFO(
