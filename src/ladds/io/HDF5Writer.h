@@ -10,13 +10,14 @@
 
 #include <string>
 
+#include "ConjunctionWriterInterface.h"
 #include "ladds/TypeDefinitions.h"
 
 /**
  * Wrapper for the whole logic of writing the HDF5 file.
  * All data is written in 32 bit precision.
  */
-class HDF5Writer {
+class HDF5Writer final : public ConjuctionWriterInterface {
  public:
   /**
    * Constructor setting up the file and creating the custom data type.
@@ -24,6 +25,8 @@ class HDF5Writer {
    * @param compressionLevel
    */
   HDF5Writer(const std::string &filename, unsigned int compressionLevel);
+
+  ~HDF5Writer() override = default;
 
   /**
    * Write one dataset of all particle data in the current iteration.
@@ -37,8 +40,8 @@ class HDF5Writer {
    * @param iteration
    * @param collisions
    */
-  void writeCollisions(size_t iteration,
-                       const std::unordered_map<Particle *, std::tuple<Particle *, double>> &collisions);
+  void writeConjunctions(size_t iteration,
+                         const std::unordered_map<Particle *, std::tuple<Particle *, double>> &collisions) override;
 
  private:
   /**

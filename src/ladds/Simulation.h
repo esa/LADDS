@@ -79,14 +79,9 @@ class Simulation {
    * Check for collisions / conjunctions and write statistics about them.
    * @param autopas
    */
-  void collisionDetection(size_t iteration,
-                          AutoPas_t &autopas,
-                          ConjunctionLogger &conjunctionLogger,
-                          size_t &totalConjunctions,
-                          size_t progressOutputFrequency,
-                          double deltaT,
-                          double conjunctionThreshold,
-                          HDF5Writer *hdf5Writer);
+  std::unordered_map<Particle *, std::tuple<Particle *, double>> collisionDetection(AutoPas_t &autopas,
+                                                                                    double deltaT,
+                                                                                    double conjunctionThreshold);
 
   /**
    * The main loop.

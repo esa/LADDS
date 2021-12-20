@@ -23,6 +23,7 @@ io:
   vtk:
     writeFrequency: 0 # Frequency of writing vtk files [iterations]
   hdf5:
+    fileName: simulationData.h5
     writeFrequency: 1000 # Frequency of writing to the hdf5 file [iterations]
     compressionLevel: 4 # Valid Levels: 0 (no compression) - 9 (max compression)
 

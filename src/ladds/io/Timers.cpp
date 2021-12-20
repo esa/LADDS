@@ -22,10 +22,8 @@ void Timers::printTimers(const YAML::Node &config) const {
       "    Constellation insertion ", constellationInsertion.getTotalTime(), maximumNumberOfDigits, timeSim);
   std::cout << timerToString(
       "    Collision detection     ", collisionDetection.getTotalTime(), maximumNumberOfDigits, timeSim);
-  std::cout << timerToString("      Collision writer      ",
-                             collisionWriting.getTotalTime(),
-                             maximumNumberOfDigits,
-                             collisionDetection.getTotalTime());
+  std::cout << timerToString(
+      "    Collision writer        ", collisionWriting.getTotalTime(), maximumNumberOfDigits, timeSim);
   std::cout << timerToString(
       "    Container update        ", containerUpdate.getTotalTime(), maximumNumberOfDigits, timeSim);
   std::cout << timerToString("    Output                  ", output.getTotalTime(), maximumNumberOfDigits, timeTotal);

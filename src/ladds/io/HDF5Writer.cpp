@@ -55,8 +55,8 @@ void HDF5Writer::writeParticles(size_t iteration, const AutoPas_t &autopas) {
   _file.writeDataset_compressed(vecId, group + "/Particles/IDs", compressionLvl);
 }
 
-void HDF5Writer::writeCollisions(size_t iteration,
-                                 const std::unordered_map<Particle *, std::tuple<Particle *, double>> &collisions) {
+void HDF5Writer::writeConjunctions(size_t iteration,
+                                   const std::unordered_map<Particle *, std::tuple<Particle *, double>> &collisions) {
   if (collisions.empty()) {
     return;
   }
