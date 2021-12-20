@@ -32,7 +32,7 @@ class ConjunctionLogger {
    * @param p1
    * @param p2
    */
-  void log(size_t iteration, const Particle &p1, const Particle &p2, const double distance);
+  void log(size_t iteration, const Particle &p1, const Particle &p2, double distance);
 
  private:
   std::string _loggerName{"conjunctionLogger"};

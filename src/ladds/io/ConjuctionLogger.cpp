@@ -24,7 +24,7 @@ ConjunctionLogger::~ConjunctionLogger() {
   spdlog::drop(_loggerName);
 }
 
-void ConjunctionLogger::log(size_t iteration, const Particle &p1, const Particle &p2, const double distance) {
+void ConjunctionLogger::log(size_t iteration, const Particle &p1, const Particle &p2, double distance) {
   // compute the squared distance inside a lambda inside the macro so it will not be executed when the logger is
   // compile-disabled
   SPDLOG_LOGGER_INFO(spdlog::get(_loggerName), "{},{},{},{}", iteration, p1.getID(), p2.getID(), distance);
