@@ -167,13 +167,14 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
 
   const auto vtkWriteFrequency =
       config["io"]["vtk"]["writeFrequency"].IsDefined() ? config["io"]["vtk"]["writeFrequency"].as<size_t>() : 0ul;
-  const auto hdf5WriteFrequency = config["io"]["hdf5"]["writeFrequency"].IsDefined()
-                                      ? config["io"]["hdf5"]["writeFrequency"].as<unsigned int>()
-                                      : 0u;
+  auto hdf5WriteFrequency = 0u;
 
   std::shared_ptr<HDF5Writer> hdf5Writer;
   std::shared_ptr<ConjuctionWriterInterface> conjuctionWriter;
   if (config["io"]["hdf5"].IsDefined()) {
+    hdf5WriteFrequency = config["io"]["hdf5"]["writeFrequency"].IsDefined()
+                             ? config["io"]["hdf5"]["writeFrequency"].as<unsigned int>()
+                             : 0u;
     const auto hdf5CompressionLvl = config["io"]["hdf5"]["compressionLevel"].IsDefined()
                                         ? config["io"]["hdf5"]["compressionLevel"].as<unsigned int>()
                                         : 0u;
