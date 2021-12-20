@@ -18,10 +18,10 @@
 #include "CollisionFunctor.h"
 #include "TypeDefinitions.h"
 #include "ladds/io/ConjunctionLogger.h"
+#include "ladds/io/HDF5Writer.h"
 #include "ladds/io/Timers.h"
 #include "ladds/particle/Constellation.h"
 #include "ladds/particle/Particle.h"
-#include "ladds/io/HDF5Writer.h"
 
 extern template class autopas::AutoPas<Particle>;
 extern template bool autopas::AutoPas<Particle>::iteratePairwise(CollisionFunctor *);
