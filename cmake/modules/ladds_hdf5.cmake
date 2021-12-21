@@ -16,13 +16,16 @@ if (LADDS_HDF5)
             GIT_TAG v1.9.0
     )
 
-
     FetchContent_MakeAvailable(h5pp)
 
-    # TODO might be more ugly since this is an INTERFACE library
-    # Disable warnings from the library target
-#    target_compile_options(HighFive PRIVATE -w)
-    # Disable warnings from included headers
-#    get_target_property(propval HighFive INTERFACE_INCLUDE_DIRECTORIES)
-#    target_include_directories(HighFive SYSTEM INTERFACE "${propval}")
+    # get includes from the HEADER target and set them to system includes
+    get_target_property(interfaceIncludeDirs_h5pp h5pp::headers INTERFACE_INCLUDE_DIRECTORIES)
+    target_include_directories(h5pp SYSTEM INTERFACE "${interfaceIncludeDirs_h5pp}")
+
+    # remove the _FORTIFY_SOURCE definition which leaks all over the project producing warnings in debug mode
+    if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+        get_target_property(interfaceCompileDefs_hdf5 hdf5::hdf5 INTERFACE_COMPILE_DEFINITIONS)
+        string(REPLACE "_FORTIFY_SOURCE=2" "" interfaceCompileDefsFixed_hdf5 ${interfaceCompileDefs_hdf5})
+        set_target_properties(hdf5::hdf5 PROPERTIES INTERFACE_COMPILE_DEFINITIONS "${interfaceCompileDefsFixed_hdf5}")
+    endif ()
 endif()
