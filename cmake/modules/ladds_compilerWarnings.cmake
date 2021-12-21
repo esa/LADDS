@@ -11,6 +11,7 @@ target_compile_options(
         >
         $<$<CXX_COMPILER_ID:Clang>:
         -Wall
+        -Weffc++
         -Wextra
         -Wno-unused-parameter # triggered by functions with disabled bodies or parameters that are needed for interfaces
         >
