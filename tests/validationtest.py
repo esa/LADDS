@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import sys
 import subprocess
 import numpy as np
@@ -24,8 +25,13 @@ if exit_code != 0 :
     sys.exit('An error occured during the simulation')
 
 output_path='output_99.vtu'
+if not os.path.isfile(output_path):
+    sys.exit("Output file not found! Expected: " + os.getcwd() + '/' + output_path)
+
 # path to the given reference vtu
 reference_path=sys.argv[3]
+if not os.path.isfile(reference_path):
+    sys.exit("Reference file not found! Expected: " + os.getcwd() + '/' + output_path)
 
 # read all positions and velocities data from output and reference
 reader = vtkXMLUnstructuredGridReader()

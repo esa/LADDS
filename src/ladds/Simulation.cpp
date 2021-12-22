@@ -162,7 +162,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
   const auto conjunctionThreshold = config.get<double>("sim/conjunctionThreshold");
   std::vector<Particle> delayedInsertion;
 
-  const auto vtkWriteFrequency = config.get<size_t>("io/vtkWriteFrequency", 0ul);
+  const auto vtkWriteFrequency = config.get<size_t>("io/vtk/writeFrequency", 0ul);
 
   auto hdf5WriteFrequency = 0u;
 
