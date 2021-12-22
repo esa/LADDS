@@ -34,6 +34,7 @@ include(ladds_doxygen)
 include(autopas)
 include(propagator)
 include(breakupModel)
+include(ladds_hdf5)
 
 add_subdirectory(src)
 

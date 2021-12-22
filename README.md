@@ -68,3 +68,35 @@ Store the temporary shell data by executing the cell (2.2)
 * write the files by executing cell (4) and save them by executing cell (5)
 
 A detailed guide is located in the directory of the notebook.
+
+## Output
+
+LADDS has multiple options for output that can be (de)activated mostly independent of each other via YAML. See `cfg/default_cfg.yaml` for relevant options.
+
+### VTK
+`.vtu` files in XML/ASCII layout that can be loaded into [Paraview](https://www.paraview.org/) for visualization.
+
+### HDF5
+A single `.h5` containing particle and conjunction data from a full simulation run with the following structure:
+```
+/
+├── CollisionData
+│   └── <IterationNr>
+│       └── (Dataset) Collisions
+│           idA idB distanceSquared
+└── ParticleData
+    └── <IterationNr>
+        └── Particles
+            ├── (Dataset) IDs
+            ├── (Dataset) Positions
+            │   x y z
+            └── (Dataset) Velocities
+                x y z
+```
+
+Collision data is tracked every iteration, particle data only in intervals that are defined in the YAML file. To keep file size reasonable compression is supported.
+
+### CSV
+If HDF5 output is disabled entirely, collision data is written in a `.csv` file in ASCII layout.
+
+

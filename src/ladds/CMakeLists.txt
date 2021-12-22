@@ -14,10 +14,12 @@ target_compile_features(${EXECUTABLE_NAME} PUBLIC cxx_std_17)
 target_include_directories(${EXECUTABLE_NAME} PUBLIC ${LADDS_SOURCE_DIR}/src/)
 
 target_link_libraries(${EXECUTABLE_NAME}
+        PUBLIC
         autopas
         debris_sim_lib
         breakupModel_lib
-        )
+        "$<$<BOOL:${LADDS_HDF5}>:hdf5::hdf5_hl;hdf5::hdf5;h5pp::h5pp>"
+)
 
 # note: in spdlog trace is the highest level
 set(
