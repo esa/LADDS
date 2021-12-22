@@ -1,5 +1,5 @@
 sim:
-  logLevel: off    # Available levels are off, critical, err, warn, info, debug, trace
+  logLevel: info    # Available levels are off, critical, err, warn, info, debug, trace
   iterations: 100 # Number of simulation iterations
   maxAltitude: 85000 # Maximum satellite altitude [km]
   deltaT: 0.1 # [s]

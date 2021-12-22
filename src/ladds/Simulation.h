@@ -11,12 +11,12 @@
 #include <satellitePropagator/io/FileOutput.h>
 #include <satellitePropagator/physics/AccelerationAccumulator.h>
 #include <satellitePropagator/physics/Integrator.h>
-#include <yaml-cpp/yaml.h>
 
 #include <memory>
 
 #include "CollisionFunctor.h"
 #include "TypeDefinitions.h"
+#include "ladds/io/ConfigReader.h"
 #include "ladds/io/ConjunctionLogger.h"
 #include "ladds/io/HDF5Writer.h"
 #include "ladds/io/Timers.h"
@@ -41,14 +41,14 @@ class Simulation {
    * Run the whole simulation with the given config.
    * @param config
    */
-  void run(const YAML::Node &config);
+  void run(ConfigReader &config);
 
   /**
    * Create and initialize an AutoPas object from the given config.
    * @param config
    * @return
    */
-  [[nodiscard]] std::unique_ptr<AutoPas_t> initAutoPas(const YAML::Node &config);
+  [[nodiscard]] std::unique_ptr<AutoPas_t> initAutoPas(ConfigReader &config);
 
   /**
    * Create and initialize the integrator.
@@ -61,7 +61,7 @@ class Simulation {
   [[nodiscard]] std::tuple<std::unique_ptr<FileOutput<AutoPas_t>>,
                            std::unique_ptr<Acceleration::AccelerationAccumulator<AutoPas_t>>,
                            std::unique_ptr<Integrator<AutoPas_t>>>
-  initIntegrator(AutoPas_t &autopas, const YAML::Node &config);
+  initIntegrator(AutoPas_t &autopas, ConfigReader &config);
 
   /**
    * Tick constellation state machines and if applicable insert new satellites as well as delayed ones from previous
@@ -95,7 +95,7 @@ class Simulation {
   void simulationLoop(AutoPas_t &autopas,
                       Integrator<AutoPas_t> &integrator,
                       std::vector<Constellation> &constellations,
-                      const YAML::Node &config);
+                      ConfigReader &config);
 
   /**
    * Inserts particles into autopas if they have a safe distance to existing particles.

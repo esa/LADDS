@@ -24,8 +24,10 @@ TEST_F(SimulationTest, testInsertionOverlap) {
   logger.get()->set_level(Logger::Level::trace);
   Simulation simulation(logger);
 
-  auto autopas = simulation.initAutoPas(config);
-  auto [csvWriter, accumulator, integrator] = simulation.initIntegrator(*autopas, config);
+  ConfigReader configReader(config, logger);
+  auto autopas = simulation.initAutoPas(configReader);
+
+  auto [csvWriter, accumulator, integrator] = simulation.initIntegrator(*autopas, configReader);
 
   /*
    * position of p2 is the position of p1 after 1 second
@@ -111,7 +113,8 @@ TEST_F(SimulationTest, testCriticalRangeInsertion1) {
   logger.get()->set_level(Logger::Level::trace);
   Simulation simulation(logger);
 
-  auto autopas = simulation.initAutoPas(config);
+  ConfigReader configReader(config, logger);
+  auto autopas = simulation.initAutoPas(configReader);
 
   std::array<double, 3> position0 = {6871, 0, 0};
   Particle p0 = Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0);
@@ -152,7 +155,8 @@ TEST_F(SimulationTest, testCriticalRangeInsertion2) {
   logger.get()->set_level(Logger::Level::trace);
   Simulation simulation(logger);
 
-  auto autopas = simulation.initAutoPas(config);
+  ConfigReader configReader(config, logger);
+  auto autopas = simulation.initAutoPas(configReader);
 
   std::array<double, 3> position0 = {6871, 0, 0};
   Particle p0 = Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0);
@@ -195,7 +199,8 @@ TEST_F(SimulationTest, testCriticalRangeInsertion3) {
   logger.get()->set_level(Logger::Level::trace);
   Simulation simulation(logger);
 
-  auto autopas = simulation.initAutoPas(config);
+  ConfigReader configReader(config, logger);
+  auto autopas = simulation.initAutoPas(configReader);
 
   std::array<double, 3> position0 = {6871, 0, 0};
   Particle p0 = Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0);
@@ -238,7 +243,8 @@ TEST_F(SimulationTest, testCriticalRangeInsertion4) {
   logger.get()->set_level(Logger::Level::trace);
   Simulation simulation(logger);
 
-  auto autopas = simulation.initAutoPas(config);
+  ConfigReader configReader(config, logger);
+  auto autopas = simulation.initAutoPas(configReader);
 
   std::array<double, 3> position0 = {6871, 0, 0};
   Particle p0 = Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0);
@@ -281,7 +287,8 @@ TEST_F(SimulationTest, testCriticalRangeInsertion5) {
   logger.get()->set_level(Logger::Level::trace);
   Simulation simulation(logger);
 
-  auto autopas = simulation.initAutoPas(config);
+  ConfigReader configReader(config, logger);
+  auto autopas = simulation.initAutoPas(configReader);
 
   std::array<double, 3> position0 = {6871, 0, 0};
   Particle p0 = Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0);
@@ -324,7 +331,8 @@ TEST_F(SimulationTest, testCriticalRangeInsertion6) {
   logger.get()->set_level(Logger::Level::trace);
   Simulation simulation(logger);
 
-  auto autopas = simulation.initAutoPas(config);
+  ConfigReader configReader(config, logger);
+  auto autopas = simulation.initAutoPas(configReader);
 
   std::array<double, 3> position0 = {6871, 0, 0};
   Particle p0 = Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0);
@@ -367,7 +375,8 @@ TEST_F(SimulationTest, testCriticalRangeInsertion7) {
   logger.get()->set_level(Logger::Level::trace);
   Simulation simulation(logger);
 
-  auto autopas = simulation.initAutoPas(config);
+  ConfigReader configReader(config, logger);
+  auto autopas = simulation.initAutoPas(configReader);
 
   std::array<double, 3> position0 = {6871, 0, 0};
   Particle p0 = Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0);
@@ -409,7 +418,8 @@ TEST_F(SimulationTest, testCriticalRangeInsertion8) {
   logger.get()->set_level(Logger::Level::trace);
   Simulation simulation(logger);
 
-  auto autopas = simulation.initAutoPas(config);
+  ConfigReader configReader(config, logger);
+  auto autopas = simulation.initAutoPas(configReader);
 
   std::array<double, 3> position0 = {6871, 0, 0};
   Particle p0 = Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0);
@@ -451,7 +461,8 @@ TEST_F(SimulationTest, testCriticalRangeInsertion9) {
   logger.get()->set_level(Logger::Level::trace);
   Simulation simulation(logger);
 
-  auto autopas = simulation.initAutoPas(config);
+  ConfigReader configReader(config, logger);
+  auto autopas = simulation.initAutoPas(configReader);
 
   std::array<double, 3> position0 = {6871, 0, 0};
   Particle p0 = Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0);

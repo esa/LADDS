@@ -8,8 +8,10 @@
 
 #include <iostream>
 
-void Timers::printTimers(const YAML::Node &config) const {
-  const auto iterations = config["sim"]["iterations"].as<size_t>();
+#include "ConfigReader.h"
+
+void Timers::printTimers(ConfigReader &config) const {
+  const auto iterations = config.get<size_t>("sim/iterations");
   const auto timeTotal = total.getTotalTime();
   const auto timeSim = simulation.getTotalTime();
   const auto maximumNumberOfDigits = static_cast<int>(std::to_string(timeTotal).length());

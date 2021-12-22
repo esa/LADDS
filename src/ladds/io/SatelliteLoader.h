@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "ConfigReader.h"
 #include "Logger.h"
 #include "ladds/TypeDefinitions.h"
 #include "ladds/particle/Constellation.h"
@@ -20,13 +21,13 @@ namespace SatelliteLoader {
  * @param autopas
  * @param config
  */
-void loadSatellites(AutoPas_t &autopas, const YAML::Node &config, const Logger &logger);
+void loadSatellites(AutoPas_t &autopas, ConfigReader &config, const Logger &logger);
 
 /**
  * Parse constellation information and prepare satellites for insertion.
  * @param config
  * @return Vector of Constellations
  */
-std::vector<Constellation> loadConstellations(const YAML::Node &config, const Logger &logger);
+std::vector<Constellation> loadConstellations(ConfigReader &config, const Logger &logger);
 
 }  // namespace SatelliteLoader

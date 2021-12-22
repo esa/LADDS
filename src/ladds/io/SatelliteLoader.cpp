@@ -6,17 +6,17 @@
 
 #include "SatelliteLoader.h"
 
+#include "ConfigReader.h"
 #include "DatasetReader.h"
 #include "Logger.h"
 
-void SatelliteLoader::loadSatellites(AutoPas_t &autopas, const YAML::Node &config, const Logger &logger) {
+void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, const Logger &logger) {
   // Read in scenario
-  auto actualSatellites =
-      DatasetReader::readDataset(std::string(DATADIR) + config["io"]["posFileName"].as<std::string>(),
-                                 std::string(DATADIR) + config["io"]["velFileName"].as<std::string>());
+  auto actualSatellites = DatasetReader::readDataset(std::string(DATADIR) + config.get<std::string>("io/posFileName"),
+                                                     std::string(DATADIR) + config.get<std::string>("io/velFileName"));
   SPDLOG_LOGGER_DEBUG(logger.get(), "Parsed {} satellites", actualSatellites.size());
 
-  const auto maxAltitude = config["sim"]["maxAltitude"].as<double>();
+  const auto maxAltitude = config.get<double>("sim/maxAltitude");
   double minAltitudeFound{std::numeric_limits<double>::max()};
   double maxAltitudeFound{0.};
   // Convert satellites to particles
@@ -34,16 +34,14 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, const YAML::Node &confi
   SPDLOG_LOGGER_INFO(logger.get(), "Number of particles: {}", autopas.getNumberOfParticles());
 }
 
-std::vector<Constellation> SatelliteLoader::loadConstellations(const YAML::Node &config, const Logger &logger) {
+std::vector<Constellation> SatelliteLoader::loadConstellations(ConfigReader &config, const Logger &logger) {
   std::vector<Constellation> constellations;
-  auto constellationList =
-      config["io"]["constellationList"].IsDefined() ? config["io"]["constellationList"].as<std::string>() : "";
+  auto constellationList = config.get<std::string>("io/constellationList", "", true);
   // altitudeSpread = 3 * sigma , altitudeDeviation = sigma (= standardDeviation)
-  auto altitudeDeviation = config["io"]["altitudeSpread"].as<double>() / 3.0;
-  if (!constellationList.empty()) {
-    const auto insertionFrequency =
-        config["io"]["constellationFrequency"].IsDefined() ? config["io"]["constellationFrequency"].as<int>() : 1;
-    auto constellationDataStr = config["io"]["constellationList"].as<std::string>();
+  auto altitudeDeviation = config.get<double>("io/altitudeSpread", 0.0) / 3.0;
+  if (not constellationList.empty()) {
+    const auto insertionFrequency = config.get<int>("io/constellationFrequency", 1);
+    auto constellationDataStr = config.get<std::string>("io/constellationList");
     // count constellation by counting ';'
     int nConstellations = 1;
     for (char con : constellationDataStr) {
