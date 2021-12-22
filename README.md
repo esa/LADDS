@@ -52,3 +52,34 @@ the `yaml` file. See `default_cfg.yaml` for the syntax.
 
 ## Processing TLE Input 
 Data on current satellites etc. is often found [online](https://www.space-track.org/) in the [TLE format](https://en.wikipedia.org/wiki/Two-line_element_set). We include a Jupyter notebook which can be used to process TLE data with pykep to create and analyze suitable datasets. Detailed instructions can be found in the notebook in `notebooks/Data Processing.ipynb`.
+
+## Output
+
+LADDS has multiple options for output that can be (de)activated mostly independent of each other via YAML. See `cfg/default_cfg.yaml` for relevant options.
+
+### VTK
+`.vtu` files in XML/ASCII layout that can be loaded into [Paraview](https://www.paraview.org/) for visualization.
+
+### HDF5
+A single `.h5` containing particle and conjunction data from a full simulation run with the following structure:
+```
+/
+├── CollisionData
+│   └── <IterationNr>
+│       └── (Dataset) Collisions
+│           idA, idB, distanceSquared
+└── ParticleData
+    └── <IterationNr>
+        └── Particles
+            ├── (Dataset) IDs
+            ├── (Dataset) Positions
+            │   x y z
+            └── (Dataset) Velocities
+                x y z
+```
+
+Collision data is tracked every iteration, particle data only in intervals that are defined in the YAML file. To keep file size reasonable compression is supported.
+
+### CSV
+If HDF5 output is disabled entirely, collision data is written in a `.csv` file in ASCII layout.
+
