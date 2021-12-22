@@ -1,15 +1,13 @@
-#pragma once
-
-#include <breakupModel/input/CSVReader.h>
-
-#include "Particle.h"
-
-namespace DatasetReader {
-
 /**
- * Reads the passed position and velocity csv files. Returns a vector of particles.
+ * @file DatasetReader.cpp
+ * @author F. Gratl
+ * @date 01.12.21
  */
-std::vector<Particle> readDataset(const std::string &position_filepath, const std::string &velocity_filepath) {
+
+#include "DatasetReader.h"
+
+std::vector<Particle> DatasetReader::readDataset(const std::string &position_filepath,
+                                                 const std::string &velocity_filepath) {
   CSVReader<double, double, double> pos_csvReader{position_filepath, false};
   CSVReader<double, double, double> vel_csvReader{velocity_filepath, false};
   std::vector<Particle> particleCollection;
@@ -39,4 +37,3 @@ std::vector<Particle> readDataset(const std::string &position_filepath, const st
                  });
   return particleCollection;
 }
-}  // namespace DatasetReader

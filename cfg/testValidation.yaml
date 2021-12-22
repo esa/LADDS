@@ -1,8 +1,9 @@
 sim:
-  logLevel: debug    # Available levels are off, critical, err, warn, info, debug, trace
-  iterations: 11 # Number of simulation iterations
+  logLevel: off    # Available levels are off, critical, err, warn, info, debug, trace
+  iterations: 100 # Number of simulation iterations
   maxAltitude: 85000 # Maximum satellite altitude [km]
   deltaT: 0.1 # [s]
+  conjunctionThreshold: 5.0 # [km]
 
   prop: # Which propagation model components should be applied
     useKEPComponent: true # Keplerian propagation
@@ -16,9 +17,15 @@ sim:
 
 io:
   output_file: output.csv # Output file name
-  posFileName: pos_test_10s.csv # Name of the CSV file with satellite positions [km]
-  velFileName: v_test_10s.csv # Name of the CSV file with satellite velocities [km/s]
-  vtkWriteFrequency: 10 # Frequency of writing to vtk file [iterations]
+  posFileName: pos_test.csv # Name of the CSV file with satellite positions [km]
+  velFileName: v_test.csv # Name of the CSV file with satellite velocities [km/s]
+  #progressOutputFrequency : 50 # Frequency of writing iteration number and encounter info to std::out.
+  vtk:
+    writeFrequency: 99 # Frequency of writing vtk files [iterations]
+
+  #constellationList: AstraPhase2,100,7200 # ';'-seperated constellations consisting of path (to constellation directory), start time, duration
+  constellationFrequency: 10 # Frequency of adding satellites to simulation [iterations]
+  altitudeSpread: 1.0 # [km] normal distributed altitude deviations are usually smaller than this value (~99.74% chance)
 
 autopas:
   logLevel: off
