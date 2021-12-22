@@ -20,6 +20,7 @@ class SimulationTest : public testing::Test {
     config["autopas"]["rebuildFrequency"] = 20;
     config["autopas"]["desiredCellsPerDimension"] = 32;
     config["io"]["output_file"] = "test";
+    config["io"]["constellationCutoff"] = 0.04;
     config["sim"]["prop"]["useKEPComponent"] = true;
   }
 

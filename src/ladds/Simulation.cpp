@@ -130,16 +130,17 @@ Simulation::initIntegrator(AutoPas_t &autopas, const YAML::Node &config) {
 
 void Simulation::updateConstellation(AutoPas_t &autopas,
                                      std::vector<Constellation> &constellations,
-                                     std::vector<Particle> &delayedInsertionTotal) {
+                                     std::vector<Particle> &delayedInsertionTotal,
+                                     double constellationCutoff) {
   // first insert delayed particles from previous insertion and collect the repeatedly delayed
-  delayedInsertionTotal = checkedInsert(autopas, delayedInsertionTotal, autopas.getCutoff());
+  delayedInsertionTotal = checkedInsert(autopas, delayedInsertionTotal, constellationCutoff);
   // container collecting delayed particles from one constellation at a time in order to append them to
   // totalDelayedInsertion
   std::vector<Particle> delayedInsertion;
   for (auto &constellation : constellations) {
     // new satellites are gradually added to the simulation according to their starting time and operation duration
     auto newSatellites = constellation.tick();
-    delayedInsertion = checkedInsert(autopas, newSatellites, autopas.getCutoff());
+    delayedInsertion = checkedInsert(autopas, newSatellites, constellationCutoff);
     delayedInsertionTotal.insert(delayedInsertionTotal.end(), delayedInsertion.begin(), delayedInsertion.end());
   }
 }
@@ -159,6 +160,8 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
   const auto iterations = config["sim"]["iterations"].as<size_t>();
   const auto constellationInsertionFrequency =
       config["io"]["constellationFrequency"].IsDefined() ? config["io"]["constellationFrequency"].as<int>() : 1;
+  const auto constellationCutoff =
+      config["io"]["constellationCutoff"].IsDefined() ? config["io"]["constellationCutoff"].as<double>() : 0.1;
   const auto progressOutputFrequency =
       config["io"]["progressOutputFrequency"].IsDefined() ? config["io"]["progressOutputFrequency"].as<int>() : 50;
   const auto deltaT = config["sim"]["deltaT"].as<double>();
@@ -199,7 +202,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     timers.constellationInsertion.start();
     // new satellites from constellations inserted over time
     if (i % constellationInsertionFrequency == 0) {
-      updateConstellation(autopas, constellations, delayedInsertion);
+      updateConstellation(autopas, constellations, delayedInsertion, constellationCutoff);
     }
     timers.constellationInsertion.stop();
 
@@ -245,10 +248,10 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
 
 std::vector<Particle> Simulation::checkedInsert(autopas::AutoPas<Particle> &autopas,
                                                 const std::vector<Particle> &newSatellites,
-                                                double cutoff) {
+                                                double constellationCutoff) {
   std::vector<Particle> delayedInsertion = {};
 
-  const double collisionRadius = 2 * cutoff;
+  const double collisionRadius = constellationCutoff;
   const double collisionRadiusSquared = collisionRadius * collisionRadius;
   const std::array<double, 3> boxSpan = {collisionRadius, collisionRadius, collisionRadius};
   for (const auto &satellite : newSatellites) {

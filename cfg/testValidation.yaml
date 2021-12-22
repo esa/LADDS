@@ -25,6 +25,7 @@ io:
 
   #constellationList: AstraPhase2,100,7200 # ';'-seperated constellations consisting of path (to constellation directory), start time, duration
   constellationFrequency: 10 # Frequency of adding satellites to simulation [iterations]
+  constellationCutoff: 0.1 # satellites of constellations are only inserted when there is no object within constellationCutoff range
   altitudeSpread: 1.0 # [km] normal distributed altitude deviations are usually smaller than this value (~99.74% chance)
 
 autopas:
