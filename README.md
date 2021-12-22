@@ -67,7 +67,7 @@ A single `.h5` containing particle and conjunction data from a full simulation r
 ├── CollisionData
 │   └── <IterationNr>
 │       └── (Dataset) Collisions
-│           idA, idB, distanceSquared
+│           idA idB distanceSquared
 └── ParticleData
     └── <IterationNr>
         └── Particles
