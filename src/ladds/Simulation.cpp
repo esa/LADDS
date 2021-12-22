@@ -7,8 +7,6 @@
 #include "Simulation.h"
 
 #include <breakupModel/output/VTKWriter.h>
-#include <ladds/io/DatasetReader.h>
-#include <ladds/particle/SatelliteToParticleConverter.h>
 
 #include <array>
 #include <tuple>

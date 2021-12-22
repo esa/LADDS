@@ -16,7 +16,7 @@ std::mt19937 Constellation::generator{42};
 
 Constellation::Constellation(const YAML::Node &constellationConfig, size_t interval, double altitudeDeviation)
     : interval(interval), altitudeDeviation(altitudeDeviation) {
-  std::string constellationName = constellationConfig["constellation"]["name"].as<std::string>();
+  auto constellationName = constellationConfig["constellation"]["name"].as<std::string>();
 
   // set variables using 3 args
   std::vector<Particle> sats =
