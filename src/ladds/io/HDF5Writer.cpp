@@ -42,9 +42,9 @@ void HDF5Writer::writeParticles(size_t iteration, const AutoPas_t &autopas) {
     const auto &vel = particle.getV();
     // pack data and make sure it is of the correct type
     vecPos.emplace_back<Vec3<floatType>>(
-        {static_cast<floatType>(pos[0]), static_cast<floatType>(pos[0]), static_cast<floatType>(pos[0])});
+        {static_cast<floatType>(pos[0]), static_cast<floatType>(pos[1]), static_cast<floatType>(pos[2])});
     vecVel.emplace_back<Vec3<floatType>>(
-        {static_cast<floatType>(vel[0]), static_cast<floatType>(vel[0]), static_cast<floatType>(vel[0])});
+        {static_cast<floatType>(vel[0]), static_cast<floatType>(vel[1]), static_cast<floatType>(vel[2])});
     vecId.emplace_back(static_cast<intType>(particle.getID()));
   }
 
