@@ -37,7 +37,8 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, const YAML::Node &confi
 std::vector<Constellation> SatelliteLoader::loadConstellations(const YAML::Node &config, const Logger &logger) {
   std::vector<Constellation> constellations;
   auto constellationList =
-      config["io"]["constellationList"].IsNull() ? "" : config["io"]["constellationList"].as<std::string>();
+      config["io"]["constellationList"].IsDefined() ? config["io"]["constellationList"].as<std::string>() : "";
+  // altitudeSpread = 3 * sigma , altitudeDeviation = sigma (= standardDeviation)
   auto altitudeDeviation = config["io"]["altitudeSpread"].as<double>() / 3.0;
   if (!constellationList.empty()) {
     const auto insertionFrequency =

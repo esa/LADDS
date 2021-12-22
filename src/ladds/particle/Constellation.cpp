@@ -12,7 +12,7 @@
 #include <iostream>
 #include <string>
 
-int Constellation::seed = 10;
+std::mt19937 Constellation::generator{42};
 
 Constellation::Constellation(const YAML::Node &constellationConfig, size_t interval, double altitudeDeviation)
     : interval(interval), altitudeDeviation(altitudeDeviation) {
@@ -23,7 +23,6 @@ Constellation::Constellation(const YAML::Node &constellationConfig, size_t inter
       readDatasetConstellation(std::string(DATADIR) + constellationName + "/pos_" + constellationName + ".csv",
                                std::string(DATADIR) + constellationName + "/v_" + constellationName + ".csv");
 
-  generator.seed(seed++);
   distribution = std::normal_distribution<double>(0, this->altitudeDeviation);
   // convert vector to deque
   constellationSize = sats.size();
@@ -138,7 +137,7 @@ std::vector<Particle> Constellation::readDatasetConstellation(const std::string 
   return particleCollection;
 }
 
-std::array<double, 3> Constellation::randomDisplacement(std::array<double, 3> pos) {
+std::array<double, 3> Constellation::randomDisplacement(const std::array<double, 3> &pos) {
   // the position pos is already the same as the direction vector from origin to pos
   // u = 1/length*pos
   std::array<double, 3> unitVector = autopas::utils::ArrayMath::normalize(pos);

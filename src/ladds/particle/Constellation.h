@@ -4,13 +4,13 @@
  * @date 12.11.21
  */
 #pragma once
-#include <breakupModel/input/CSVReader.h>
-#include <breakupModel/output/VTKWriter.h>
+
 #include <yaml-cpp/yaml.h>
 
 #include <array>
 #include <deque>
 #include <iostream>
+#include <random>
 
 #include "ladds/particle/Particle.h"
 
@@ -23,6 +23,7 @@ class Constellation {
  public:
   /**
    * Constructs a constellation object
+
    * @param constellationConfig : YAML::Node object with the constellation data. Valid
    * constellation data can be created using the ConstellationGeneration notebook
    * and must be in the projects data folder
@@ -64,7 +65,7 @@ class Constellation {
    * @param pos input position
    * @return new position with random altitude
    */
-  std::array<double, 3> randomDisplacement(std::array<double, 3> pos);
+  std::array<double, 3> randomDisplacement(const std::array<double, 3> &pos);
 
   /**
    * iteration from which constellation starts being added to the simulation
@@ -149,21 +150,13 @@ class Constellation {
   double altitudeDeviation;
 
   /**
-   * seed determining the behaviour of the (pseudo-) random number generator of
-   * the constellation. Constellations share the seed variable and increment
-   * the value during construction so that each constellation is seeded
-   * differently
-   */
-  static int seed;
-
-  /**
    * seeded/deterministic random number generator used to add noise to the
    * altitudes of satellites
    */
-  std::mt19937 generator;
+  static std::mt19937 generator;
 
   /**
-   * normal distribution that determines the random deviation from the satellites base
+   * normal distribution that determines the deviation of the satellites base
    * altitude. uses altitudeDeviation as parameter
    */
   std::normal_distribution<double> distribution;
