@@ -69,10 +69,13 @@ class Simulation {
    * @param constellations
    * @param delayedInsertion Vector of satellites that could not be inserted in the last phase. This is an in/out
    * parameter!
+   * @param constellationCutoff range parameter for checked insertion: if the insertion would be within a distance
+   * of constellationCutoff to any other object the insertion is delayed instead
    */
   void updateConstellation(AutoPas_t &autopas,
                            std::vector<Constellation> &constellations,
-                           std::vector<Particle> &delayedInsertion);
+                           std::vector<Particle> &delayedInsertion,
+                           double constellationCutoff);
 
   /**
    * Check for collisions / conjunctions and write statistics about them.
@@ -101,12 +104,13 @@ class Simulation {
    * Inserts particles into autopas if they have a safe distance to existing particles.
    * @param autopas Container where particles are about to be added.
    * @param newSatellites Satellites to be added.
-   * @param cutoff
+   * @param constellationCutoff sphere with radius constellationCutoff around inserted satellite must be
+   * empty for satellite to be inserted or else the insertion will be delayed (passed in the returned vector)
    * @return Vector of particles that were not added.
    */
   std::vector<Particle> checkedInsert(autopas::AutoPas<Particle> &autopas,
                                       const std::vector<Particle> &newSatellites,
-                                      double cutoff);
+                                      double constellationCutoff);
 
   /**
    * One logger to log them all.
