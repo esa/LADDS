@@ -81,6 +81,14 @@ class ConfigReader {
   }
 
   /**
+   * Checks if a given path is defined in the configuration.
+   * @param valuePath
+   * @param suppressWarning
+   * @return True iff valuePath exists in config.
+   */
+  bool defines(const std::string &valuePath, bool suppressWarning = true);
+
+  /**
    * Prints all accessed fields and what values were returned.
    */
   void printParsedValues();

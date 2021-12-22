@@ -36,3 +36,18 @@ void ConfigReader::printParsedValues() {
   }
   SPDLOG_LOGGER_INFO(logger.get(), "Configuration:{}", ss.str());
 }
+
+bool ConfigReader::defines(const std::string &valuePath, bool suppressWarning) {
+  std::vector<std::string> valuePathVec = autopas::utils::StringUtils::tokenize(valuePath, "/");
+  YAML::Node node = Clone(config);
+  for (const auto &dir : valuePathVec) {
+    // as soon as anything in the path is undefined abort and either use the fallback value or abort.
+    if (not node[dir].IsDefined()) {
+      if (not suppressWarning) {
+        SPDLOG_LOGGER_WARN(logger.get(), "Config value \"{}\" not defined!", valuePath);
+      }
+      return false;
+    }
+  }
+  return true;
+}

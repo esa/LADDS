@@ -19,6 +19,7 @@ class Timers {
   autopas::utils::Timer integrator{};
   autopas::utils::Timer constellationInsertion{};
   autopas::utils::Timer collisionDetection{};
+  autopas::utils::Timer collisionWriting{};
   autopas::utils::Timer containerUpdate{};
   autopas::utils::Timer output{};
 

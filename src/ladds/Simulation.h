@@ -18,6 +18,7 @@
 #include "TypeDefinitions.h"
 #include "ladds/io/ConfigReader.h"
 #include "ladds/io/ConjunctionLogger.h"
+#include "ladds/io/HDF5Writer.h"
 #include "ladds/io/Timers.h"
 #include "ladds/particle/Constellation.h"
 #include "ladds/particle/Particle.h"
@@ -69,22 +70,21 @@ class Simulation {
    * @param constellations
    * @param delayedInsertion Vector of satellites that could not be inserted in the last phase. This is an in/out
    * parameter!
+   * @param constellationCutoff range parameter for checked insertion: if the insertion would be within a distance
+   * of constellationCutoff to any other object the insertion is delayed instead
    */
   void updateConstellation(AutoPas_t &autopas,
                            std::vector<Constellation> &constellations,
-                           std::vector<Particle> &delayedInsertion);
+                           std::vector<Particle> &delayedInsertion,
+                           double constellationCutoff);
 
   /**
    * Check for collisions / conjunctions and write statistics about them.
    * @param autopas
    */
-  void collisionDetection(size_t iteration,
-                          AutoPas_t &autopas,
-                          ConjunctionLogger &conjunctionLogger,
-                          size_t &totalConjunctions,
-                          size_t progressOutputFrequency,
-                          double deltaT,
-                          double conjunctionThreshold);
+  std::unordered_map<Particle *, std::tuple<Particle *, double>> collisionDetection(AutoPas_t &autopas,
+                                                                                    double deltaT,
+                                                                                    double conjunctionThreshold);
 
   /**
    * The main loop.
@@ -101,12 +101,13 @@ class Simulation {
    * Inserts particles into autopas if they have a safe distance to existing particles.
    * @param autopas Container where particles are about to be added.
    * @param newSatellites Satellites to be added.
-   * @param cutoff
+   * @param constellationCutoff sphere with radius constellationCutoff around inserted satellite must be
+   * empty for satellite to be inserted or else the insertion will be delayed (passed in the returned vector)
    * @return Vector of particles that were not added.
    */
   std::vector<Particle> checkedInsert(autopas::AutoPas<Particle> &autopas,
                                       const std::vector<Particle> &newSatellites,
-                                      double cutoff);
+                                      double constellationCutoff);
 
   /**
    * One logger to log them all.

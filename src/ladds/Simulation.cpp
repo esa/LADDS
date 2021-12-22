@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "ladds/io/ConjunctionLogger.h"
+#include "ladds/io/HDF5Writer.h"
 #include "ladds/io/SatelliteLoader.h"
 #include "ladds/io/VTUWriter.h"
 #include "ladds/particle/Constellation.h"
@@ -126,41 +127,27 @@ Simulation::initIntegrator(AutoPas_t &autopas, ConfigReader &config) {
 
 void Simulation::updateConstellation(AutoPas_t &autopas,
                                      std::vector<Constellation> &constellations,
-                                     std::vector<Particle> &delayedInsertionTotal) {
+                                     std::vector<Particle> &delayedInsertionTotal,
+                                     double constellationCutoff) {
   // first insert delayed particles from previous insertion and collect the repeatedly delayed
-  delayedInsertionTotal = checkedInsert(autopas, delayedInsertionTotal, autopas.getCutoff());
+  delayedInsertionTotal = checkedInsert(autopas, delayedInsertionTotal, constellationCutoff);
   // container collecting delayed particles from one constellation at a time in order to append them to
   // totalDelayedInsertion
   std::vector<Particle> delayedInsertion;
   for (auto &constellation : constellations) {
     // new satellites are gradually added to the simulation according to their starting time and operation duration
     auto newSatellites = constellation.tick();
-    delayedInsertion = checkedInsert(autopas, newSatellites, autopas.getCutoff());
+    delayedInsertion = checkedInsert(autopas, newSatellites, constellationCutoff);
     delayedInsertionTotal.insert(delayedInsertionTotal.end(), delayedInsertion.begin(), delayedInsertion.end());
   }
 }
 
-void Simulation::collisionDetection(size_t iteration,
-                                    AutoPas_t &autopas,
-                                    ConjunctionLogger &conjunctionLogger,
-                                    size_t &totalConjunctions,
-                                    size_t progressOutputFrequency,
-                                    double deltaT,
-                                    double conjunctionThreshold) {
+std::unordered_map<Particle *, std::tuple<Particle *, double>> Simulation::collisionDetection(
+    AutoPas_t &autopas, double deltaT, double conjunctionThreshold) {
   // pairwise interaction
   CollisionFunctor collisionFunctor(autopas.getCutoff(), deltaT, conjunctionThreshold);
   autopas.iteratePairwise(&collisionFunctor);
-  auto collisions = collisionFunctor.getCollisions();
-  for (const auto &[p1, p2AndDistanceSquare] : collisions) {
-    totalConjunctions++;
-    const auto &[p2, distanceSquare] = p2AndDistanceSquare;
-    conjunctionLogger.log(iteration, *p1, *p2, distanceSquare);
-    SPDLOG_LOGGER_DEBUG(logger.get(), "{} | {} | distanceSquare={}", p1->getID(), p2->getID(), distanceSquare);
-  }
-  if (iteration % progressOutputFrequency == 0) {
-    SPDLOG_LOGGER_INFO(
-        logger.get(), "It {} - Encounters:{} Total conjunctions:{}", iteration, collisions.size(), totalConjunctions);
-  }
+  return collisionFunctor.getCollisions();
 }
 
 void Simulation::simulationLoop(AutoPas_t &autopas,
@@ -168,15 +155,31 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
                                 std::vector<Constellation> &constellations,
                                 ConfigReader &config) {
   const auto iterations = config.get<size_t>("sim/iterations");
-  const auto vtkWriteFrequency = config.get<size_t>("io/vtkWriteFrequency", 0ul);
   const auto constellationInsertionFrequency = config.get<int>("io/constellationFrequency", 1);
+  const auto constellationCutoff = config.get<double>("io/constellationCutoff", 0.1);
   const auto progressOutputFrequency = config.get<int>("io/progressOutputFrequency", 50);
   const auto deltaT = config.get<double>("sim/deltaT");
   const auto conjunctionThreshold = config.get<double>("sim/conjunctionThreshold");
   std::vector<Particle> delayedInsertion;
 
+  const auto vtkWriteFrequency = config.get<size_t>("io/vtkWriteFrequency", 0ul);
+
+  auto hdf5WriteFrequency = 0u;
+
+  std::shared_ptr<HDF5Writer> hdf5Writer;
+  std::shared_ptr<ConjuctionWriterInterface> conjuctionWriter;
+  if (config.defines("io/hdf5")) {
+    hdf5WriteFrequency = config.get<unsigned int>("io/hdf5/writeFrequency", 0u);
+    const auto hdf5CompressionLvl = config.get<unsigned int>("io/hdf5/compressionLevel", 0u);
+    const auto hdf5FileName = config.get<std::string>("io/hdf5/fileName", "simulationData.h5");
+
+    hdf5Writer = std::make_shared<HDF5Writer>(hdf5FileName, hdf5CompressionLvl);
+    conjuctionWriter = hdf5Writer;
+  } else {
+    conjuctionWriter = std::make_shared<ConjunctionLogger>("");
+  }
+
   size_t totalConjunctions{0ul};
-  ConjunctionLogger conjunctionLogger("");
 
   config.printParsedValues();
 
@@ -189,7 +192,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     timers.constellationInsertion.start();
     // new satellites from constellations inserted over time
     if (i % constellationInsertionFrequency == 0) {
-      updateConstellation(autopas, constellations, delayedInsertion);
+      updateConstellation(autopas, constellations, delayedInsertion, constellationCutoff);
     }
     timers.constellationInsertion.stop();
 
@@ -206,16 +209,27 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     // TODO Check for particles that burn up
 
     timers.collisionDetection.start();
-    collisionDetection(
-        i, autopas, conjunctionLogger, totalConjunctions, progressOutputFrequency, deltaT, conjunctionThreshold);
+    auto collisions = collisionDetection(autopas, deltaT, conjunctionThreshold);
     timers.collisionDetection.stop();
+
+    timers.collisionWriting.start();
+    totalConjunctions += collisions.size();
+    conjuctionWriter->writeConjunctions(i, collisions);
+    if (i % progressOutputFrequency == 0) {
+      SPDLOG_LOGGER_INFO(
+          logger.get(), "It {} - Encounters:{} Total conjunctions:{}", i, collisions.size(), totalConjunctions);
+    }
+    timers.collisionWriting.stop();
 
     // TODO insert breakup model here
 
     timers.output.start();
     // Visualization:
-    if (i % vtkWriteFrequency == 0) {
-      VTUWriter::writeVTK(i, autopas);
+    if (vtkWriteFrequency and i % vtkWriteFrequency == 0) {
+      VTUWriter::writeVTU(i, autopas);
+    }
+    if (hdf5WriteFrequency and i % hdf5WriteFrequency == 0) {
+      hdf5Writer->writeParticles(i, autopas);
     }
     timers.output.stop();
   }
@@ -224,10 +238,10 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
 
 std::vector<Particle> Simulation::checkedInsert(autopas::AutoPas<Particle> &autopas,
                                                 const std::vector<Particle> &newSatellites,
-                                                double cutoff) {
+                                                double constellationCutoff) {
   std::vector<Particle> delayedInsertion = {};
 
-  const double collisionRadius = 2 * cutoff;
+  const double collisionRadius = constellationCutoff;
   const double collisionRadiusSquared = collisionRadius * collisionRadius;
   const std::array<double, 3> boxSpan = {collisionRadius, collisionRadius, collisionRadius};
   for (const auto &satellite : newSatellites) {
