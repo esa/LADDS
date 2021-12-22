@@ -164,5 +164,5 @@ class Constellation {
   /**
    * variable used to give every satellite that is part of a constellation an id
    */
-    static size_t particleID;
+  static size_t particleID;
 };

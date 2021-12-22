@@ -13,8 +13,8 @@
 
 #include "ladds/Simulation.h"
 #include "ladds/io/Logger.h"
-#include "ladds/particle/Particle.h"
 #include "ladds/io/SatelliteLoader.h"
+#include "ladds/particle/Particle.h"
 
 /**
  * Tests whether particles are correctly inserted into the simulation, when a particle
@@ -22,7 +22,7 @@
  */
 TEST_F(SimulationTest, testInsertionOverlap) {
   Logger logger{"SimulationTestLogger"};
-  logger.get()->set_level(Logger::Level::trace);
+  logger.get()->set_level(Logger::Level::off);
   Simulation simulation(logger);
 
   auto autopas = simulation.initAutoPas(config);
@@ -109,7 +109,7 @@ TEST_F(SimulationTest, testInsertionOverlap) {
  */
 TEST_F(SimulationTest, testCriticalRangeInsertion1) {
   Logger logger{"SimulationTestLogger"};
-  logger.get()->set_level(Logger::Level::trace);
+  logger.get()->set_level(Logger::Level::off);
   Simulation simulation(logger);
 
   auto autopas = simulation.initAutoPas(config);
@@ -150,7 +150,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion1) {
  */
 TEST_F(SimulationTest, testCriticalRangeInsertion2) {
   Logger logger{"SimulationTestLogger"};
-  logger.get()->set_level(Logger::Level::trace);
+  logger.get()->set_level(Logger::Level::off);
   Simulation simulation(logger);
 
   auto autopas = simulation.initAutoPas(config);
@@ -193,7 +193,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion2) {
  */
 TEST_F(SimulationTest, testCriticalRangeInsertion3) {
   Logger logger{"SimulationTestLogger"};
-  logger.get()->set_level(Logger::Level::trace);
+  logger.get()->set_level(Logger::Level::off);
   Simulation simulation(logger);
 
   auto autopas = simulation.initAutoPas(config);
@@ -236,7 +236,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion3) {
  */
 TEST_F(SimulationTest, testCriticalRangeInsertion4) {
   Logger logger{"SimulationTestLogger"};
-  logger.get()->set_level(Logger::Level::trace);
+  logger.get()->set_level(Logger::Level::off);
   Simulation simulation(logger);
 
   auto autopas = simulation.initAutoPas(config);
@@ -279,7 +279,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion4) {
  */
 TEST_F(SimulationTest, testCriticalRangeInsertion5) {
   Logger logger{"SimulationTestLogger"};
-  logger.get()->set_level(Logger::Level::trace);
+  logger.get()->set_level(Logger::Level::off);
   Simulation simulation(logger);
 
   auto autopas = simulation.initAutoPas(config);
@@ -322,7 +322,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion5) {
  */
 TEST_F(SimulationTest, testCriticalRangeInsertion6) {
   Logger logger{"SimulationTestLogger"};
-  logger.get()->set_level(Logger::Level::trace);
+  logger.get()->set_level(Logger::Level::off);
   Simulation simulation(logger);
 
   auto autopas = simulation.initAutoPas(config);
@@ -365,7 +365,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion6) {
  */
 TEST_F(SimulationTest, testCriticalRangeInsertion7) {
   Logger logger{"SimulationTestLogger"};
-  logger.get()->set_level(Logger::Level::trace);
+  logger.get()->set_level(Logger::Level::off);
   Simulation simulation(logger);
 
   auto autopas = simulation.initAutoPas(config);
@@ -407,7 +407,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion7) {
  */
 TEST_F(SimulationTest, testCriticalRangeInsertion8) {
   Logger logger{"SimulationTestLogger"};
-  logger.get()->set_level(Logger::Level::trace);
+  logger.get()->set_level(Logger::Level::off);
   Simulation simulation(logger);
 
   auto autopas = simulation.initAutoPas(config);
@@ -449,7 +449,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion8) {
  */
 TEST_F(SimulationTest, testCriticalRangeInsertion9) {
   Logger logger{"SimulationTestLogger"};
-  logger.get()->set_level(Logger::Level::trace);
+  logger.get()->set_level(Logger::Level::off);
   Simulation simulation(logger);
 
   auto autopas = simulation.initAutoPas(config);
@@ -492,44 +492,44 @@ TEST_F(SimulationTest, testCriticalRangeInsertion9) {
  * The test structure imitates simulationLoop
  */
 TEST_F(SimulationTest, SimulationTestScenario1) {
-    Logger logger{"SimulationTestLogger"};
-    logger.get()->set_level(Logger::Level::trace);
-    Simulation simulation(logger);
-    config["io"]["altitudeSpread"] = 0;
-    config["io"]["constellationList"] = "TestConstellationA;TestConstellationAPrime;TestConstellationAPrime";
-    // run
-    auto autopas = simulation.initAutoPas(config);
-    auto [csvWriter, accumulator, integrator] = simulation.initIntegrator(*autopas, config);
-    SatelliteLoader::loadSatellites(*autopas, config, logger);
-    auto constellations = SatelliteLoader::loadConstellations(config, logger);
-    const auto constellationCutoff =
-            config["io"]["constellationCutoff"].IsDefined() ? config["io"]["constellationCutoff"].as<double>() : 0.1;
-    // three (almost) identical constellations are added at time = 0 (exceptions tagged with ¹ / ²)
-    //   1         2          3
-    //---o--- | ---o¹-- | ---o¹--
-    //--o-o-- | --o-o²- | --o-o²-
-    //---o--- | ---o--- | ---o---
-    //¹: offset smaller that constellationCutoff, ²: offset greater than constellationCutoff (see pos.csv)
+  Logger logger{"SimulationTestLogger"};
+  logger.get()->set_level(Logger::Level::off);
+  Simulation simulation(logger);
+  config["io"]["altitudeSpread"] = 0;
+  config["io"]["constellationList"] = "TestConstellationA;TestConstellationAPrime;TestConstellationAPrime";
+  // run
+  auto autopas = simulation.initAutoPas(config);
+  auto [csvWriter, accumulator, integrator] = simulation.initIntegrator(*autopas, config);
+  SatelliteLoader::loadSatellites(*autopas, config, logger);
+  auto constellations = SatelliteLoader::loadConstellations(config, logger);
+  const auto constellationCutoff =
+      config["io"]["constellationCutoff"].IsDefined() ? config["io"]["constellationCutoff"].as<double>() : 0.1;
+  // three (almost) identical constellations are added at time = 0 (exceptions tagged with ¹ / ²)
+  //   1         2          3
+  //---o--- | ---o¹-- | ---o¹--
+  //--o-o-- | --o-o²- | --o-o²-
+  //---o--- | ---o--- | ---o---
+  //¹: offset smaller that constellationCutoff, ²: offset greater than constellationCutoff (see pos.csv)
 
-    std::vector<Particle> delayedInsertion;
-    ASSERT_EQ(autopas->getNumberOfParticles(), 0);
+  std::vector<Particle> delayedInsertion;
+  ASSERT_EQ(autopas->getNumberOfParticles(), 0);
 
-    integrator->integrate(false);
-    simulation.updateConstellation(*autopas, constellations, delayedInsertion, constellationCutoff);
-    auto escapedParticles = autopas->updateContainer();
-    ASSERT_EQ(autopas->getNumberOfParticles(), 5);
-    integrator->integrate(false);
-    simulation.updateConstellation(*autopas, constellations, delayedInsertion, constellationCutoff);
-    escapedParticles = autopas->updateContainer();
-    ASSERT_EQ(autopas->getNumberOfParticles(), 9);
-    integrator->integrate(false);
-    simulation.updateConstellation(*autopas, constellations, delayedInsertion, constellationCutoff);
-    escapedParticles = autopas->updateContainer();
-    ASSERT_EQ(autopas->getNumberOfParticles(), 12);
-    integrator->integrate(false);
-    simulation.updateConstellation(*autopas, constellations, delayedInsertion, constellationCutoff);
-    escapedParticles = autopas->updateContainer();
-    ASSERT_EQ(autopas->getNumberOfParticles(), 12);
+  integrator->integrate(false);
+  simulation.updateConstellation(*autopas, constellations, delayedInsertion, constellationCutoff);
+  auto escapedParticles = autopas->updateContainer();
+  ASSERT_EQ(autopas->getNumberOfParticles(), 5);
+  integrator->integrate(false);
+  simulation.updateConstellation(*autopas, constellations, delayedInsertion, constellationCutoff);
+  escapedParticles = autopas->updateContainer();
+  ASSERT_EQ(autopas->getNumberOfParticles(), 9);
+  integrator->integrate(false);
+  simulation.updateConstellation(*autopas, constellations, delayedInsertion, constellationCutoff);
+  escapedParticles = autopas->updateContainer();
+  ASSERT_EQ(autopas->getNumberOfParticles(), 12);
+  integrator->integrate(false);
+  simulation.updateConstellation(*autopas, constellations, delayedInsertion, constellationCutoff);
+  escapedParticles = autopas->updateContainer();
+  ASSERT_EQ(autopas->getNumberOfParticles(), 12);
 }
 /**
  * scenario with small constellations that tests simultaneous insertion
@@ -540,93 +540,93 @@ TEST_F(SimulationTest, SimulationTestScenario1) {
  * The test structure imitates simulationLoop
  */
 TEST_F(SimulationTest, SimulationTestScenario2) {
-    Logger logger{"SimulationTestLogger"};
-    logger.get()->set_level(Logger::Level::trace);
-    Simulation simulation(logger);
-    // one sixteenth of a revolution time for a 400km altitude satellite (*100)
-    config["sim"]["deltaT"] = 3.465534435;
-    config["io"]["altitudeSpread"] = 0;
-    config["io"]["constellationList"] =
-            "TestConstellationB;TestConstellationB11;TestConstellationB12;TestConstellationB21;TestConstellationB21;"
-            "TestConstellationB21;TestConstellationB21;TestConstellationB21;TestConstellationB21;TestConstellationB21;"
-            "TestConstellationB21;TestConstellationB21";
-    config["io"]["constellationFrequency"] = 100;
-    config["autopas"]["cutoff"] = 80.0;
-    config["autopas"]["skin"] = 160.0;
-    auto constellationInsertionFrequency = config["io"]["constellationFrequency"].as<int>();
-    // run
-    auto autopas = simulation.initAutoPas(config);
-    auto [csvWriter, accumulator, integrator] = simulation.initIntegrator(*autopas, config);
-    SatelliteLoader::loadSatellites(*autopas, config, logger);
-    auto constellations = SatelliteLoader::loadConstellations(config, logger);
-    const auto constellationCutoff = 100.0;
+  Logger logger{"SimulationTestLogger"};
+  logger.get()->set_level(Logger::Level::off);
+  Simulation simulation(logger);
+  // one sixteenth of a revolution time for a 400km altitude satellite (*100)
+  config["sim"]["deltaT"] = 3.465534435;
+  config["io"]["altitudeSpread"] = 0;
+  config["io"]["constellationList"] =
+      "TestConstellationB;TestConstellationB11;TestConstellationB12;TestConstellationB21;TestConstellationB21;"
+      "TestConstellationB21;TestConstellationB21;TestConstellationB21;TestConstellationB21;TestConstellationB21;"
+      "TestConstellationB21;TestConstellationB21";
+  config["io"]["constellationFrequency"] = 100;
+  config["autopas"]["cutoff"] = 80.0;
+  config["autopas"]["skin"] = 160.0;
+  auto constellationInsertionFrequency = config["io"]["constellationFrequency"].as<int>();
+  // run
+  auto autopas = simulation.initAutoPas(config);
+  auto [csvWriter, accumulator, integrator] = simulation.initIntegrator(*autopas, config);
+  SatelliteLoader::loadSatellites(*autopas, config, logger);
+  auto constellations = SatelliteLoader::loadConstellations(config, logger);
+  const auto constellationCutoff = 100.0;
 
-    /*
-     * the test simulation was supposed to be simulated in 21 iterations, but a
-     * deltaT of 346.5534435 seconds created a rounding error that destroyed the
-     * property of 16 iterations simulating exactly one revolution. DeltaT was
-     * therefore divided by 100 which is compensated by 100 times more integration
-     * steps and a big constellationCutoff
-     *
-     * since the time step is chosen so that a satellite with a 400km altitude
-     * moves by 1/16 in 100 iterations the simulation can be visualized as an
-     * array of 16 possible areas for a satellite. Checked insertion is tested
-     * at two orbital planes, so there are two seperate 16-size-arrays
-     *
-     * First plane:
-     * ConstellationB (Plane 1, inserted at t = 0):
-     * o-o-o-o-o-o-o-o-
-     * ConstellationB11 (inserted at t = 2)
-     * o-------o-------
-     * ConstellationB12 (inserted at t = 4)
-     * o---o---o---o---
-     *
-     * Second plane:
-     * ConstellationB (Plane 2, inserted at t = 3):
-     * o-o-o-o-o-o-o-o-
-     * ConstellationB21 (inserted 9 times at t = 3):
-     * o---------------
-     */
+  /*
+   * the test simulation was supposed to be simulated in 21 iterations, but a
+   * deltaT of 346.5534435 seconds created a rounding error that destroyed the
+   * property of 16 iterations simulating exactly one revolution. DeltaT was
+   * therefore divided by 100 which is compensated by 100 times more integration
+   * steps and a big constellationCutoff
+   *
+   * since the time step is chosen so that a satellite with a 400km altitude
+   * moves by 1/16 in 100 iterations the simulation can be visualized as an
+   * array of 16 possible areas for a satellite. Checked insertion is tested
+   * at two orbital planes, so there are two seperate 16-size-arrays
+   *
+   * First plane:
+   * ConstellationB (Plane 1, inserted at t = 0):
+   * o-o-o-o-o-o-o-o-
+   * ConstellationB11 (inserted at t = 2)
+   * o-------o-------
+   * ConstellationB12 (inserted at t = 4)
+   * o---o---o---o---
+   *
+   * Second plane:
+   * ConstellationB (Plane 2, inserted at t = 3):
+   * o-o-o-o-o-o-o-o-
+   * ConstellationB21 (inserted 9 times at t = 3):
+   * o---------------
+   */
 
-    /*
-     * o = satellite, 0 = satellite inserted at this iteration
-     * visualization: timetable of first plane, expected:
-     * 0 : O-O-O-O-O-O-O-O- s: 8
-     * 1 : Oo-o-o-oOo-o-o-o s:10
-     * 2 : ooo-o-o-ooo-o-o- s:10
-     * 3 : -ooo-o-o-ooo-o-o s:10
-     * 4 : o-ooo-o-o-ooo-o- s:10
-     * 5 : Oo-ooo-oOo-ooo-o s:12
-     * 6 : ooo-ooo-ooo-ooo- s:12
-     * 7 : -oooOooo-oooOooo s:14
-     *
-     * visualization: timetable of second plane, expected:
-     * 0 : ---------------- s: 0 11: ooooooooo-o-o-o- s:12
-     * 1 : ---------------- s: 0 12: Oooooooooo-o-o-o s:13
-     * 2 : ---------------- s: 0 13: ooooooooooo-o-o- s:13
-     * 3 : O-O-O-O-O-O-O-O- s: 8 14: Oooooooooooo-o-o s:14
-     * 4 : Oo-o-o-o-o-o-o-o s: 9 15: ooooooooooooo-o- s:14
-     * 5 : ooo-o-o-o-o-o-o- s: 9 16: Oooooooooooooo-o s:15
-     * 6 : Oooo-o-o-o-o-o-o s:10 17: ooooooooooooooo- s:15
-     * 7 : ooooo-o-o-o-o-o- s:10 18: Oooooooooooooooo s:16
-     * 8 : Oooooo-o-o-o-o-o s:11 19: oooooooooooooooo s:16
-     * 9 : ooooooo-o-o-o-o- s:11 20: oooooooooooooooo s:16
-     * 10: Oooooooo-o-o-o-o s:12 21: oooooooooooooooo s:16
-     */
-    std::vector<Particle> delayedInsertion;
-    ASSERT_EQ(autopas->getNumberOfParticles(), 0);
-    std::vector<Particle> escapedParticles;
-    std::vector<size_t> expectedSeries = {8 + 0,   10 + 0,  10 + 0,  10 + 8,  10 + 9,  12 + 9,  12 + 10,
-                                          14 + 10, 14 + 11, 14 + 11, 14 + 12, 14 + 12, 14 + 13, 14 + 13,
-                                          14 + 14, 14 + 14, 14 + 15, 14 + 15, 14 + 16, 14 + 16, 14 + 16};
-    for (int i = 0; i < 2100; i++) {
-        integrator->integrate(false);
-        if (i % constellationInsertionFrequency == 0) {
-            simulation.updateConstellation(*autopas, constellations, delayedInsertion, constellationCutoff);
-        }
-        escapedParticles = autopas->updateContainer();
-        if (i % constellationInsertionFrequency == 0) {
-            ASSERT_EQ(autopas->getNumberOfParticles(), expectedSeries[i / 100]);
-        }
+  /*
+   * o = satellite, 0 = satellite inserted at this iteration
+   * visualization: timetable of first plane, expected:
+   * 0 : O-O-O-O-O-O-O-O- s: 8
+   * 1 : Oo-o-o-oOo-o-o-o s:10
+   * 2 : ooo-o-o-ooo-o-o- s:10
+   * 3 : -ooo-o-o-ooo-o-o s:10
+   * 4 : o-ooo-o-o-ooo-o- s:10
+   * 5 : Oo-ooo-oOo-ooo-o s:12
+   * 6 : ooo-ooo-ooo-ooo- s:12
+   * 7 : -oooOooo-oooOooo s:14
+   *
+   * visualization: timetable of second plane, expected:
+   * 0 : ---------------- s: 0 11: ooooooooo-o-o-o- s:12
+   * 1 : ---------------- s: 0 12: Oooooooooo-o-o-o s:13
+   * 2 : ---------------- s: 0 13: ooooooooooo-o-o- s:13
+   * 3 : O-O-O-O-O-O-O-O- s: 8 14: Oooooooooooo-o-o s:14
+   * 4 : Oo-o-o-o-o-o-o-o s: 9 15: ooooooooooooo-o- s:14
+   * 5 : ooo-o-o-o-o-o-o- s: 9 16: Oooooooooooooo-o s:15
+   * 6 : Oooo-o-o-o-o-o-o s:10 17: ooooooooooooooo- s:15
+   * 7 : ooooo-o-o-o-o-o- s:10 18: Oooooooooooooooo s:16
+   * 8 : Oooooo-o-o-o-o-o s:11 19: oooooooooooooooo s:16
+   * 9 : ooooooo-o-o-o-o- s:11 20: oooooooooooooooo s:16
+   * 10: Oooooooo-o-o-o-o s:12 21: oooooooooooooooo s:16
+   */
+  std::vector<Particle> delayedInsertion;
+  ASSERT_EQ(autopas->getNumberOfParticles(), 0);
+  std::vector<Particle> escapedParticles;
+  std::vector<size_t> expectedSeries = {8 + 0,   10 + 0,  10 + 0,  10 + 8,  10 + 9,  12 + 9,  12 + 10,
+                                        14 + 10, 14 + 11, 14 + 11, 14 + 12, 14 + 12, 14 + 13, 14 + 13,
+                                        14 + 14, 14 + 14, 14 + 15, 14 + 15, 14 + 16, 14 + 16, 14 + 16};
+  for (int i = 0; i < 2100; i++) {
+    integrator->integrate(false);
+    if (i % constellationInsertionFrequency == 0) {
+      simulation.updateConstellation(*autopas, constellations, delayedInsertion, constellationCutoff);
     }
+    escapedParticles = autopas->updateContainer();
+    if (i % constellationInsertionFrequency == 0) {
+      ASSERT_EQ(autopas->getNumberOfParticles(), expectedSeries[i / 100]);
+    }
+  }
 }

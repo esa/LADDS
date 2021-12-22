@@ -58,7 +58,7 @@ Constellation::Constellation(const YAML::Node &constellationConfig, size_t inter
     timeSteps.push_back((timestamps[i + 1] - timestamps[i]) / shells[i][2]);  // = duration_i / nPlanes_i
   }
 
-  //prepare next ID base for next constellation (C1 starts at 1M, C2 starts at 2M ...)
+  // prepare next ID base for next constellation (C1 starts at 1M, C2 starts at 2M ...)
   particleID = particleID + 1000000 - constellationSize;
 }
 
