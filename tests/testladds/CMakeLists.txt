@@ -40,11 +40,11 @@ target_include_directories(
     PUBLIC
     ${LADDS_SOURCE_DIR}/src
 )
-
+#NOTE: DATADIR changed from ... /data/ to .../tests/data/
 target_compile_definitions(${TEST_EXECUTABLE_NAME}
     PUBLIC
     SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_${LADDS_MAX_LOGLVL}
-    DATADIR=\"${PROJECT_SOURCE_DIR}/data/\"
+    DATADIR=\"${PROJECT_SOURCE_DIR}/tests/data/\"
     CFGDIR=\"${PROJECT_SOURCE_DIR}/cfg/\"
     CFGDIRTEST=\"${PROJECT_SOURCE_DIR}/cfg/\"
 )

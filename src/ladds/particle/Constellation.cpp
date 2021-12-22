@@ -12,6 +12,8 @@
 #include <iostream>
 #include <string>
 
+size_t Constellation::particleID = 1000000;
+
 std::mt19937 Constellation::generator{42};
 
 Constellation::Constellation(const YAML::Node &constellationConfig, size_t interval, double altitudeDeviation)
@@ -55,6 +57,9 @@ Constellation::Constellation(const YAML::Node &constellationConfig, size_t inter
   for (size_t i = 0ul; i < timestamps.size() - 1; ++i) {
     timeSteps.push_back((timestamps[i + 1] - timestamps[i]) / shells[i][2]);  // = duration_i / nPlanes_i
   }
+
+  //prepare next ID base for next constellation (C1 starts at 1M, C2 starts at 2M ...)
+  particleID = particleID + 1000000 - constellationSize;
 }
 
 std::vector<Particle> Constellation::tick() {
@@ -121,7 +126,6 @@ std::vector<Particle> Constellation::readDatasetConstellation(const std::string 
 
   particleCollection.reserve(positions.size());
 
-  size_t particleId = 0;
   std::transform(positions.begin(),
                  positions.end(),
                  velocities.begin(),
@@ -132,7 +136,7 @@ std::vector<Particle> Constellation::readDatasetConstellation(const std::string 
 
                    const std::array<double, 3> posArray = {x, y, z};
                    const std::array<double, 3> velArray = {vx, vy, vz};
-                   return Particle(posArray, velArray, particleId++);
+                   return Particle(posArray, velArray, particleID++);
                  });
   return particleCollection;
 }
