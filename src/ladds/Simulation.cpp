@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "ladds/io/ConjunctionLogger.h"
+#include "ladds/io/HDF5Writer.h"
 #include "ladds/io/SatelliteLoader.h"
 #include "ladds/io/VTUWriter.h"
 #include "ladds/particle/Constellation.h"
@@ -144,27 +145,12 @@ void Simulation::updateConstellation(AutoPas_t &autopas,
   }
 }
 
-void Simulation::collisionDetection(size_t iteration,
-                                    AutoPas_t &autopas,
-                                    ConjunctionLogger &conjunctionLogger,
-                                    size_t &totalConjunctions,
-                                    size_t progressOutputFrequency,
-                                    double deltaT,
-                                    double conjunctionThreshold) {
+std::unordered_map<Particle *, std::tuple<Particle *, double>> Simulation::collisionDetection(
+    AutoPas_t &autopas, double deltaT, double conjunctionThreshold) {
   // pairwise interaction
   CollisionFunctor collisionFunctor(autopas.getCutoff(), deltaT, conjunctionThreshold);
   autopas.iteratePairwise(&collisionFunctor);
-  auto collisions = collisionFunctor.getCollisions();
-  for (const auto &[p1, p2AndDistanceSquare] : collisions) {
-    totalConjunctions++;
-    const auto &[p2, distanceSquare] = p2AndDistanceSquare;
-    conjunctionLogger.log(iteration, *p1, *p2, distanceSquare);
-    SPDLOG_LOGGER_DEBUG(logger.get(), "{} | {} | distanceSquare={}", p1->getID(), p2->getID(), distanceSquare);
-  }
-  if (iteration % progressOutputFrequency == 0) {
-    SPDLOG_LOGGER_INFO(
-        logger.get(), "It {} - Encounters:{} Total conjunctions:{}", iteration, collisions.size(), totalConjunctions);
-  }
+  return collisionFunctor.getCollisions();
 }
 
 void Simulation::simulationLoop(AutoPas_t &autopas,
@@ -172,7 +158,6 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
                                 std::vector<Constellation> &constellations,
                                 const YAML::Node &config) {
   const auto iterations = config["sim"]["iterations"].as<size_t>();
-  const auto vtkWriteFrequency = config["io"]["vtkWriteFrequency"].as<size_t>();
   const auto constellationInsertionFrequency =
       config["io"]["constellationFrequency"].IsDefined() ? config["io"]["constellationFrequency"].as<int>() : 1;
   const auto constellationCutoff =
@@ -183,8 +168,30 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
   const auto conjunctionThreshold = config["sim"]["conjunctionThreshold"].as<double>();
   std::vector<Particle> delayedInsertion;
 
+  const auto vtkWriteFrequency =
+      config["io"]["vtk"]["writeFrequency"].IsDefined() ? config["io"]["vtk"]["writeFrequency"].as<size_t>() : 0ul;
+  auto hdf5WriteFrequency = 0u;
+
+  std::shared_ptr<HDF5Writer> hdf5Writer;
+  std::shared_ptr<ConjuctionWriterInterface> conjuctionWriter;
+  if (config["io"]["hdf5"].IsDefined()) {
+    hdf5WriteFrequency = config["io"]["hdf5"]["writeFrequency"].IsDefined()
+                             ? config["io"]["hdf5"]["writeFrequency"].as<unsigned int>()
+                             : 0u;
+    const auto hdf5CompressionLvl = config["io"]["hdf5"]["compressionLevel"].IsDefined()
+                                        ? config["io"]["hdf5"]["compressionLevel"].as<unsigned int>()
+                                        : 0u;
+    const auto hdf5FileName = config["io"]["hdf5"]["fileName"].IsDefined()
+                                  ? config["io"]["hdf5"]["fileName"].as<std::string>()
+                                  : "simulationData.h5";
+
+    hdf5Writer = std::make_shared<HDF5Writer>(hdf5FileName, hdf5CompressionLvl);
+    conjuctionWriter = hdf5Writer;
+  } else {
+    conjuctionWriter = std::make_shared<ConjunctionLogger>("");
+  }
+
   size_t totalConjunctions{0ul};
-  ConjunctionLogger conjunctionLogger("");
 
   for (size_t i = 0ul; i < iterations; ++i) {
     // update positions
@@ -212,16 +219,27 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     // TODO Check for particles that burn up
 
     timers.collisionDetection.start();
-    collisionDetection(
-        i, autopas, conjunctionLogger, totalConjunctions, progressOutputFrequency, deltaT, conjunctionThreshold);
+    auto collisions = collisionDetection(autopas, deltaT, conjunctionThreshold);
     timers.collisionDetection.stop();
+
+    timers.collisionWriting.start();
+    totalConjunctions += collisions.size();
+    conjuctionWriter->writeConjunctions(i, collisions);
+    if (i % progressOutputFrequency == 0) {
+      SPDLOG_LOGGER_INFO(
+          logger.get(), "It {} - Encounters:{} Total conjunctions:{}", i, collisions.size(), totalConjunctions);
+    }
+    timers.collisionWriting.stop();
 
     // TODO insert breakup model here
 
     timers.output.start();
     // Visualization:
-    if (i % vtkWriteFrequency == 0) {
-      VTUWriter::writeVTK(i, autopas);
+    if (vtkWriteFrequency and i % vtkWriteFrequency == 0) {
+      VTUWriter::writeVTU(i, autopas);
+    }
+    if (hdf5WriteFrequency and i % hdf5WriteFrequency == 0) {
+      hdf5Writer->writeParticles(i, autopas);
     }
     timers.output.stop();
   }

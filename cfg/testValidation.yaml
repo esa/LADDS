@@ -20,7 +20,8 @@ io:
   posFileName: pos_test.csv # Name of the CSV file with satellite positions [km]
   velFileName: v_test.csv # Name of the CSV file with satellite velocities [km/s]
   #progressOutputFrequency : 50 # Frequency of writing iteration number and encounter info to std::out.
-  vtkWriteFrequency: 99 # Frequency of writing to vtk file [iterations]
+  vtk:
+    writeFrequency: 99 # Frequency of writing vtk files [iterations]
 
   #constellationList: AstraPhase2,100,7200 # ';'-seperated constellations consisting of path (to constellation directory), start time, duration
   constellationFrequency: 10 # Frequency of adding satellites to simulation [iterations]
