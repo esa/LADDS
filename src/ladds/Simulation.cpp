@@ -15,7 +15,7 @@
 #include <vector>
 
 #include "ladds/io/ConjunctionLogger.h"
-#include "ladds/io/HDF5Writer.h"
+#include "ladds/io/hdf5/HDF5Writer.h"
 #include "ladds/io/SatelliteLoader.h"
 #include "ladds/io/VTUWriter.h"
 #include "ladds/particle/Constellation.h"

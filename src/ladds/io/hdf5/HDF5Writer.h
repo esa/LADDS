@@ -12,7 +12,7 @@
 
 #include <string>
 
-#include "ConjunctionWriterInterface.h"
+#include "ladds/io/ConjunctionWriterInterface.h"
 #include "ladds/TypeDefinitions.h"
 
 /**
