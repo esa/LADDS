@@ -12,14 +12,17 @@
 
 #include <string>
 
+#include "HDF5Writer.h"
 #include "ladds/particle/Particle.h"
 class HDF5Reader {
  public:
   explicit HDF5Reader(const std::string &filename);
 
- private:
   std::vector<Particle> readParticles(size_t iteration);
 
+  std::vector<HDF5Writer::CollisionInfo> readCollisions(size_t iteration);
+
+ private:
 #ifdef LADDS_HDF5
   /**
    * Actual file that is read.
