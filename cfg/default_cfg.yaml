@@ -3,15 +3,15 @@ sim:
   iterations: 1 # Number of simulation iterations
   maxAltitude: 10000 # Maximum satellite altitude [km]
   deltaT: 10.0 # [s]
-  conjunctionThreshold: 5.0 # [km]
+  conjunctionThreshold: 0.5 # [km]
 
   prop: # Which propagation model components should be applied
     useKEPComponent: true # Keplerian propagation
     useJ2Component: true # J2 spherical harmonic approximation
     useC22Component: true # C22 spherical harmonic approximation
     useS22Component: true # S22 spherical harmonic approximation
-    useSOLComponent: true # Solar gravitational pull
-    useLUNComponent: true # Lunar gravitational pull
+    useSOLComponent: false # Solar gravitational pull
+    useLUNComponent: false # Lunar gravitational pull
     useSRPComponent: true # Solar radiation pressure
     useDRAGComponent: true # Atmospheric drag
 
