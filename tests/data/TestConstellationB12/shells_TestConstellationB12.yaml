@@ -1,0 +1,18 @@
+constellation:
+  name: TestConstellationB12
+  startTime: 400
+  duration: 0
+  nShells: 1
+
+shell1:
+  altitude: 400
+  inclination: 40.0
+  nPlanes: 1
+  nSats: 4
+
+special1:
+  offsetM: 0
+  argPeriapsis: 3.141592653589793
+  startingW: 0
+  W_area: 90
+
