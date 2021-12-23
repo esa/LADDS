@@ -86,7 +86,7 @@ class ConfigReader {
    * @param suppressWarning
    * @return True iff valuePath exists in config.
    */
-  bool defines(const std::string &valuePath, bool suppressWarning = true);
+  bool defines(const std::string &valuePath, bool suppressWarning = false);
 
   /**
    * Prints all accessed fields and what values were returned.
