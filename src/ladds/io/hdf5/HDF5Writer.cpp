@@ -31,13 +31,10 @@ HDF5Writer::HDF5Writer(const std::string &filename, unsigned int compressionLeve
 
 void HDF5Writer::writeParticles(size_t iteration, const AutoPas_t &autopas) {
 #ifdef LADDS_HDF5
-  // Data will be casted to these types before writing
-  using floatType = float;
-  using intType = unsigned int;
 
-  std::vector<Vec3<floatType>> vecPos;
-  std::vector<Vec3<floatType>> vecVel;
-  std::vector<intType> vecId;
+  std::vector<Vec3<FloatType>> vecPos;
+  std::vector<Vec3<FloatType>> vecVel;
+  std::vector<IntType> vecId;
 
   vecPos.reserve(autopas.getNumberOfParticles());
   vecVel.reserve(autopas.getNumberOfParticles());
@@ -47,18 +44,18 @@ void HDF5Writer::writeParticles(size_t iteration, const AutoPas_t &autopas) {
     const auto &pos = particle.getR();
     const auto &vel = particle.getV();
     // pack data and make sure it is of the correct type
-    vecPos.emplace_back<Vec3<floatType>>(
-        {static_cast<floatType>(pos[0]), static_cast<floatType>(pos[1]), static_cast<floatType>(pos[2])});
-    vecVel.emplace_back<Vec3<floatType>>(
-        {static_cast<floatType>(vel[0]), static_cast<floatType>(vel[1]), static_cast<floatType>(vel[2])});
-    vecId.emplace_back(static_cast<intType>(particle.getID()));
+    vecPos.emplace_back<Vec3<FloatType>>(
+        {static_cast<FloatType>(pos[0]), static_cast<FloatType>(pos[1]), static_cast<FloatType>(pos[2])});
+    vecVel.emplace_back<Vec3<FloatType>>(
+        {static_cast<FloatType>(vel[0]), static_cast<FloatType>(vel[1]), static_cast<FloatType>(vel[2])});
+    vecId.emplace_back(static_cast<IntType>(particle.getID()));
   }
 
   const auto group = groupParticleData + std::to_string(iteration);
   const auto &compressionLvl = _file.getCompressionLevel();
-  _file.writeDataset_compressed(vecPos, group + "/Particles/Positions", compressionLvl);
-  _file.writeDataset_compressed(vecVel, group + "/Particles/Velocities", compressionLvl);
-  _file.writeDataset_compressed(vecId, group + "/Particles/IDs", compressionLvl);
+  _file.writeDataset_compressed(vecPos, group + datasetParticlePositions, compressionLvl);
+  _file.writeDataset_compressed(vecVel, group + datasetParticleVelocities, compressionLvl);
+  _file.writeDataset_compressed(vecId, group + datasetParticleIDs, compressionLvl);
 #endif
 }
 
@@ -78,6 +75,6 @@ void HDF5Writer::writeConjunctions(size_t iteration,
                                       static_cast<decltype(CollisionInfo::distanceSquared)>(distanceSquare)});
   }
   const auto group = groupCollisionData + std::to_string(iteration);
-  _file.writeDataset(data, group + "/Collisions", collisionInfoH5Type);
+  _file.writeDataset(data, group + datasetCollisions, collisionInfoH5Type);
 #endif
 }

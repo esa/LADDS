@@ -12,8 +12,8 @@
 
 #include <string>
 
-#include "ladds/io/ConjunctionWriterInterface.h"
 #include "ladds/TypeDefinitions.h"
+#include "ladds/io/ConjunctionWriterInterface.h"
 
 /**
  * Wrapper for the whole logic of writing the HDF5 file.
@@ -45,17 +45,14 @@ class HDF5Writer final : public ConjuctionWriterInterface {
   void writeConjunctions(size_t iteration,
                          const std::unordered_map<Particle *, std::tuple<Particle *, double>> &collisions) override;
 
- private:
-#ifdef LADDS_HDF5
   /**
-   * Actual file that will be created. All of the data this writer gets ends up in this one file.
+   * Type to which any floating point data will be cast before writing.
    */
-  h5pp::File _file;
-#endif
-
-  const std::string groupParticleData = "ParticleData/";
-
-  const std::string groupCollisionData = "CollisionData/";
+  using FloatType = float;
+  /**
+   * Type to which any integer data will be cast before writing.
+   */
+  using IntType = unsigned int;
 
   /**
    * This represents one line of 3D vector data in the HDF5 file.
@@ -65,6 +62,14 @@ class HDF5Writer final : public ConjuctionWriterInterface {
     T x, y, z;
   };
 
+  static constexpr auto groupParticleData = "ParticleData/";
+  static constexpr auto datasetParticlePositions = "/Particles/Positions";
+  static constexpr auto datasetParticleVelocities = "/Particles/Velocities";
+  static constexpr auto datasetParticleIDs = "/Particles/IDs";
+
+  static constexpr auto groupCollisionData = "CollisionData/";
+  static constexpr auto datasetCollisions = "/Collisions";
+
   /**
    * Type for the information of a single collision.
    */
@@ -72,6 +77,15 @@ class HDF5Writer final : public ConjuctionWriterInterface {
     unsigned int idA, idB;
     float distanceSquared;
   };
+
+
+ private:
+#ifdef LADDS_HDF5
+  /**
+   * Actual file that will be created. All of the data this writer gets ends up in this one file.
+   */
+  h5pp::File _file;
+#endif
 
 #ifdef LADDS_HDF5
   /**
