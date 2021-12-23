@@ -6,7 +6,7 @@
 
 #include "CollisionFunctorIntegrationTest.h"
 
-#include <autopas/AutoPas.h>
+#include <autopas/AutoPasDecl.h>
 #include <autopasTools/generators/RandomGenerator.h>
 #include <gmock/gmock-matchers.h>
 #include <gmock/gmock-more-matchers.h>
