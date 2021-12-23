@@ -21,6 +21,8 @@ class SimulationTest : public testing::Test {
     config["autopas"]["desiredCellsPerDimension"] = 32;
     config["io"]["output_file"] = "test";
     config["io"]["constellationCutoff"] = 0.04;
+    config["io"]["posFileName"] = "pos_test.csv";
+    config["io"]["velFileName"] = "v_test.csv";
     config["sim"]["prop"]["useKEPComponent"] = true;
   }
 

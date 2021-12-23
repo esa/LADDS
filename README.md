@@ -53,6 +53,22 @@ the `yaml` file. See `default_cfg.yaml` for the syntax.
 ## Processing TLE Input 
 Data on current satellites etc. is often found [online](https://www.space-track.org/) in the [TLE format](https://en.wikipedia.org/wiki/Two-line_element_set). We include a Jupyter notebook which can be used to process TLE data with pykep to create and analyze suitable datasets. Detailed instructions can be found in the notebook in `notebooks/Data Processing.ipynb`.
 
+## Generating Constellation Input
+Satellite constellations (e.g. Starlink, OneWeb) are usually described by a list of orbital shells.
+An orbital shell is described by a 4-tuple with information about `altitude`, `inclination`, `number of
+planes`, and `number of satellites` per plane. We provide a notebook 
+`notebooks/ConstellationGeneration/ConstellationGeneration.ipynb` that can be used 
+to generate constellation data from orbital shell parameters.
+
+Quick guide:
+* Initialize the constellation by executing the first cell and providing metadata in the second cell (1)
+* create a shell by providing the 4 shell arguments, and further parameters (extra params) if necessary (2.1).
+Store the temporary shell data by executing the cell (2.2)
+* turn satellites into position and velocity vectors by executing cell (3)
+* write the files by executing cell (4) and save them by executing cell (5)
+
+A detailed guide is located in the directory of the notebook.
+
 ## Output
 
 LADDS has multiple options for output that can be (de)activated mostly independent of each other via YAML. See `cfg/default_cfg.yaml` for relevant options.
@@ -82,4 +98,5 @@ Collision data is tracked every iteration, particle data only in intervals that 
 
 ### CSV
 If HDF5 output is disabled entirely, collision data is written in a `.csv` file in ASCII layout.
+
 

@@ -12,26 +12,18 @@
 #include <iostream>
 #include <string>
 
+size_t Constellation::particleID = 1000000;
+
 std::mt19937 Constellation::generator{42};
 
-Constellation::Constellation(const std::string &constellation_data_str, size_t interval, double altitudeDeviation)
+Constellation::Constellation(const YAML::Node &constellationConfig, size_t interval, double altitudeDeviation)
     : interval(interval), altitudeDeviation(altitudeDeviation) {
-  // split the 3 comma seperated arguments
-  auto seperator1 = constellation_data_str.find(',', 0);
-  auto seperator2 = constellation_data_str.find(',', seperator1 + 1);
-
-  // argDirPath s1 argStartTime s2  argDuration    // n: 4
-  // a   b   c   d   ,   e   f   ,   g   h   i   // n: 7-4-1=2
-  // 0   1   2   3   4   5   6   7   8   9   10  // n: 11-7-1=3
-  std::string argConstellationName = constellation_data_str.substr(0, seperator1);
-  std::string argStartTime = constellation_data_str.substr(seperator1 + 1, seperator2 - seperator1 - 1);
-  std::string argDuration =
-      constellation_data_str.substr(seperator2 + 1, constellation_data_str.size() - seperator2 - 1);
+  auto constellationName = constellationConfig["constellation"]["name"].as<std::string>();
 
   // set variables using 3 args
   std::vector<Particle> sats =
-      readDatasetConstellation(std::string(DATADIR) + argConstellationName + "/pos_" + argConstellationName + ".csv",
-                               std::string(DATADIR) + argConstellationName + "/v_" + argConstellationName + ".csv");
+      readDatasetConstellation(std::string(DATADIR) + constellationName + "/pos_" + constellationName + ".csv",
+                               std::string(DATADIR) + constellationName + "/v_" + constellationName + ".csv");
 
   distribution = std::normal_distribution<double>(0, this->altitudeDeviation);
   // convert vector to deque
@@ -41,24 +33,17 @@ Constellation::Constellation(const std::string &constellation_data_str, size_t i
     satellites.push_back(sats[i]);
   }
 
-  startTime = std::stoi(argStartTime);
-  duration = std::stoi(argDuration);
+  startTime = constellationConfig["constellation"]["startTime"].as<int>();
+  duration = constellationConfig["constellation"]["duration"].as<int>();
 
-  std::ifstream shellParameters(std::string(DATADIR) + argConstellationName + "/shells_" + argConstellationName +
-                                ".txt");
-  std::string tmp_string;
-  std::getline(shellParameters, tmp_string);
-  double altitude, inclination, nPlanes, satsPerPlane;
-  while (!tmp_string.empty()) {
-    std::istringstream numStream(tmp_string);
-    numStream >> altitude;
-    numStream >> inclination;
-    numStream >> nPlanes;
-    numStream >> satsPerPlane;
-    shells.emplace_back<std::array<double, 4>>({altitude, inclination, nPlanes, satsPerPlane});
-    std::getline(shellParameters, tmp_string);
+  int nShells = constellationConfig["constellation"]["nShells"].as<int>();
+  for (int i = 1; i <= nShells; i++) {
+    std::string attribute = "shell" + std::to_string(i);
+    shells.emplace_back<std::array<double, 4>>({constellationConfig[attribute]["altitude"].as<double>(),
+                                                constellationConfig[attribute]["inclination"].as<double>(),
+                                                constellationConfig[attribute]["nPlanes"].as<double>(),
+                                                constellationConfig[attribute]["nSats"].as<double>()});
   }
-  shellParameters.close();
 
   // determine times when each shell has its deployment started
   double timestamp = 0;
@@ -72,6 +57,9 @@ Constellation::Constellation(const std::string &constellation_data_str, size_t i
   for (size_t i = 0ul; i < timestamps.size() - 1; ++i) {
     timeSteps.push_back((timestamps[i + 1] - timestamps[i]) / shells[i][2]);  // = duration_i / nPlanes_i
   }
+
+  // prepare next ID base for next constellation (C1 starts at 1M, C2 starts at 2M ...)
+  particleID = particleID + 1000000 - constellationSize;
 }
 
 std::vector<Particle> Constellation::tick() {
@@ -138,7 +126,6 @@ std::vector<Particle> Constellation::readDatasetConstellation(const std::string 
 
   particleCollection.reserve(positions.size());
 
-  size_t particleId = 0;
   std::transform(positions.begin(),
                  positions.end(),
                  velocities.begin(),
@@ -149,7 +136,7 @@ std::vector<Particle> Constellation::readDatasetConstellation(const std::string 
 
                    const std::array<double, 3> posArray = {x, y, z};
                    const std::array<double, 3> velArray = {vx, vy, vz};
-                   return Particle(posArray, velArray, particleId++);
+                   return Particle(posArray, velArray, particleID++);
                  });
   return particleCollection;
 }

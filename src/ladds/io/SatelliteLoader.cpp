@@ -53,13 +53,22 @@ std::vector<Constellation> SatelliteLoader::loadConstellations(ConfigReader &con
     // parse constellation info
     constellations.reserve(nConstellations);
     for (int i = 0; i < nConstellations; ++i) {
-      unsigned long offset = constellationDataStr.find(';', 0);
-      if (offset == 0) {
-        constellations.emplace_back(Constellation(constellationDataStr, insertionFrequency, altitudeDeviation));
-        break;
-      } else {
-        constellations.emplace_back(
-            Constellation(constellationDataStr.substr(0, offset), insertionFrequency, altitudeDeviation));
+      unsigned long offset =
+          (i == nConstellations - 1) ? constellationDataStr.size() : constellationDataStr.find(';', 0);
+      std::string constellationDir = constellationDataStr.substr(0, offset);
+
+      YAML::Node constellationConfig;
+      try {
+        constellationConfig =
+            YAML::LoadFile(std::string(DATADIR) + constellationDir + "/shells_" + constellationDir + ".yaml");
+      } catch (YAML::Exception &e) {
+        std::cout << e.msg << std::endl;
+        logger.log(Logger::Level::warn, "Error loading cfg, Exiting...");
+        exit(1);
+      }
+
+      constellations.emplace_back(Constellation(constellationConfig, insertionFrequency, altitudeDeviation));
+      if (i != nConstellations - 1) {
         constellationDataStr.erase(0, offset + 1);
       }
     }
