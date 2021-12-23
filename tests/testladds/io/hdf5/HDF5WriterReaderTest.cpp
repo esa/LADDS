@@ -44,7 +44,9 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestParticleData) {
   auto particlesHDF5 = hdf5Reader.readParticles(iterationNr);
 
   // 4. check that read data is equal to generated data
-  ASSERT_THAT(particlesHDF5, ::testing::UnorderedElementsAreArray(particles));
+  EXPECT_THAT(particlesHDF5, ::testing::UnorderedElementsAreArray(particles));
+  // cleanup
+  std::remove(filename);
 }
 
 TEST_F(HDF5WriterReaderTest, WriteReadTestCollisionData) {
@@ -86,6 +88,8 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestCollisionData) {
     HDF5Writer::CollisionInfo collisionInfo{idARef, idBRef, static_cast<HDF5Writer::FloatType>(distRef)};
     EXPECT_THAT(conjunctionsHDF5, ::testing::Contains(collisionInfo));
   }
+  // cleanup
+  std::remove(filename);
 }
 #else
 TEST(HDF5WriterReaderTest, TestReaderNotCompiledException) {
