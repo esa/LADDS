@@ -26,6 +26,8 @@ HDF5Writer::HDF5Writer(const std::string &filename, unsigned int compressionLeve
             "distanceSquared",
             HOFFSET(CollisionInfo, distanceSquared),
             h5pp::type::getH5NativeType<decltype(CollisionInfo::distanceSquared)>());
+#else
+  throw std::runtime_error("LADDS was compiled without HDF5 support, so the HDF5Writer can't do anything!");
 #endif
 }
 

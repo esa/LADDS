@@ -4,7 +4,6 @@
  * @date 23.12.2021
  */
 
-#ifdef LADDS_HDF5
 #include "HDF5WriterReaderTest.h"
 
 #include <gmock/gmock-matchers.h>
@@ -12,6 +11,7 @@
 #include "ladds/io/hdf5/HDF5Reader.h"
 #include "ladds/io/hdf5/HDF5Writer.h"
 
+#ifdef LADDS_HDF5
 TEST_F(HDF5WriterReaderTest, WriteReadTestParticleData) {
   // 1. create some data
   constexpr size_t numParticles = 10;
@@ -87,5 +87,11 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestCollisionData) {
     EXPECT_THAT(conjunctionsHDF5, ::testing::Contains(collisionInfo));
   }
 }
-
+#else
+TEST(HDF5WriterReaderTest, TestReaderNotCompiledException) {
+  EXPECT_THROW(HDF5Reader("foo"), std::runtime_error);
+}
+TEST(HDF5WriterReaderTest, TestWriterNotCompiledException) {
+  EXPECT_THROW(HDF5Writer("foo", 0), std::runtime_error);
+}
 #endif

@@ -12,6 +12,9 @@ HDF5Reader::HDF5Reader(const std::string &filename)
     : file(filename, h5pp::FilePermission::READONLY)
 #endif
 {
+#ifndef LADDS_HDF5
+  throw std::runtime_error("LADDS was compiled without HDF5 support, so the HDF5Reader can't do anything!");
+#endif
 }
 
 std::vector<Particle> HDF5Reader::readParticles(size_t iteration) {
