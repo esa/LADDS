@@ -1,18 +1,3 @@
-constellation:
-  name: TestConstellationB11
-  startTime: 0
-  duration: 0
-  nShells: 1
-
-shell1:
-  altitude: 400
-  inclination: 40.0
-  nPlanes: 1
-  nSats: 2
-
-special1:
-  offsetM: 0
-  argPeriapsis: 3.141592653589793
-  startingW: 0
-  W_area: 90
-
+version https://git-lfs.github.com/spec/v1
+oid sha256:99414cf6cd24185c2fd724b5e87630f89493d71ef07287ba82a7f33ff8882a14
+size 242
