@@ -64,7 +64,7 @@ Constellation::Constellation(const std::string &constellation_data_str, size_t i
   double timestamp = 0;
   timestamps.push_back(0);
   for (auto [alt, i, planes, nSats] : shells) {
-    timestamp += (planes * nSats / static_cast<double>(constellationSize)) * duration;
+    timestamp += (planes * nSats / static_cast<double>(constellationSize)) * static_cast<double>(duration);
     timestamps.push_back(timestamp);
   }
 

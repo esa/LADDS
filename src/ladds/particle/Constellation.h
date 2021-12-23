@@ -68,12 +68,12 @@ class Constellation {
   /**
    * iteration from which constellation starts being added to the simulation
    */
-  int startTime = 0;
+  size_t startTime = 0;
 
   /**
    * time span over which satellites of the constellation are being added
    */
-  int duration = 0;
+  size_t duration = 0;
 
   /**
    * internal clock that determines which satellites are added to the simulation,
