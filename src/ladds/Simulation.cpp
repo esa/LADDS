@@ -41,7 +41,8 @@ void setAutoPasOption(ConfigReader &config,
                       const std::string &valuePath,
                       F setterFun,
                       const std::set<Option> &defaultVals) {
-  auto valStr = config.template get<std::string>(valuePath, autopas::utils::ArrayUtils::to_string(defaultVals), true);
+  auto valStr = config.template get<std::string>(
+      valuePath, autopas::utils::ArrayUtils::to_string(defaultVals, " ", {"", ""}), true);
   const auto options = Option::parseOptions(valStr);
   setterFun(options);
 }
