@@ -15,7 +15,7 @@
 std::mt19937 Constellation::generator{42};
 
 Constellation::Constellation(const std::string &constellation_data_str, size_t interval, double altitudeDeviation)
-    : interval(interval), altitudeDeviation(altitudeDeviation) {
+    : interval(interval), altitudeDeviation(altitudeDeviation), distribution(0., altitudeDeviation) {
   // split the 3 comma seperated arguments
   auto seperator1 = constellation_data_str.find(',', 0);
   auto seperator2 = constellation_data_str.find(',', seperator1 + 1);
@@ -33,7 +33,6 @@ Constellation::Constellation(const std::string &constellation_data_str, size_t i
       readDatasetConstellation(std::string(DATADIR) + argConstellationName + "/pos_" + argConstellationName + ".csv",
                                std::string(DATADIR) + argConstellationName + "/v_" + argConstellationName + ".csv");
 
-  distribution = std::normal_distribution<double>(0, this->altitudeDeviation);
   // convert vector to deque
   constellationSize = sats.size();
   for (size_t i = 0ul; i < constellationSize; ++i) {
