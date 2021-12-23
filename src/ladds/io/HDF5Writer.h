@@ -6,7 +6,9 @@
 
 #pragma once
 
+#ifdef LADDS_HDF5
 #include <h5pp/h5pp.h>
+#endif
 
 #include <string>
 
@@ -44,10 +46,12 @@ class HDF5Writer final : public ConjuctionWriterInterface {
                          const std::unordered_map<Particle *, std::tuple<Particle *, double>> &collisions) override;
 
  private:
+#ifdef LADDS_HDF5
   /**
    * Actual file that will be created. All of the data this writer gets ends up in this one file.
    */
   h5pp::File _file;
+#endif
 
   const std::string groupParticleData = "ParticleData/";
 
@@ -69,8 +73,10 @@ class HDF5Writer final : public ConjuctionWriterInterface {
     float distanceSquared;
   };
 
-  /*
-   *
+#ifdef LADDS_HDF5
+  /**
+   * Object holding the info for the hdf5 compound type of the collision data.
    */
   h5pp::hid::h5t collisionInfoH5Type;
+#endif
 };
