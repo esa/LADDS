@@ -20,6 +20,9 @@ io:
   posFileName: pos.csv # Name of the CSV file with satellite positions [km]
   velFileName: v.csv # Name of the CSV file with satellite velocities [km/s]
   #progressOutputFrequency : 50 # Frequency of writing iteration number and encounter info to std::out.
+  #checkpoint:
+  #  file: simulationData.h5
+  #  iteration: 0
   vtk:
     writeFrequency: 0 # Frequency of writing vtk files [iterations]
   hdf5:

@@ -9,26 +9,64 @@
 #include "ConfigReader.h"
 #include "DatasetReader.h"
 #include "Logger.h"
+#include "ladds/io/hdf5/HDF5Reader.h"
 
 void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, const Logger &logger) {
-  // Read in scenario
-  auto actualSatellites = DatasetReader::readDataset(std::string(DATADIR) + config.get<std::string>("io/posFileName"),
-                                                     std::string(DATADIR) + config.get<std::string>("io/velFileName"));
-  SPDLOG_LOGGER_DEBUG(logger.get(), "Parsed {} satellites", actualSatellites.size());
+  std::vector<Particle> satellites;
 
+  // load CSV ...
+  if (const auto posFilePathCfg = config.get<std::string>("io/posFileName", ""),
+      velFilePathCfg = config.get<std::string>("io/velFileName", "");
+      not posFilePathCfg.empty() and not velFilePathCfg.empty()) {
+    const auto posFilePath = std::string(DATADIR) + posFilePathCfg;
+    const auto velFilePath = std::string(DATADIR) + velFilePathCfg;
+
+    SPDLOG_LOGGER_INFO(
+        logger.get(), "Loading scenario from CSV\nPositions: {}\nVelocities: {}", posFilePath, velFilePath);
+
+    // Read in scenario
+    satellites = DatasetReader::readDataset(posFilePath, velFilePath);
+    SPDLOG_LOGGER_DEBUG(logger.get(), "Parsed {} satellites", satellites.size());
+  } else
+      // ... or load checkpoint ...
+      if (const auto checkpointPathCfg = config.get<std::string>("io/checkpoint/file", "");
+          not checkpointPathCfg.empty()) {
+    const auto checkpointPath = std::string(DATADIR) + checkpointPathCfg;
+    SPDLOG_LOGGER_INFO(logger.get(), "Loading scenario from HDF5 checkpoint\nFile: {}", checkpointPath);
+
+    auto iteration = config.get<size_t>("io/checkpoint/iteration");
+    HDF5Reader hdfReader(checkpointPath);
+    satellites = hdfReader.readParticles(iteration);
+  } else {
+    // ... or fail
+    throw std::runtime_error("No valid input option found! Exiting...");
+  }
+
+  // load particle vector into autopas while checking that they are within the desired altitude
   const auto maxAltitude = config.get<double>("sim/maxAltitude");
+  const auto maxAltitudeSquared = maxAltitude * maxAltitude;
   double minAltitudeFound{std::numeric_limits<double>::max()};
   double maxAltitudeFound{0.};
-  // Convert satellites to particles
-  for (const auto &particle : actualSatellites) {
-    auto pos = particle.getPosition();
-    double altitude = sqrt(pos[0] * pos[0] + pos[1] * pos[1] + pos[2] * pos[2]);
-    minAltitudeFound = std::min(minAltitudeFound, altitude);
-    maxAltitudeFound = std::max(maxAltitudeFound, altitude);
-    if (altitude < maxAltitude) {
+  for (const auto &particle : satellites) {
+    const auto &pos = particle.getPosition();
+    const double altitudeSquared = autopas::utils::ArrayMath::dot(pos, pos);
+    minAltitudeFound = std::min(minAltitudeFound, altitudeSquared);
+    maxAltitudeFound = std::max(maxAltitudeFound, altitudeSquared);
+    if (altitudeSquared < maxAltitudeSquared) {
       autopas.addParticle(particle);
+    } else {
+      SPDLOG_LOGGER_WARN(logger.get(),
+                         "Particle NOT added because its altitudeSquared was too high!\n"
+                         "Max allowed: {}\n"
+                         "Actual: {}\n"
+                         "{})",
+                         maxAltitude,
+                         sqrt(altitudeSquared),
+                         particle.toString());
     }
   }
+  minAltitudeFound = sqrt(minAltitudeFound);
+  maxAltitudeFound = sqrt(maxAltitudeFound);
   SPDLOG_LOGGER_INFO(logger.get(), "Min altitude is {}", minAltitudeFound);
   SPDLOG_LOGGER_INFO(logger.get(), "Max altitude is {}", maxAltitudeFound);
   SPDLOG_LOGGER_INFO(logger.get(), "Number of particles: {}", autopas.getNumberOfParticles());
