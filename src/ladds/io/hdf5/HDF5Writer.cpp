@@ -78,3 +78,10 @@ void HDF5Writer::writeConjunctions(size_t iteration,
   _file.writeDataset(data, group + datasetCollisions, collisionInfoH5Type);
 #endif
 }
+
+bool HDF5Writer::CollisionInfo::operator==(const HDF5Writer::CollisionInfo &rhs) const {
+  return idA == rhs.idA && idB == rhs.idB && distanceSquared == rhs.distanceSquared;
+}
+bool HDF5Writer::CollisionInfo::operator!=(const HDF5Writer::CollisionInfo &rhs) const {
+  return !(rhs == *this);
+}

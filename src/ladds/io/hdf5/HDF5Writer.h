@@ -76,8 +76,9 @@ class HDF5Writer final : public ConjuctionWriterInterface {
   struct CollisionInfo {
     unsigned int idA, idB;
     float distanceSquared;
+    bool operator==(const CollisionInfo &rhs) const;
+    bool operator!=(const CollisionInfo &rhs) const;
   };
-
 
  private:
 #ifdef LADDS_HDF5
