@@ -30,25 +30,26 @@ ctest -j12
 ```
 
 ## Calibrating AutoPas
-### Enable and Analyze Tuning
+By default, some robust but static configuration is set by LADDS. You can change this by specifying the
+algorithmic options AutoPas is allowed to use in the YAML file. If more than one configuration can be built
+from these options AutoPas will tune over them at run time.
+
+### Enable Auto Tuning
 If you are unsure what algorithmic configuration you want to use for AutoPas just let AutoPas guide you.
-For this, two things need to be activated:
-* In the `yaml` file:
+For this, the following needs be activated in the `yaml` file:
 ```yaml
 autopas:
   tuningMode: true
 ```
-* The CMake variables:  `AUTOPAS_LOG_TUNINGDATA=ON` and `AUTOPAS_LOG_TUNINGRESULTS=ON`.
+In this mode, the simulation is only executed for one AutoPas tuning-phase. At the end of this phase, a copy
+of the full configuration is created, which contains the algorithm configuration that AutoPas deemed to be
+the fastest. This configuration can then be used to run the actual simulation at optimal speed.
 
-This will result in AutoPas testing all reasonable configurations and dumping the results in two `csv` files.
+### Analyzing AutoPas Configurations
+AutoPas can be compiled to dump information about the performance of the algorithms it uses to `.csv` files. 
+For this set the CMake variables:  `AUTOPAS_LOG_TUNINGDATA=ON` and `AUTOPAS_LOG_TUNINGRESULTS=ON`.
 * `AutoPas_tuningData.csv` contains the timing data of all samples AutoPas collected.
 * `AutoPas_tuningResults.csv` contains the result of each tuning phase.
-  If this file is empty, you either forgot to activate tuning mode or did not run enough iterations for a 
-  tuning cycle to finish. Currently, about `100*rebuildFrequency` iterations are needed.
-
-### Configuring AutoPas manually
-When `tuningMode` is disabled it is possible to manually select the Algorithms AutoPas should use through
-the `yaml` file. See `default_cfg.yaml` for the syntax.
 
 ## Processing TLE Input 
 Data on current satellites etc. is often found [online](https://www.space-track.org/) in the [TLE format](https://en.wikipedia.org/wiki/Two-line_element_set). We include a Jupyter notebook which can be used to process TLE data with pykep to create and analyze suitable datasets. Detailed instructions can be found in the notebook in `notebooks/Data Processing.ipynb`.
