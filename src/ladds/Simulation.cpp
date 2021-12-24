@@ -54,9 +54,9 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config) {
 
   const auto maxAltitude = config.get<double>("sim/maxAltitude");
   const auto cutoff = config.get<double>("autopas/cutoff");
-  const auto desiredCellsPerDimension = config.get<double>("autopas/desiredCellsPerDimension");
+  const auto desiredCellsPerDimension = config.get<double>("autopas/desiredCellsPerDimension", 25);
   const auto deltaT = config.get<double>("sim/deltaT");
-  const auto verletRebuildFrequency = config.get<unsigned int>("autopas/rebuildFrequency");
+  const auto verletRebuildFrequency = config.get<unsigned int>("autopas/rebuildFrequency", 1);
   // *8.5 : Assumed max km/s   TODO: get this from input?
   // *2: because particles might flight directly towards each other
   const auto verletSkin = 2 * 8.5 * deltaT * verletRebuildFrequency;
@@ -75,8 +75,8 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config) {
   // hardcode values that seem to be optimal
   std::set<autopas::Newton3Option> optimalNewton3Opt{autopas::Newton3Option::enabled};
   std::set<autopas::DataLayoutOption> optimalDataLayoutOpt{autopas::DataLayoutOption::aos};
-  std::set<autopas::ContainerOption> optimalContainerOpt{autopas::ContainerOption::varVerletListsAsBuild};
-  std::set<autopas::TraversalOption> optimalTraversalOpt{autopas::TraversalOption::vvl_as_built};
+  std::set<autopas::ContainerOption> optimalContainerOpt{autopas::ContainerOption::linkedCells};
+  std::set<autopas::TraversalOption> optimalTraversalOpt{autopas::TraversalOption::lc_c04_HCP};
   // if tuning mode is enabled use full range of AutoPas defaults
   if (config.get<bool>("autopas/tuningMode", false)) {
     optimalNewton3Opt = autopas->getAllowedNewton3Options();

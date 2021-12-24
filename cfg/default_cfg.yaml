@@ -38,10 +38,11 @@ io:
 autopas:
   logLevel: off
   cutoff: 80.0 # Cutoff for autopas force interaction
-  rebuildFrequency: 8
-  desiredCellsPerDimension: 32 # Desired number of cells per dimension
-  tuningMode: false
+  # For the following parameters sensible defaults are chosen by LADDS. Only set them here if you know what you are doing!
+#  rebuildFrequency: 1 # Number of iterations before internal data structure is rebuilt. Increases collision search radius!
+#  desiredCellsPerDimension: 25 # Desired number of cells per dimension
+  tuningMode: false # can be used to obtain good values for  the following four parameters
 #  Newton3: "enabled, disabled"
 #  DataLayout: "AoS, SoA"
-#  Container: "varVerletListsAsBuilt, verletListCells"
-#  Traversal: "vvl_as_build, vlc_c01, vlc_c18, vlc_sliced_balanced, vlc_slice_c02"
+#  Container: "linkedCells, varVerletListsAsBuilt, verletListCells"
+#  Traversal: "lc_c01, lc_c04_hcp, vvl_as_build, vlc_c01, vlc_c18, vlc_sliced_balanced, vlc_slice_c02"
