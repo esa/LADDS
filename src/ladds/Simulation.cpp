@@ -94,7 +94,7 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config) {
   setAutoPasOption<autopas::TraversalOption>(
       config, "autopas/Traversal", [&](const auto &op) { autopas->setAllowedTraversals(op); }, optimalTraversalOpt);
   // arbitrary number. Can be changed to whatever makes sense.
-  autopas->setTuningInterval(10000);
+  autopas->setTuningInterval(std::numeric_limits<unsigned int>::max());
   autopas->setSelectorStrategy(autopas::SelectorStrategyOption::fastestMean);
   autopas->setNumSamples(verletRebuildFrequency);
   autopas::Logger::get()->set_level(spdlog::level::from_str(config.get<std::string>("autopas/logLevel", "off")));
