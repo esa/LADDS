@@ -107,8 +107,7 @@ TEST_P(CollisionFunctorIntegrationTest, testAutoPasAlgorithm) {
   auto collisionPtrs = functor.getCollisions();
   std::vector<std::pair<size_t, size_t>> collisionIDs;
   collisionIDs.reserve(collisionPtrs.size());
-  for (const auto &[pi, pjAndDist] : collisionPtrs) {
-    const auto &[pj, dist] = pjAndDist;
+  for (const auto &[pi, pj, dist] : collisionPtrs) {
     collisionIDs.emplace_back(pi->getID(), pj->getID());
   }
 

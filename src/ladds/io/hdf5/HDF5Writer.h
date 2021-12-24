@@ -42,8 +42,7 @@ class HDF5Writer final : public ConjuctionWriterInterface {
    * @param iteration
    * @param collisions
    */
-  void writeConjunctions(size_t iteration,
-                         const std::unordered_map<Particle *, std::tuple<Particle *, double>> &collisions) override;
+  void writeConjunctions(size_t iteration, const CollisionFunctor::CollisionCollectionT &collisions) override;
 
   /**
    * Type to which any floating point data will be cast before writing.

@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include "ladds/CollisionFunctor.h"
 #include "ladds/particle/Particle.h"
-#include "unordered_map"
 
 class ConjuctionWriterInterface {
  public:
@@ -19,6 +19,5 @@ class ConjuctionWriterInterface {
    * @param iteration
    * @param collisions
    */
-  virtual void writeConjunctions(size_t iteration,
-                                 const std::unordered_map<Particle *, std::tuple<Particle *, double>> &collisions) = 0;
+  virtual void writeConjunctions(size_t iteration, const CollisionFunctor::CollisionCollectionT &collisions) = 0;
 };

@@ -47,8 +47,8 @@ TEST(CollisionFunctorTest, ThreeParticles) {
   auto collisions = collisionFunctor.getCollisions();
 
   decltype(collisions) expected{
-      {&debris[0], {&debris[1], 1.0}},
-      {&debris[1], {&debris[2], 1.0}},
+      {&debris[0], &debris[1], 1.0},
+      {&debris[1], &debris[2], 1.0},
   };
 
   EXPECT_THAT(collisionFunctor.getCollisions(), ::testing::UnorderedElementsAreArray(expected));
@@ -84,7 +84,7 @@ TEST_P(CollisionFunctorTest, LinearInterpolationTest) {
 
   auto collisions = collisionFunctor.getCollisions();
 
-  decltype(collisions) expected{{&debris[0], {&debris[1], expected_dist}}};
+  decltype(collisions) expected{{&debris[0], &debris[1], expected_dist}};
 
   EXPECT_THAT(collisionFunctor.getCollisions(), ::testing::UnorderedElementsAreArray(expected));
 }

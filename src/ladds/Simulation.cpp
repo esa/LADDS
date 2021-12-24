@@ -147,8 +147,9 @@ void Simulation::updateConstellation(AutoPas_t &autopas,
   }
 }
 
-std::unordered_map<Particle *, std::tuple<Particle *, double>> Simulation::collisionDetection(
-    AutoPas_t &autopas, double deltaT, double conjunctionThreshold) {
+CollisionFunctor::CollisionCollectionT Simulation::collisionDetection(AutoPas_t &autopas,
+                                                                      double deltaT,
+                                                                      double conjunctionThreshold) {
   // pairwise interaction
   CollisionFunctor collisionFunctor(autopas.getCutoff(), deltaT, conjunctionThreshold);
   autopas.iteratePairwise(&collisionFunctor);

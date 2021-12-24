@@ -9,6 +9,7 @@
 #include <string>
 
 #include "ConjunctionWriterInterface.h"
+#include "ladds/CollisionFunctor.h"
 #include "ladds/particle/Particle.h"
 /**
  * Helper to log data for individual conjunctions to a csv file for easier analysis.
@@ -28,8 +29,7 @@ class ConjunctionLogger final : public ConjuctionWriterInterface {
    */
   ~ConjunctionLogger() override;
 
-  void writeConjunctions(size_t iteration,
-                         const std::unordered_map<Particle *, std::tuple<Particle *, double>> &collisions) override;
+  void writeConjunctions(size_t iteration, const CollisionFunctor::CollisionCollectionT &collisions) override;
 
  private:
   /**
