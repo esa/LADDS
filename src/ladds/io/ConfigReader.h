@@ -93,6 +93,20 @@ class ConfigReader {
    */
   void printParsedValues();
 
+  /**
+   * Write a YAML file containing the whole configuration object.
+   * @param filename
+   */
+  void dumpConfig(const std::string &filename) const;
+
+  /**
+   * Update or insert a value for a given key / value path.
+   * If any Node along the path does not exist it will be created.
+   * @param valuePath
+   * @param value
+   */
+  void setValue(const std::string &valuePath, const std::string &value);
+
  private:
   /**
    *  Loads the config file, falls back to default cfg if not found.
