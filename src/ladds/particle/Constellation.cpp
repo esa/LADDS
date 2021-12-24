@@ -11,13 +11,20 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <time.h>
 
 size_t Constellation::particleID = 1000000;
 
 std::mt19937 Constellation::generator{42};
 
-Constellation::Constellation(const YAML::Node &constellationConfig, size_t interval, double altitudeDeviation)
-    : interval(interval), altitudeDeviation(altitudeDeviation) {
+Constellation::Constellation(const YAML::Node &constellationConfig,const YAML::Node &config) {
+  interval = config["io"]["constellationFrequency"].IsDefined() ? config["io"]["constellationFrequency"].as<int>() : 1;
+  // altitudeSpread = 3 * sigma , altitudeDeviation = sigma (= standardDeviation)
+  altitudeDeviation = config["io"]["altitudeSpread"].as<double>() / 3.0;
+  deltaT = config["sim"]["deltaT"].as<double>();
+  setStartTime(constellationConfig["constellation"]["startTime"].as<std::string>());
+  setDuration(constellationConfig["constellation"]["duration"].as<std::string>());
+
   auto constellationName = constellationConfig["constellation"]["name"].as<std::string>();
 
   // set variables using 3 args
@@ -33,9 +40,6 @@ Constellation::Constellation(const YAML::Node &constellationConfig, size_t inter
     satellites.push_back(sats[i]);
   }
 
-  startTime = constellationConfig["constellation"]["startTime"].as<int>();
-  duration = constellationConfig["constellation"]["duration"].as<int>();
-
   int nShells = constellationConfig["constellation"]["nShells"].as<int>();
   for (int i = 1; i <= nShells; i++) {
     std::string attribute = "shell" + std::to_string(i);
@@ -49,7 +53,7 @@ Constellation::Constellation(const YAML::Node &constellationConfig, size_t inter
   double timestamp = 0;
   timestamps.push_back(0);
   for (auto [alt, i, planes, nSats] : shells) {
-    timestamp += (planes * nSats / static_cast<double>(constellationSize)) * duration;
+    timestamp += (planes * nSats / static_cast<double>(constellationSize)) * static_cast<double>(duration);
     timestamps.push_back(timestamp);
   }
 
@@ -108,6 +112,37 @@ std::vector<Particle> Constellation::tick() {
 
 size_t Constellation::getConstellationSize() const {
   return constellationSize;
+}
+
+void Constellation::setStartTime(const std::string &startTime_str) {
+    //date string
+    if(startTime_str.size() > 4){
+        if(startTime_str[4] == '/'){
+            int year = std::stoi(startTime_str.substr(0, 4));
+            int month = std::stoi(startTime_str.substr(5, 2)) - 1;
+            int day = std::stoi(startTime_str.substr(8, 2));
+            struct tm stm = {0,0,0,day,month,year};
+            struct tm t0 = {0,0,0,1,0,2022};
+            std::cout << "t1: " << std::mktime(&stm) << " t0: " << std::mktime(&t0) << std::endl;
+            time_t stime = std::mktime(&stm) - std::mktime(&t0);
+            //integer division cutting off anything smaller than 1ms
+            startTime = static_cast<unsigned long>(static_cast<unsigned long>(stime)*1000) / static_cast<unsigned long>(deltaT*1000.0);
+            return;
+        }
+    }
+    //iteration
+    startTime = std::stoi(startTime_str);
+    std::cout << "StartTime: " << startTime << std::endl;
+}
+
+void Constellation::setDuration(const std::string &duration_str) {
+    if(duration_str[duration_str.size()-1] == 'd') {
+        duration = static_cast<size_t>(24*60*60*std::stoi(duration_str.substr(0,duration_str.size()-1)) / deltaT);
+        std::cout << "Duration: " << duration << std::endl;
+    } else {
+        duration = std::stoi(duration_str);
+        std::cout << "Duration: " << duration << std::endl;
+    }
 }
 
 std::vector<Particle> Constellation::readDatasetConstellation(const std::string &position_filepath,
