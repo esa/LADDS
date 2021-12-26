@@ -81,8 +81,8 @@ class Simulation {
    * @return Tuple of the collisions and whether AutoPas is currently in tuning mode.
    */
   std::tuple<CollisionFunctor::CollisionCollectionT, bool> collisionDetection(AutoPas_t &autopas,
-                                                            double deltaT,
-                                                            double conjunctionThreshold);
+                                                                              double deltaT,
+                                                                              double conjunctionThreshold);
 
   /**
    * Updates the configuration with the latest AutoPas configuration and writes it to a new YAML file.

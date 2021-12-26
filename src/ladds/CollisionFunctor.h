@@ -35,12 +35,17 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
   }
 
   [[nodiscard]] constexpr static auto getNeededAttr() {
-    return std::array<typename Particle::AttributeNames, 6>{Particle::AttributeNames::ptr,
-                                                            Particle::AttributeNames::id,
-                                                            Particle::AttributeNames::ownershipState,
-                                                            Particle::AttributeNames::posX,
-                                                            Particle::AttributeNames::posY,
-                                                            Particle::AttributeNames::posZ};
+    return std::array<typename Particle::AttributeNames, 9>{
+        Particle::AttributeNames::ptr,
+        Particle::AttributeNames::id,
+        Particle::AttributeNames::ownershipState,
+        Particle::AttributeNames::posX,
+        Particle::AttributeNames::posY,
+        Particle::AttributeNames::posZ,
+        Particle::AttributeNames::velX,
+        Particle::AttributeNames::velY,
+        Particle::AttributeNames::velZ,
+    };
   }
 
   [[nodiscard]] constexpr static auto getNeededAttr(std::false_type) {

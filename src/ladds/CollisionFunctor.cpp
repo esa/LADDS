@@ -118,6 +118,7 @@ void CollisionFunctor::SoAFunctorPair(autopas::SoAView<SoAArraysType> soa1,
                               : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
     // alias because OpenMP needs it
     auto &thisCollisions = _threadData[autopas::autopas_get_thread_num()].collisions;
+    const auto soa2NumParticles = soa2.getNumParticles();
 #pragma omp simd reduction(vecMerge : thisCollisions)
     for (size_t j = 0; j < soa2.getNumParticles(); ++j) {
       SoAKernel(i, j, soa1, soa2, newton3);
@@ -141,13 +142,9 @@ void CollisionFunctor::SoAFunctorVerlet(autopas::SoAView<SoAArraysType> soa,
   }
 }
 
+#pragma omp declare simd
 void CollisionFunctor::SoAKernel(
     size_t i, size_t j, autopas::SoAView<SoAArraysType> &soa1, autopas::SoAView<SoAArraysType> &soa2, bool newton3) {
-  // TODO: as soon as this exception is removed / the SoAFunctor properly implemented
-  // remove the GTEST_SKIP in CollisionFunctorIntegrationTest::testAutoPasAlgorithm!
-  throw std::runtime_error(
-      "SoA kernel not up to date with AoS Kernel as it lacks the new linear interpolation distance.");
-
   // get pointers to the SoAs
   const auto *const __restrict x1ptr = soa1.template begin<Particle::AttributeNames::posX>();
   const auto *const __restrict y1ptr = soa1.template begin<Particle::AttributeNames::posY>();
@@ -155,6 +152,13 @@ void CollisionFunctor::SoAKernel(
   const auto *const __restrict x2ptr = soa2.template begin<Particle::AttributeNames::posX>();
   const auto *const __restrict y2ptr = soa2.template begin<Particle::AttributeNames::posY>();
   const auto *const __restrict z2ptr = soa2.template begin<Particle::AttributeNames::posZ>();
+
+  const auto *const __restrict vx1ptr = soa1.template begin<Particle::AttributeNames::velX>();
+  const auto *const __restrict vy1ptr = soa1.template begin<Particle::AttributeNames::velY>();
+  const auto *const __restrict vz1ptr = soa1.template begin<Particle::AttributeNames::velZ>();
+  const auto *const __restrict vx2ptr = soa2.template begin<Particle::AttributeNames::velX>();
+  const auto *const __restrict vy2ptr = soa2.template begin<Particle::AttributeNames::velY>();
+  const auto *const __restrict vz2ptr = soa2.template begin<Particle::AttributeNames::velZ>();
 
   const auto *const __restrict ownedStatePtr2 = soa2.template begin<Particle::AttributeNames::ownershipState>();
 
@@ -181,6 +185,52 @@ void CollisionFunctor::SoAKernel(
   if (dr2 > _cutoffSquare) {
     return;
   }
+
+  // Get old time step position
+  const auto old_r_i_x = x1ptr[i] - vx1ptr[i] * _dt;
+  const auto old_r_i_y = y1ptr[i] - vy1ptr[i] * _dt;
+  const auto old_r_i_z = z1ptr[i] - vz1ptr[i] * _dt;
+  const auto old_r_j_x = x2ptr[j] - vx2ptr[j] * _dt;
+  const auto old_r_j_y = y2ptr[j] - vy2ptr[j] * _dt;
+  const auto old_r_j_z = z2ptr[j] - vz2ptr[j] * _dt;
+
+  // Compute nominator dot products
+  const auto vi_ri = vx1ptr[i] * old_r_i_x + vy1ptr[i] * old_r_i_y + vz1ptr[i] * old_r_i_z;
+  const auto vi_rj = vx1ptr[i] * old_r_j_x + vy1ptr[i] * old_r_j_y + vz1ptr[i] * old_r_j_z;
+  const auto vj_ri = vx2ptr[j] * old_r_i_x + vy2ptr[j] * old_r_i_y + vz2ptr[j] * old_r_i_z;
+  const auto vj_rj = vx2ptr[j] * old_r_j_x + vy2ptr[j] * old_r_j_y + vz2ptr[j] * old_r_j_z;
+
+  const auto nominator = vi_rj + vj_ri - vi_ri - vj_rj;
+
+  // Compute denominator dot products
+  const auto two_vi_vj = 2.0 * (vx1ptr[i] * vx2ptr[j] + vy1ptr[i] * vy2ptr[j] + vz1ptr[i] * vz2ptr[j]);
+  const auto vi_square = vx1ptr[i] * vx1ptr[i] + vy1ptr[i] * vy1ptr[i] + vz1ptr[i] * vz1ptr[i];
+  const auto vj_square = vx2ptr[j] * vx2ptr[j] + vy2ptr[j] * vy2ptr[j] + vz2ptr[j] * vz2ptr[j];
+
+  const auto denominator = vi_square + vj_square - two_vi_vj;
+
+  // Compute t at minimal distance
+  auto t = nominator / denominator;
+
+  // If in the past, minimum is at t = 0
+  // Else If in future timesteps, minimum for this is at t= _dt
+  t = std::clamp(t, 0., _dt);
+
+  // Compute actual distance by propagating along the line to t
+  const auto p1_x = old_r_i_x + vx1ptr[i] * t;
+  const auto p1_y = old_r_i_y + vy1ptr[i] * t;
+  const auto p1_z = old_r_i_z + vz1ptr[i] * t;
+  const auto p2_x = old_r_j_x + vx2ptr[j] * t;
+  const auto p2_y = old_r_j_y + vy2ptr[j] * t;
+  const auto p2_z = old_r_j_z + vz2ptr[j] * t;
+
+  const auto dr_lines_x = p1_x - p2_x;
+  const auto dr_lines_y = p1_y - p2_y;
+  const auto dr_lines_z = p1_z - p2_z;
+
+  const auto distanceSquare_lines = dr_lines_x * dr_lines_x + dr_lines_y * dr_lines_y + dr_lines_z * dr_lines_z;
+
+  if (distanceSquare_lines > _minorCutoffSquare) return;
 
   // store pointers to colliding pair
   if (id1ptr[i] < id2ptr[j]) {

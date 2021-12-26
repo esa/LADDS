@@ -24,7 +24,7 @@ class Particle final : public autopas::ParticleFP64 {
   /**
    * Enums used as ids for accessing and creating a dynamically sized SoA.
    */
-  enum AttributeNames : int { ptr, id, posX, posY, posZ, forceX, forceY, forceZ, ownershipState };
+  enum AttributeNames : int { ptr, id, posX, posY, posZ, velX, velY, velZ, forceX, forceY, forceZ, ownershipState };
 
   /**
    * The type for the SoA storage.
@@ -34,6 +34,9 @@ class Particle final : public autopas::ParticleFP64 {
                                                          double /*x*/,
                                                          double /*y*/,
                                                          double /*z*/,
+                                                         double /*vx*/,
+                                                         double /*vy*/,
+                                                         double /*vz*/,
                                                          double /*fx*/,
                                                          double /*fy*/,
                                                          double /*fz*/,
@@ -56,6 +59,12 @@ class Particle final : public autopas::ParticleFP64 {
       return getR()[1];
     } else if constexpr (attribute == AttributeNames::posZ) {
       return getR()[2];
+    } else if constexpr (attribute == AttributeNames::velX) {
+      return getV()[0];
+    } else if constexpr (attribute == AttributeNames::velY) {
+      return getV()[1];
+    } else if constexpr (attribute == AttributeNames::velZ) {
+      return getV()[2];
     } else if constexpr (attribute == AttributeNames::forceX) {
       return getF()[0];
     } else if constexpr (attribute == AttributeNames::forceY) {
