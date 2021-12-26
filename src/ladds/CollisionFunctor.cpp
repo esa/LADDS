@@ -94,7 +94,30 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
 }
 
 void CollisionFunctor::SoAFunctorSingle(autopas::SoAView<SoAArraysType> soa, bool newton3) {
-  SoAFunctorPair(soa, soa, newton3);
+  const auto soaNumParticles = soa.getNumParticles();
+  if (soaNumParticles == 0) return;
+
+  // get pointers to the SoA
+  const auto *const __restrict ownedStatePtr1 = soa.template begin<Particle::AttributeNames::ownershipState>();
+
+  // outer loop over SoA1
+  for (size_t i = 0; i < soaNumParticles; ++i) {
+    if (ownedStatePtr1[i] == autopas::OwnershipState::dummy) {
+      // If the i-th particle is a dummy, skip this loop iteration.
+      continue;
+    }
+
+    // inner loop over SoA2
+    // custom reduction for collision collections (vector)
+#pragma omp declare reduction(vecMerge:CollisionCollectionT \
+                              : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
+    // alias because OpenMP needs it
+    auto &thisCollisions = _threadData[autopas::autopas_get_thread_num()].collisions;
+#pragma omp simd reduction(vecMerge : thisCollisions)
+    for (size_t j = i + 1; j < soaNumParticles; ++j) {
+      SoAKernel(i, j, soa, soa, newton3);
+    }
+  }
 }
 
 void CollisionFunctor::SoAFunctorPair(autopas::SoAView<SoAArraysType> soa1,
@@ -168,7 +191,7 @@ void CollisionFunctor::SoAKernel(
   const auto *const __restrict id1ptr = soa1.template begin<Particle::AttributeNames::id>();
   const auto *const __restrict id2ptr = soa2.template begin<Particle::AttributeNames::id>();
 
-  if (ownedStatePtr2[j] == autopas::OwnershipState::dummy or id1ptr[i] == id2ptr[j]) {
+  if (ownedStatePtr2[j] == autopas::OwnershipState::dummy) {
     return;
   }
 
