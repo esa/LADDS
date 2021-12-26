@@ -31,7 +31,8 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
   }
 
   [[nodiscard]] bool allowsNonNewton3() final {
-    return true;
+    // as we are only interested in any interaction [i,j] it makes no sense to also look at [j,i]
+    return false;
   }
 
   [[nodiscard]] constexpr static auto getNeededAttr() {
