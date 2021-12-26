@@ -26,10 +26,6 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   using autopas::utils::ArrayMath::mulScalar;
   using autopas::utils::ArrayMath::sub;
 
-  if (not newton3 and i.getID() > j.getID()) {
-    return;
-  }
-
   // skip interaction with deleted particles
   if (i.isDummy() or j.isDummy()) {
     return;
