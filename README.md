@@ -53,21 +53,53 @@ the `yaml` file. See `default_cfg.yaml` for the syntax.
 ## Processing TLE Input 
 Data on current satellites etc. is often found [online](https://www.space-track.org/) in the [TLE format](https://en.wikipedia.org/wiki/Two-line_element_set). We include a Jupyter notebook which can be used to process TLE data with pykep to create and analyze suitable datasets. Detailed instructions can be found in the notebook in `notebooks/Data Processing.ipynb`.
 
-## Generating Constellation Input
+## Generating and including Constellations
 Satellite constellations (e.g. Starlink, OneWeb) are usually described by a list of orbital shells.
 An orbital shell is described by a 4-tuple with information about `altitude`, `inclination`, `number of
 planes`, and `number of satellites` per plane. We provide a notebook 
 `notebooks/ConstellationGeneration/ConstellationGeneration.ipynb` that can be used 
 to generate constellation data from orbital shell parameters.
 
-Quick guide:
+### Generating constellation:
 * Initialize the constellation by executing the first cell and providing metadata in the second cell (1)
-* create a shell by providing the 4 shell arguments, and further parameters (extra params) if necessary (2.1).
+* Create a shell by providing the 4 shell arguments, and further parameters (extra params) if necessary (2.1).
 Store the temporary shell data by executing the cell (2.2)
-* turn satellites into position and velocity vectors by executing cell (3)
-* write the files by executing cell (4) and save them by executing cell (5)
+* Turn satellites into position and velocity vectors by executing cell (3)
+* Write the files by executing cell (4) and save them by executing cell (5)
 
-A detailed guide is located in the directory of the notebook.
+A more detailed guide is included in the notebook.
+
+### Including the constellation data in simulation (`io` section):
+
+* In the configuration file for the simulation, include the constellation(s) by
+defining `constellationList` and assigning the constellation name(s); Syntax: 
+{name;}name ; e.g. Astra;Starlink;OneWeb
+* Assign values for `constellationFrequency`, `constellationCutoff` and
+`altitudeSpread` (more information below)
+
+### How constellation satellites are inserted to the simulation
+
+When starting the simulation with satellite constellations every
+`constellationFrequency` iterations, satellites that are due to be added
+are inserted to the simulation. They are only inserted if there is no other
+object within the range `constellationCutoff` of the position of the new 
+Satellite. If there are objects close enough to the new satellite, the insertion 
+is postponed to the next time satellites are added. 
+
+The insertion of a constellation takes as long as specified by the `duration` 
+parameter in the respective .yaml file and happens shell by shell. The time it 
+takes to insert one shell of a constellation depends on the percentage of 
+satellites the shell contributes to. Satellites of each orbital 
+shell are inserted plane by plane and linearly over time.
+
+Satellites are inserted with varying altitude based on a random variable that is
+normally distributed. `AltitudeSpread` determines within what range most satellites 
+(99.74%) deviate from `altitude`. The parameter equals 3 times the standard deviation
+of the normal distribution.
+
+
+
+
 
 ## Output
 
