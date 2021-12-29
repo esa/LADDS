@@ -74,8 +74,12 @@ std::vector<Particle> Constellation::tick() {
       break;
     case Status::inactive:
       // check time and activate if startTime is reached
-      if (simulationTime >= startTime) {
+      if (simulationTime >= startTime || startTime < 0) {
         status = Status::active;
+        //if constellation has been scheduled before simulationStart, timeActive is set
+        //accordingly to insert as much as is due
+        timeActive = simulationTime - startTime;
+        std::cout << "timeActive: " << timeActive << std::endl;
       } else {
         break;
       }
@@ -83,6 +87,7 @@ std::vector<Particle> Constellation::tick() {
 
       while (static_cast<double>(timeActive) >=
              timestamps[currentShellIndex] + planesDeployed * timeSteps[currentShellIndex]) {
+          std::cout << "new plane added." << std::endl;
         int planeSize = static_cast<int>(shells[currentShellIndex][3]);
         particles.reserve(planeSize);
         for (int i = 0; i < planeSize; i++) {
@@ -126,7 +131,8 @@ void Constellation::setStartTime(const std::string &startTime_str) {
             std::cout << "t1: " << std::mktime(&stm) << " t0: " << std::mktime(&t0) << std::endl;
             time_t stime = std::mktime(&stm) - std::mktime(&t0);
             //integer division cutting off anything smaller than 1ms
-            startTime = static_cast<unsigned long>(static_cast<unsigned long>(stime)*1000) / static_cast<unsigned long>(deltaT*1000.0);
+            startTime = static_cast<long>(static_cast<long>(stime)*1000) / static_cast<long>(deltaT*1000.0);
+            std::cout << "StartTime: " << startTime << std::endl;
             return;
         }
     }

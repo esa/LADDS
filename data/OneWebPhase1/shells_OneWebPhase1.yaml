@@ -1,0 +1,30 @@
+constellation:
+  name: OneWebPhase1
+  startTime: 0
+  duration: 0
+  nShells: 2
+
+shell1:
+  altitude: 1210
+  inclination: 87.9
+  nPlanes: 12
+  nSats: 49
+
+shell2:
+  altitude: 1200
+  inclination: 55.0
+  nPlanes: 8
+  nSats: 16
+
+special1:
+  offsetM: 0
+  argPeriapsis: 3.141592653589793
+  startingW: 0
+  W_area: 360
+
+special2:
+  offsetM: 0
+  argPeriapsis: 3.141592653589793
+  startingW: 0
+  W_area: 360
+
