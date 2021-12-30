@@ -1,20 +1,20 @@
 constellation:
-  name: OneWebPhase1
-  startTime: 2020/02/06
-  duration: 1057d
+  name: Telesat
+  startTime: 2023/01/01
+  duration: 2337d
   nShells: 2
 
 shell1:
-  altitude: 1210
-  inclination: 87.9
-  nPlanes: 12
-  nSats: 49
+  altitude: 1015
+  inclination: 98.98
+  nPlanes: 27
+  nSats: 13
 
 shell2:
-  altitude: 1200
-  inclination: 55.0
-  nPlanes: 8
-  nSats: 16
+  altitude: 1325
+  inclination: 50.88
+  nPlanes: 40
+  nSats: 33
 
 special1:
   offsetM: 0

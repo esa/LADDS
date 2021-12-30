@@ -1,20 +1,20 @@
 constellation:
-  name: OneWebPhase1
-  startTime: 2020/02/06
-  duration: 1057d
+  name: AstraPhase2
+  startTime: 2022/07/11
+  duration: 731d
   nShells: 2
 
 shell1:
-  altitude: 1210
-  inclination: 87.9
-  nPlanes: 12
-  nSats: 49
+  altitude: 690
+  inclination: 98.0
+  nPlanes: 14
+  nSats: 36
 
 shell2:
-  altitude: 1200
+  altitude: 700
   inclination: 55.0
-  nPlanes: 8
-  nSats: 16
+  nPlanes: 56
+  nSats: 32
 
 special1:
   offsetM: 0

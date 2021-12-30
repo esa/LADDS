@@ -1,0 +1,42 @@
+constellation:
+  name: Amazon
+  startTime: 2022/12/01
+  duration: 2433d
+  nShells: 3
+
+shell1:
+  altitude: 590
+  inclination: 33.0
+  nPlanes: 28
+  nSats: 28
+
+shell2:
+  altitude: 610
+  inclination: 42.0
+  nPlanes: 36
+  nSats: 36
+
+shell3:
+  altitude: 630
+  inclination: 51.9
+  nPlanes: 34
+  nSats: 34
+
+special1:
+  offsetM: 0
+  argPeriapsis: 3.141592653589793
+  startingW: 0
+  W_area: 360
+
+special2:
+  offsetM: 0
+  argPeriapsis: 3.141592653589793
+  startingW: 0
+  W_area: 360
+
+special3:
+  offsetM: 0
+  argPeriapsis: 3.141592653589793
+  startingW: 0
+  W_area: 360
+

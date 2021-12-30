@@ -1,0 +1,18 @@
+constellation:
+  name: AstraPhase1
+  startTime: 2022/07/01
+  duration: 0
+  nShells: 1
+
+shell1:
+  altitude: 700
+  inclination: 0.0
+  nPlanes: 1
+  nSats: 40
+
+special1:
+  offsetM: 0
+  argPeriapsis: 3.141592653589793
+  startingW: 0
+  W_area: 360
+
