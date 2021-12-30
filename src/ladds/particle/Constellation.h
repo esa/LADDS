@@ -47,13 +47,36 @@ class Constellation {
    */
   [[nodiscard]] size_t getConstellationSize() const;
 
+  /**
+   * getter for constellationName = name of this constellation
+   * @return std::sting : constellationName
+   */
+  [[nodiscard]] std::string getConstellationName() const;
+
+  /**
+   * getter for startTime = timestamp (iteration) where constellation insertion starts
+   * @return size_t : timestamp (iteration) where constellation insertion starts
+   */
+  [[nodiscard]] long getStartTime() const;
+
+  /**
+   * getter for duration = timespan over which constellation insertion takes place
+   * @return size_t : timespan over which constellation insertion takes place
+   */
+  [[nodiscard]] size_t getDuration() const;
+
  private:
   /**
    * stores the satellites of the constellation that have not been added to the simulation
    */
   std::deque<Particle> satellites{};
 
-    /**
+  /**
+   * the name of the constellation
+   */
+  std::string constellationName;
+
+  /**
    * sets internal attribute startTime according to the passed date string
    * startTime_str
    * @param startTime a point in time either in iterations or as a date string. if

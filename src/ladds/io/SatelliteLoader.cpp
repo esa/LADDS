@@ -77,9 +77,17 @@ std::vector<Constellation> SatelliteLoader::loadConstellations(const YAML::Node 
     }
 
     SPDLOG_LOGGER_INFO(logger.get(),
-                       "{} more particles will be added from {} constellations",
+                       "{} more satellites will be added from {} constellations:",
                        constellationTotalNumSatellites,
                        nConstellations);
+  }
+  for(auto & c : constellations){
+      SPDLOG_LOGGER_INFO(logger.get(),
+                         "{}: insertion starts at iteration: {}, is fully deployed within {} iterations, inserts {} satellites",
+                         c.getConstellationName(),
+                         c.getStartTime(),
+                         c.getDuration(),
+                         c.getConstellationSize());
   }
   return constellations;
 }

@@ -25,7 +25,7 @@ Constellation::Constellation(const YAML::Node &constellationConfig,const YAML::N
   setStartTime(constellationConfig["constellation"]["startTime"].as<std::string>());
   setDuration(constellationConfig["constellation"]["duration"].as<std::string>());
 
-  auto constellationName = constellationConfig["constellation"]["name"].as<std::string>();
+  constellationName = constellationConfig["constellation"]["name"].as<std::string>();
 
   // set variables using 3 args
   std::vector<Particle> sats =
@@ -115,6 +115,18 @@ std::vector<Particle> Constellation::tick() {
 
 size_t Constellation::getConstellationSize() const {
   return constellationSize;
+}
+
+std::string Constellation::getConstellationName() const {
+    return constellationName;
+}
+
+long Constellation::getStartTime() const {
+    return startTime;
+}
+
+size_t Constellation::getDuration() const {
+    return duration;
 }
 
 void Constellation::setStartTime(const std::string &startTime_str) {
