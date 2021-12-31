@@ -1,30 +1,3 @@
-constellation:
-  name: Telesat
-  startTime: 2023/01/01
-  duration: 2337d
-  nShells: 2
-
-shell1:
-  altitude: 1015
-  inclination: 98.98
-  nPlanes: 27
-  nSats: 13
-
-shell2:
-  altitude: 1325
-  inclination: 50.88
-  nPlanes: 40
-  nSats: 33
-
-special1:
-  offsetM: 0
-  argPeriapsis: 3.141592653589793
-  startingW: 0
-  W_area: 360
-
-special2:
-  offsetM: 0
-  argPeriapsis: 3.141592653589793
-  startingW: 0
-  W_area: 360
-
+version https://git-lfs.github.com/spec/v1
+oid sha256:e21d43e3b39db3190fcee9f24fc08dede6be3cccfff274e03dad1ae462d3d93e
+size 407
