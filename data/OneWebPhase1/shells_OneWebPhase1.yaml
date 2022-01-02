@@ -1,30 +1,3 @@
-constellation:
-  name: OneWebPhase1
-  startTime: 2020/02/06
-  duration: 1057d
-  nShells: 2
-
-shell1:
-  altitude: 1210
-  inclination: 87.9
-  nPlanes: 12
-  nSats: 49
-
-shell2:
-  altitude: 1200
-  inclination: 55.0
-  nPlanes: 8
-  nSats: 16
-
-special1:
-  offsetM: 0
-  argPeriapsis: 3.141592653589793
-  startingW: 0
-  W_area: 360
-
-special2:
-  offsetM: 0
-  argPeriapsis: 3.141592653589793
-  startingW: 0
-  W_area: 360
-
+version https://git-lfs.github.com/spec/v1
+oid sha256:41b2a098a1ce525b7c74775fef0c8a759e84d9545dce0296f934176c813969dc
+size 409
