@@ -35,4 +35,5 @@ target_compile_definitions(${EXECUTABLE_NAME}
         PUBLIC
         SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_${LADDS_MAX_LOGLVL}
         DATADIR=\"${PROJECT_SOURCE_DIR}/data/\"
+        $<$<BOOL:${LADDS_HDF5}>:LADDS_HDF5=1>
 )

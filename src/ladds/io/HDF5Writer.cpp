@@ -7,8 +7,12 @@
 #include "HDF5Writer.h"
 
 HDF5Writer::HDF5Writer(const std::string &filename, unsigned int compressionLevel)
+#ifdef LADDS_HDF5
     : _file(filename, h5pp::FilePermission::REPLACE),
-      collisionInfoH5Type(H5Tcreate(H5T_COMPOUND, sizeof(CollisionInfo))) {
+      collisionInfoH5Type(H5Tcreate(H5T_COMPOUND, sizeof(CollisionInfo)))
+#endif
+{
+#ifdef LADDS_HDF5
   _file.setCompressionLevel(compressionLevel);
   H5Tinsert(collisionInfoH5Type,
             "idA",
@@ -22,9 +26,11 @@ HDF5Writer::HDF5Writer(const std::string &filename, unsigned int compressionLeve
             "distanceSquared",
             HOFFSET(CollisionInfo, distanceSquared),
             h5pp::type::getH5NativeType<decltype(CollisionInfo::distanceSquared)>());
+#endif
 }
 
 void HDF5Writer::writeParticles(size_t iteration, const AutoPas_t &autopas) {
+#ifdef LADDS_HDF5
   // Data will be casted to these types before writing
   using floatType = float;
   using intType = unsigned int;
@@ -53,11 +59,13 @@ void HDF5Writer::writeParticles(size_t iteration, const AutoPas_t &autopas) {
   _file.writeDataset_compressed(vecPos, group + "/Particles/Positions", compressionLvl);
   _file.writeDataset_compressed(vecVel, group + "/Particles/Velocities", compressionLvl);
   _file.writeDataset_compressed(vecId, group + "/Particles/IDs", compressionLvl);
+#endif
 }
 
 void HDF5Writer::writeConjunctions(size_t iteration,
                                    const std::unordered_map<Particle *, std::tuple<Particle *, double>> &collisions) {
-  if (collisions.empty()) {
+#ifdef LADDS_HDF5
+    if (collisions.empty()) {
     return;
   }
   std::vector<CollisionInfo> data;
@@ -71,4 +79,5 @@ void HDF5Writer::writeConjunctions(size_t iteration,
   }
   const auto group = groupCollisionData + std::to_string(iteration);
   _file.writeDataset(data, group + "/Collisions", collisionInfoH5Type);
+#endif
 }
