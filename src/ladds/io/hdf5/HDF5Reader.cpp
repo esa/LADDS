@@ -17,7 +17,7 @@ HDF5Reader::HDF5Reader(const std::string &filename)
 #endif
 }
 
-std::vector<Particle> HDF5Reader::readParticles(size_t iteration) {
+std::vector<Particle> HDF5Reader::readParticles(size_t iteration) const {
   std::vector<Particle> particles{};
 #ifdef LADDS_HDF5
   const auto pos = file.readDataset<std::vector<HDF5Writer::Vec3<HDF5Writer::FloatType>>>(
@@ -37,7 +37,7 @@ std::vector<Particle> HDF5Reader::readParticles(size_t iteration) {
   return particles;
 }
 
-std::vector<HDF5Writer::CollisionInfo> HDF5Reader::readCollisions(size_t iteration) {
+std::vector<HDF5Writer::CollisionInfo> HDF5Reader::readCollisions(size_t iteration) const {
   std::vector<HDF5Writer::CollisionInfo> collisions{};
 #ifdef LADDS_HDF5
   file.readDataset(collisions,
