@@ -34,8 +34,9 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
     const auto checkpointPath = std::string(DATADIR) + checkpointPathCfg;
     SPDLOG_LOGGER_INFO(logger.get(), "Loading scenario from HDF5 checkpoint\nFile: {}", checkpointPath);
 
-    auto iteration = config.get<size_t>("io/checkpoint/iteration");
     HDF5Reader hdfReader(checkpointPath);
+    // either load the given iteration or fall back to the last iteration stored in the file
+    auto iteration = config.get<size_t>("io/checkpoint/iteration", hdfReader.readLastIterationNr());
     satellites = hdfReader.readParticles(iteration);
   } else {
     // ... or fail

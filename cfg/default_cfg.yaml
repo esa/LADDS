@@ -22,7 +22,7 @@ io:
   #progressOutputFrequency : 50 # Frequency of writing iteration number and encounter info to std::out.
   #checkpoint:
   #  file: simulationData.h5
-  #  iteration: 0
+  #  iteration: 0 # Iteration to be loaded. If omitted, the last iteration in the file will be loaded.
   vtk:
     writeFrequency: 0 # Frequency of writing vtk files [iterations]
   hdf5:
