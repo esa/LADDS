@@ -90,7 +90,7 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestCollisionData) {
     EXPECT_THAT(conjunctionsHDF5, ::testing::Contains(collisionInfo));
   }
   // cleanup
-  //  std::remove(filename);
+  std::remove(filename);
 }
 #else
 TEST(HDF5WriterReaderTest, TestReaderNotCompiledException) {
