@@ -10,9 +10,7 @@ if (LADDS_HDF5)
         set(h5ppRepoPath git@github.com:DavidAce/h5pp.git)
     endif ()
 
-    # workaround for cmake picking the wrong compiler variables(?) in check_cxx_source_compiles.
-    # Without this line a call check_cxx_source_compiles in h5pp fails on cluster using the module system
-    # presumably because a different compiler than the loaded one is used? Needs further investigation...
+    # explicitly tell cmake that the checks that are about to happen (via check_cxx_source_compiles in h5pp) need c++17
     set(CMAKE_REQUIRED_FLAGS -std=c++17)
 
     FetchContent_Declare(
