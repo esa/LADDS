@@ -58,7 +58,7 @@ size_t HDF5Reader::readLastIterationNr() {
     const auto iterationStr = datasetName.substr(groupStrLength, posSecondSlash - groupStrLength);
     return strtoul(iterationStr.c_str(), nullptr, 10);
   });
-  // sort numerically and return the highest (=highest)
+  // sort numerically and return the highest
   std::sort(allIterations.begin(), allIterations.end());
   return allIterations.back();
 }
