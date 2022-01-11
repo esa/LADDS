@@ -25,6 +25,8 @@ list(FILTER TEST_SRC EXCLUDE REGEX "main.cpp")
 
 add_executable(${TEST_EXECUTABLE_NAME} ${TEST_SRC})
 
+target_compile_features(${TEST_EXECUTABLE_NAME} PUBLIC cxx_std_17)
+
 target_link_libraries(
     ${TEST_EXECUTABLE_NAME}
     gmock_main
@@ -47,6 +49,7 @@ target_compile_definitions(${TEST_EXECUTABLE_NAME}
     DATADIR=\"${PROJECT_SOURCE_DIR}/data/\"
     CFGDIR=\"${PROJECT_SOURCE_DIR}/cfg/\"
     CFGDIRTEST=\"${PROJECT_SOURCE_DIR}/cfg/\"
+    $<$<BOOL:${LADDS_HDF5}>:LADDS_HDF5=1>
 )
 
 gtest_discover_tests(${TEST_EXECUTABLE_NAME})
