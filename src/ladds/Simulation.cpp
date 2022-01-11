@@ -34,11 +34,15 @@ namespace {
  * @tparam F
  * @param node
  * @param setterFun
- * @param defaultVal
+ * @param defaultVals
  */
 template <class Option, class F>
-void setAutoPasOption(ConfigReader &config, const std::string &valuePath, F setterFun, const Option &defaultVal) {
-  auto valStr = config.template get<std::string>(valuePath, defaultVal.to_string(), true);
+void setAutoPasOption(ConfigReader &config,
+                      const std::string &valuePath,
+                      F setterFun,
+                      const std::set<Option> &defaultVals) {
+  auto valStr = config.template get<std::string>(
+      valuePath, autopas::utils::ArrayUtils::to_string(defaultVals, " ", {"", ""}), true);
   const auto options = Option::parseOptions(valStr);
   setterFun(options);
 }
@@ -67,26 +71,27 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config) {
   // -2 because internally there will be two halo cells added on top of maxAltitude
   autopas->setCellSizeFactor((maxAltitude * 2.) / ((cutoff + verletSkin) * (desiredCellsPerDimension - 2)));
 
-  // only restrict AutoPas options if we are not in tuning mode
-  const auto tuningMode = config.get<bool>("autopas/tuningMode", false);
-  if (not tuningMode) {
-    setAutoPasOption<autopas::Newton3Option>(config,
-                                             "autopas/Newton3",
-                                             [&](const auto &op) { autopas->setAllowedNewton3Options(op); },
-                                             {autopas::Newton3Option::enabled});
-    setAutoPasOption<autopas::DataLayoutOption>(config,
-                                                "autopas/DataLayout",
-                                                [&](const auto &op) { autopas->setAllowedDataLayouts(op); },
-                                                {autopas::DataLayoutOption::aos});
-    setAutoPasOption<autopas::ContainerOption>(config,
-                                               "autopas/Container",
-                                               [&](const auto &op) { autopas->setAllowedContainers(op); },
-                                               {autopas::ContainerOption::varVerletListsAsBuild});
-    setAutoPasOption<autopas::TraversalOption>(config,
-                                               "autopas/Traversal",
-                                               [&](const auto &op) { autopas->setAllowedTraversals(op); },
-                                               {autopas::TraversalOption::vvl_as_built});
+  // hardcode values that seem to be optimal
+  std::set<autopas::Newton3Option> optimalNewton3Opt{autopas::Newton3Option::enabled};
+  std::set<autopas::DataLayoutOption> optimalDataLayoutOpt{autopas::DataLayoutOption::aos};
+  std::set<autopas::ContainerOption> optimalContainerOpt{autopas::ContainerOption::varVerletListsAsBuild};
+  std::set<autopas::TraversalOption> optimalTraversalOpt{autopas::TraversalOption::vvl_as_built};
+  // if tuning mode is enabled use full range of AutoPas defaults
+  if (config.get<bool>("autopas/tuningMode", false)) {
+    optimalNewton3Opt = autopas->getAllowedNewton3Options();
+    optimalDataLayoutOpt = autopas->getAllowedDataLayouts();
+    optimalContainerOpt = autopas->getAllowedContainers();
+    optimalTraversalOpt = autopas->getAllowedTraversals();
   }
+  // however, always allow setting config options via yaml
+  setAutoPasOption<autopas::Newton3Option>(
+      config, "autopas/Newton3", [&](const auto &op) { autopas->setAllowedNewton3Options(op); }, optimalNewton3Opt);
+  setAutoPasOption<autopas::DataLayoutOption>(
+      config, "autopas/DataLayout", [&](const auto &op) { autopas->setAllowedDataLayouts(op); }, optimalDataLayoutOpt);
+  setAutoPasOption<autopas::ContainerOption>(
+      config, "autopas/Container", [&](const auto &op) { autopas->setAllowedContainers(op); }, optimalContainerOpt);
+  setAutoPasOption<autopas::TraversalOption>(
+      config, "autopas/Traversal", [&](const auto &op) { autopas->setAllowedTraversals(op); }, optimalTraversalOpt);
   // arbitrary number. Can be changed to whatever makes sense.
   autopas->setTuningInterval(10000);
   autopas->setSelectorStrategy(autopas::SelectorStrategyOption::fastestMean);
