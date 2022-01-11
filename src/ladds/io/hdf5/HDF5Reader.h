@@ -18,9 +18,15 @@ class HDF5Reader {
  public:
   explicit HDF5Reader(const std::string &filename);
 
-  std::vector<Particle> readParticles(size_t iteration);
+  std::vector<Particle> readParticles(size_t iteration) const;
 
-  std::vector<HDF5Writer::CollisionInfo> readCollisions(size_t iteration);
+  std::vector<HDF5Writer::CollisionInfo> readCollisions(size_t iteration) const;
+
+  /**
+   * Finds the last iteration that is stored in the file.
+   * @return Highest iteration number.
+   */
+  size_t readLastIterationNr();
 
  private:
 #ifdef LADDS_HDF5

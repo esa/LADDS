@@ -15,9 +15,9 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
   std::vector<Particle> satellites;
 
   // load CSV ...
-  if (const auto posFilePathCfg = config.get<std::string>("io/posFileName", ""),
-      velFilePathCfg = config.get<std::string>("io/velFileName", "");
-      not posFilePathCfg.empty() and not velFilePathCfg.empty()) {
+  const auto posFilePathCfg = config.get<std::string>("io/posFileName", "");
+  const auto velFilePathCfg = config.get<std::string>("io/velFileName", "");
+  if (not posFilePathCfg.empty() and not velFilePathCfg.empty()) {
     const auto posFilePath = std::string(DATADIR) + posFilePathCfg;
     const auto velFilePath = std::string(DATADIR) + velFilePathCfg;
 
@@ -27,19 +27,21 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
     // Read in scenario
     satellites = DatasetReader::readDataset(posFilePath, velFilePath);
     SPDLOG_LOGGER_DEBUG(logger.get(), "Parsed {} satellites", satellites.size());
-  } else
-      // ... or load checkpoint ...
-      if (const auto checkpointPathCfg = config.get<std::string>("io/checkpoint/file", "");
-          not checkpointPathCfg.empty()) {
-    const auto checkpointPath = std::string(DATADIR) + checkpointPathCfg;
-    SPDLOG_LOGGER_INFO(logger.get(), "Loading scenario from HDF5 checkpoint\nFile: {}", checkpointPath);
-
-    auto iteration = config.get<size_t>("io/checkpoint/iteration");
-    HDF5Reader hdfReader(checkpointPath);
-    satellites = hdfReader.readParticles(iteration);
   } else {
-    // ... or fail
-    throw std::runtime_error("No valid input option found! Exiting...");
+    // ... or load checkpoint ...
+    const auto checkpointPathCfg = config.get<std::string>("io/checkpoint/file", "");
+    if (not checkpointPathCfg.empty()) {
+      const auto checkpointPath = std::string(DATADIR) + checkpointPathCfg;
+      SPDLOG_LOGGER_INFO(logger.get(), "Loading scenario from HDF5 checkpoint\nFile: {}", checkpointPath);
+
+      HDF5Reader hdfReader(checkpointPath);
+      // either load the given iteration or fall back to the last iteration stored in the file
+      auto iteration = config.get<size_t>("io/checkpoint/iteration", hdfReader.readLastIterationNr());
+      satellites = hdfReader.readParticles(iteration);
+    } else {
+      // ... or fail
+      throw std::runtime_error("No valid input option found! Exiting...");
+    }
   }
 
   // load particle vector into autopas while checking that they are within the desired altitude
