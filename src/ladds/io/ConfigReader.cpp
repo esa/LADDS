@@ -48,6 +48,7 @@ bool ConfigReader::defines(const std::string &valuePath, bool suppressWarning) {
       }
       return false;
     }
+    node = node[dir];
   }
   return true;
 }

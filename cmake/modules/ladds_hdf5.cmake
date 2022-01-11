@@ -10,6 +10,9 @@ if (LADDS_HDF5)
         set(h5ppRepoPath git@github.com:DavidAce/h5pp.git)
     endif ()
 
+    # explicitly tell cmake that the checks that are about to happen (via check_cxx_source_compiles in h5pp) need c++17
+    set(CMAKE_REQUIRED_FLAGS -std=c++17)
+
     FetchContent_Declare(
             h5pp
             GIT_REPOSITORY ${h5ppRepoPath}

@@ -1,6 +1,6 @@
 sim:
   logLevel: info    # Available levels are off, critical, err, warn, info, debug, trace
-  iterations: 1 # Number of simulation iterations
+  iterations: 32000 # Number of simulation iterations
   maxAltitude: 10000 # Maximum satellite altitude [km]
   deltaT: 10.0 # [s]
   conjunctionThreshold: 0.5 # [km]
@@ -22,7 +22,7 @@ io:
   #progressOutputFrequency : 50 # Frequency of writing iteration number and encounter info to std::out.
   #checkpoint:
   #  file: simulationData.h5
-  #  iteration: 0
+  #  iteration: 0 # Iteration to be loaded. If omitted, the last iteration in the file will be loaded.
   vtk:
     writeFrequency: 0 # Frequency of writing vtk files [iterations]
   hdf5:

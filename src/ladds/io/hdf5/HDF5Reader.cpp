@@ -17,7 +17,7 @@ HDF5Reader::HDF5Reader(const std::string &filename)
 #endif
 }
 
-std::vector<Particle> HDF5Reader::readParticles(size_t iteration) {
+std::vector<Particle> HDF5Reader::readParticles(size_t iteration) const {
   std::vector<Particle> particles{};
 #ifdef LADDS_HDF5
   const auto pos = file.readDataset<std::vector<HDF5Writer::Vec3<HDF5Writer::FloatType>>>(
@@ -37,11 +37,28 @@ std::vector<Particle> HDF5Reader::readParticles(size_t iteration) {
   return particles;
 }
 
-std::vector<HDF5Writer::CollisionInfo> HDF5Reader::readCollisions(size_t iteration) {
+std::vector<HDF5Writer::CollisionInfo> HDF5Reader::readCollisions(size_t iteration) const {
   std::vector<HDF5Writer::CollisionInfo> collisions{};
 #ifdef LADDS_HDF5
   file.readDataset(collisions,
                    HDF5Writer::groupCollisionData + std::to_string(iteration) + HDF5Writer::datasetCollisions);
 #endif
   return collisions;
+}
+
+size_t HDF5Reader::readLastIterationNr() {
+  const auto groupStrLength = std::string(HDF5Writer::groupParticleData).size();
+  // gather all ID datasets. They contain the iteration number in their path
+  auto allIdDatasets = file.findDatasets(HDF5Writer::datasetParticleIDs);
+  std::vector<size_t> allIterations;
+  allIterations.reserve(allIdDatasets.size());
+  // extract all iteration numbers as size_t
+  std::transform(allIdDatasets.begin(), allIdDatasets.end(), std::back_inserter(allIterations), [&](auto &datasetName) {
+    const auto posSecondSlash = datasetName.find('/', groupStrLength);
+    const auto iterationStr = datasetName.substr(groupStrLength, posSecondSlash - groupStrLength);
+    return strtoul(iterationStr.c_str(), nullptr, 10);
+  });
+  // sort numerically and return the highest
+  std::sort(allIterations.begin(), allIterations.end());
+  return allIterations.back();
 }
