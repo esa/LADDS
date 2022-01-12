@@ -78,6 +78,10 @@ TEST_P(CollisionFunctorIntegrationTest, testAutoPasAlgorithm) {
 
   CollisionFunctor functor(_cutoff, 10.0, 0.1 * _cutoff);
 
+  if (not functor.allowsNonNewton3() and newton3 == autopas::Newton3Option::disabled) {
+    GTEST_SKIP_("Functor does not support Newton3==disabled!");
+  }
+
   // configure the AutoPas container
   autopas::AutoPas<Particle> autopas;
   // allow all container options since the traversal determines it uniquely

@@ -3,7 +3,7 @@
 Codebase for the ARIADNA Study between TU Munich and ESA's Advanced Concepts Team. A more detailed project description can be found on the [Advanced Concept Team's webpage](https://www.esa.int/gsp/ACT/projects/debris_hpc/).
 
 ## Requirements
-* CMake >= 3.14
+* CMake >= 3.19
 * make (build-essentials, or equivalent)
 * A C++17 Compiler (recommended: gcc >=7 or clang >=8, only clang-10 is tested)
 * OpenMP >= 4.5
