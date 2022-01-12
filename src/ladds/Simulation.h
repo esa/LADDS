@@ -23,9 +23,6 @@
 #include "ladds/particle/Constellation.h"
 #include "ladds/particle/Particle.h"
 
-extern template class autopas::AutoPas<Particle>;
-extern template bool autopas::AutoPas<Particle>::iteratePairwise(CollisionFunctor *);
-
 /**
  * The main simulation class responsible for all high-level logic.
  */
@@ -81,10 +78,18 @@ class Simulation {
   /**
    * Check for collisions / conjunctions and write statistics about them.
    * @param autopas
+   * @return Tuple of the collisions and whether AutoPas is currently in tuning mode.
    */
-  CollisionFunctor::CollisionCollectionT collisionDetection(AutoPas_t &autopas,
-                                                            double deltaT,
-                                                            double conjunctionThreshold);
+  std::tuple<CollisionFunctor::CollisionCollectionT, bool> collisionDetection(AutoPas_t &autopas,
+                                                                              double deltaT,
+                                                                              double conjunctionThreshold);
+
+  /**
+   * Updates the configuration with the latest AutoPas configuration and writes it to a new YAML file.
+   * @param config
+   * @param autopas
+   */
+  void dumpCalibratedConfig(ConfigReader &config, const AutoPas_t &autopas) const;
 
   /**
    * The main loop.

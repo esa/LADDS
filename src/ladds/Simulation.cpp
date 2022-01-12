@@ -7,8 +7,9 @@
 #include "Simulation.h"
 
 #include <breakupModel/output/VTKWriter.h>
-#include <ladds/io/DatasetReader.h>
-#include <ladds/particle/SatelliteToParticleConverter.h>
+
+// needed for autopas::AutoPas::getCurrentConfiguration()
+#include <autopas/AutoPasImpl.h>
 
 #include <array>
 #include <tuple>
@@ -53,9 +54,9 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config) {
 
   const auto maxAltitude = config.get<double>("sim/maxAltitude");
   const auto cutoff = config.get<double>("autopas/cutoff");
-  const auto desiredCellsPerDimension = config.get<double>("autopas/desiredCellsPerDimension");
+  const auto desiredCellsPerDimension = config.get<double>("autopas/desiredCellsPerDimension", 25);
   const auto deltaT = config.get<double>("sim/deltaT");
-  const auto verletRebuildFrequency = config.get<unsigned int>("autopas/rebuildFrequency");
+  const auto verletRebuildFrequency = config.get<unsigned int>("autopas/rebuildFrequency", 1);
   // *8.5 : Assumed max km/s   TODO: get this from input?
   // *2: because particles might flight directly towards each other
   const auto verletSkin = 2 * 8.5 * deltaT * verletRebuildFrequency;
@@ -74,8 +75,8 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config) {
   // hardcode values that seem to be optimal
   std::set<autopas::Newton3Option> optimalNewton3Opt{autopas::Newton3Option::enabled};
   std::set<autopas::DataLayoutOption> optimalDataLayoutOpt{autopas::DataLayoutOption::aos};
-  std::set<autopas::ContainerOption> optimalContainerOpt{autopas::ContainerOption::varVerletListsAsBuild};
-  std::set<autopas::TraversalOption> optimalTraversalOpt{autopas::TraversalOption::vvl_as_built};
+  std::set<autopas::ContainerOption> optimalContainerOpt{autopas::ContainerOption::linkedCells};
+  std::set<autopas::TraversalOption> optimalTraversalOpt{autopas::TraversalOption::lc_c04_HCP};
   // if tuning mode is enabled use full range of AutoPas defaults
   if (config.get<bool>("autopas/tuningMode", false)) {
     optimalNewton3Opt = autopas->getAllowedNewton3Options();
@@ -93,7 +94,7 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config) {
   setAutoPasOption<autopas::TraversalOption>(
       config, "autopas/Traversal", [&](const auto &op) { autopas->setAllowedTraversals(op); }, optimalTraversalOpt);
   // arbitrary number. Can be changed to whatever makes sense.
-  autopas->setTuningInterval(10000);
+  autopas->setTuningInterval(std::numeric_limits<unsigned int>::max());
   autopas->setSelectorStrategy(autopas::SelectorStrategyOption::fastestMean);
   autopas->setNumSamples(verletRebuildFrequency);
   autopas::Logger::get()->set_level(spdlog::level::from_str(config.get<std::string>("autopas/logLevel", "off")));
@@ -147,19 +148,20 @@ void Simulation::updateConstellation(AutoPas_t &autopas,
   }
 }
 
-CollisionFunctor::CollisionCollectionT Simulation::collisionDetection(AutoPas_t &autopas,
-                                                                      double deltaT,
-                                                                      double conjunctionThreshold) {
+std::tuple<CollisionFunctor::CollisionCollectionT, bool> Simulation::collisionDetection(AutoPas_t &autopas,
+                                                                                        double deltaT,
+                                                                                        double conjunctionThreshold) {
   // pairwise interaction
   CollisionFunctor collisionFunctor(autopas.getCutoff(), deltaT, conjunctionThreshold);
-  autopas.iteratePairwise(&collisionFunctor);
-  return collisionFunctor.getCollisions();
+  bool stillTuning = autopas.iteratePairwise(&collisionFunctor);
+  return {collisionFunctor.getCollisions(), stillTuning};
 }
 
 void Simulation::simulationLoop(AutoPas_t &autopas,
                                 Integrator<AutoPas_t> &integrator,
                                 std::vector<Constellation> &constellations,
                                 ConfigReader &config) {
+  const auto tuningMode = config.get<bool>("autopas/tuningMode", false);
   const auto iterations = config.get<size_t>("sim/iterations");
   const auto constellationInsertionFrequency = config.get<int>("io/constellationFrequency", 1);
   const auto constellationCutoff = config.get<double>("io/constellationCutoff", 0.1);
@@ -189,7 +191,8 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
 
   config.printParsedValues();
 
-  for (size_t i = 0ul; i < iterations; ++i) {
+  // in tuning mode ignore the iteration counter
+  for (size_t i = 0ul; i < iterations or tuningMode; ++i) {
     // update positions
     timers.integrator.start();
     integrator.integrate(false);
@@ -215,8 +218,13 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     // TODO Check for particles that burn up
 
     timers.collisionDetection.start();
-    auto collisions = collisionDetection(autopas, deltaT, conjunctionThreshold);
+    auto [collisions, stillTuning] = collisionDetection(autopas, deltaT, conjunctionThreshold);
     timers.collisionDetection.stop();
+
+    if (tuningMode and not stillTuning) {
+      dumpCalibratedConfig(config, autopas);
+      return;
+    }
 
     timers.collisionWriting.start();
     totalConjunctions += collisions.size();
@@ -294,4 +302,14 @@ void Simulation::run(ConfigReader &config) {
 
   timers.total.stop();
   timers.printTimers(config);
+}
+
+void Simulation::dumpCalibratedConfig(ConfigReader &config, const AutoPas_t &autopas) const {
+  auto autopasConfig = autopas.getCurrentConfig();
+  config.setValue("autopas/Newton3", autopasConfig.newton3.to_string());
+  config.setValue("autopas/DataLayout", autopasConfig.dataLayout.to_string());
+  config.setValue("autopas/Container", autopasConfig.container.to_string());
+  config.setValue("autopas/Traversal", autopasConfig.traversal.to_string());
+  config.setValue("autopas/tuningMode", "off");
+  config.dumpConfig("calibratedConfig.yaml");
 }
