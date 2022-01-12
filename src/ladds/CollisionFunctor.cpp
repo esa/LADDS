@@ -16,7 +16,7 @@ CollisionFunctor::CollisionFunctor(double cutoff, double dt, double minorCutoff)
   _threadData.resize(autopas::autopas_get_max_threads());
 }
 
-const std::unordered_map<Particle *, std::tuple<Particle *, double>> &CollisionFunctor::getCollisions() const {
+const CollisionFunctor::CollisionCollectionT &CollisionFunctor::getCollisions() const {
   return _collisions;
 }
 
@@ -85,11 +85,11 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
 
   // store pointers to colliding pair
   if (i.getID() < j.getID()) {
-    _threadData[autopas::autopas_get_thread_num()].collisions[i.get<Particle::AttributeNames::ptr>()] = {
-        j.get<Particle::AttributeNames::ptr>(), distanceSquare_lines};
+    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(
+        i.get<Particle::AttributeNames::ptr>(), j.get<Particle::AttributeNames::ptr>(), distanceSquare_lines);
   } else {
-    _threadData[autopas::autopas_get_thread_num()].collisions[j.get<Particle::AttributeNames::ptr>()] = {
-        i.get<Particle::AttributeNames::ptr>(), distanceSquare_lines};
+    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(
+        j.get<Particle::AttributeNames::ptr>(), i.get<Particle::AttributeNames::ptr>(), distanceSquare_lines);
   }
 }
 
@@ -113,11 +113,12 @@ void CollisionFunctor::SoAFunctorPair(autopas::SoAView<SoAArraysType> soa1,
     }
 
     // inner loop over SoA2
-    // custom reduction for unordered maps
-#pragma omp declare reduction(mapMerge : std::unordered_map<Particle *, std::tuple<Particle *,double>> : omp_out.insert(omp_in.begin(), omp_in.end()))
+    // custom reduction for collision collections (vector)
+#pragma omp declare reduction(vecMerge:CollisionCollectionT \
+                              : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
     // alias because OpenMP needs it
     auto &thisCollisions = _threadData[autopas::autopas_get_thread_num()].collisions;
-#pragma omp simd reduction(mapMerge : thisCollisions)
+#pragma omp simd reduction(vecMerge : thisCollisions)
     for (size_t j = 0; j < soa2.getNumParticles(); ++j) {
       SoAKernel(i, j, soa1, soa2, newton3);
     }
@@ -183,9 +184,9 @@ void CollisionFunctor::SoAKernel(
 
   // store pointers to colliding pair
   if (id1ptr[i] < id2ptr[j]) {
-    _threadData[autopas::autopas_get_thread_num()].collisions[ptr1ptr[i]] = {ptr2ptr[j], dr2};
+    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(ptr1ptr[i], ptr2ptr[j], dr2);
   } else {
-    _threadData[autopas::autopas_get_thread_num()].collisions[ptr2ptr[j]] = {ptr1ptr[i], dr2};
+    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(ptr2ptr[j], ptr1ptr[i], dr2);
   }
 }
 void CollisionFunctor::initTraversal() {
@@ -194,7 +195,7 @@ void CollisionFunctor::initTraversal() {
 
 void CollisionFunctor::endTraversal(bool newton3) {
   for (auto &data : _threadData) {
-    _collisions.insert(data.collisions.begin(), data.collisions.end());
+    _collisions.insert(_collisions.end(), data.collisions.begin(), data.collisions.end());
     data.collisions.clear();
   }
 }

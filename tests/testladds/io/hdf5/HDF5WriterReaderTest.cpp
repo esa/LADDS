@@ -59,11 +59,11 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestCollisionData) {
   }
 
   // These conjunctions are just randomly made up and have nothing to do with position data!
-  std::unordered_map<Particle *, std::tuple<Particle *, double>> conjunctions;
+  CollisionFunctor::CollisionCollectionT conjunctions;
   auto insertConjunction = [&](size_t idA, size_t idB) {
     const auto dr = autopas::utils::ArrayMath::sub(particles[idA].getR(), particles[idB].getR());
     const auto distanceSquare = autopas::utils::ArrayMath::dot(dr, dr);
-    conjunctions[&particles[idA]] = {&particles[idB], distanceSquare};
+    conjunctions.emplace_back(&particles[idA], &particles[idB], distanceSquare);
   };
   insertConjunction(1, 2);
   insertConjunction(2, 3);
@@ -81,8 +81,7 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestCollisionData) {
 
   // 4. check that read data is equal to generated data
   EXPECT_EQ(conjunctions.size(), conjunctionsHDF5.size());
-  for (const auto &[ptrARef, ptrBAndDistRef] : conjunctions) {
-    const auto &[ptrBRef, distRef] = ptrBAndDistRef;
+  for (const auto &[ptrARef, ptrBRef, distRef] : conjunctions) {
     const auto idARef = static_cast<HDF5Writer::IntType>(ptrARef->getID());
     const auto idBRef = static_cast<HDF5Writer::IntType>(ptrBRef->getID());
 

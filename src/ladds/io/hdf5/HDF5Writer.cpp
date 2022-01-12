@@ -61,8 +61,7 @@ void HDF5Writer::writeParticles(size_t iteration, const AutoPas_t &autopas) {
 #endif
 }
 
-void HDF5Writer::writeConjunctions(size_t iteration,
-                                   const std::unordered_map<Particle *, std::tuple<Particle *, double>> &collisions) {
+void HDF5Writer::writeConjunctions(size_t iteration, const CollisionFunctor::CollisionCollectionT &collisions) {
 #ifdef LADDS_HDF5
   if (collisions.empty()) {
     return;
@@ -70,8 +69,7 @@ void HDF5Writer::writeConjunctions(size_t iteration,
   std::vector<CollisionInfo> data;
   data.reserve(collisions.size());
 
-  for (const auto &[p1, p2AndDistanceSquare] : collisions) {
-    const auto &[p2, distanceSquare] = p2AndDistanceSquare;
+  for (const auto &[p1, p2, distanceSquare] : collisions) {
     data.emplace_back<CollisionInfo>({static_cast<decltype(CollisionInfo::idA)>(p1->getID()),
                                       static_cast<decltype(CollisionInfo::idB)>(p2->getID()),
                                       static_cast<decltype(CollisionInfo::distanceSquared)>(distanceSquare)});

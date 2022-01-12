@@ -32,12 +32,9 @@ TEST(CollisionFunctorTest, ThreeParticles) {
 
   CollisionFunctor collisionFunctor(cutoff, 10.0, cutoff);
 
-  for (auto &di : debris) {
-    for (auto &dj : debris) {
-      if (di == dj) {
-        continue;
-      }
-      collisionFunctor.AoSFunctor(di, dj, newton3);
+  for (size_t i = 0; i < debris.size(); ++i) {
+    for (size_t j = i + 1; j < debris.size(); ++j) {
+      collisionFunctor.AoSFunctor(debris[i], debris[j], newton3);
     }
   }
 
@@ -47,8 +44,8 @@ TEST(CollisionFunctorTest, ThreeParticles) {
   auto collisions = collisionFunctor.getCollisions();
 
   decltype(collisions) expected{
-      {&debris[0], {&debris[1], 1.0}},
-      {&debris[1], {&debris[2], 1.0}},
+      {&debris[0], &debris[1], 1.0},
+      {&debris[1], &debris[2], 1.0},
   };
 
   EXPECT_THAT(collisionFunctor.getCollisions(), ::testing::UnorderedElementsAreArray(expected));
@@ -70,12 +67,9 @@ TEST_P(CollisionFunctorTest, LinearInterpolationTest) {
   debris.emplace_back(x1, v1, 0.);
   debris.emplace_back(x2, v2, 1.);
 
-  for (auto &di : debris) {
-    for (auto &dj : debris) {
-      if (di == dj) {
-        continue;
-      }
-      collisionFunctor.AoSFunctor(di, dj, newton3);
+  for (size_t i = 0; i < debris.size(); ++i) {
+    for (size_t j = i + 1; j < debris.size(); ++j) {
+      collisionFunctor.AoSFunctor(debris[i], debris[j], newton3);
     }
   }
 
@@ -84,7 +78,7 @@ TEST_P(CollisionFunctorTest, LinearInterpolationTest) {
 
   auto collisions = collisionFunctor.getCollisions();
 
-  decltype(collisions) expected{{&debris[0], {&debris[1], expected_dist}}};
+  decltype(collisions) expected{{&debris[0], &debris[1], expected_dist}};
 
   EXPECT_THAT(collisionFunctor.getCollisions(), ::testing::UnorderedElementsAreArray(expected));
 }

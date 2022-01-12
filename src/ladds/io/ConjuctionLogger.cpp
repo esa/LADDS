@@ -30,10 +30,8 @@ void ConjunctionLogger::log(size_t iteration, const Particle &p1, const Particle
   SPDLOG_LOGGER_INFO(spdlog::get(_loggerName), "{},{},{},{}", iteration, p1.getID(), p2.getID(), distance);
 }
 
-void ConjunctionLogger::writeConjunctions(
-    size_t iteration, const std::unordered_map<Particle *, std::tuple<Particle *, double>> &collisions) {
-  for (const auto &[p1, p2AndDistanceSquare] : collisions) {
-    const auto &[p2, distanceSquare] = p2AndDistanceSquare;
+void ConjunctionLogger::writeConjunctions(size_t iteration, const CollisionFunctor::CollisionCollectionT &collisions) {
+  for (const auto &[p1, p2, distanceSquare] : collisions) {
     log(iteration, *p1, *p2, distanceSquare);
   }
 }
