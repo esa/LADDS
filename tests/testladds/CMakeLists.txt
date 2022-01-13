@@ -25,6 +25,8 @@ list(FILTER TEST_SRC EXCLUDE REGEX "main.cpp")
 
 add_executable(${TEST_EXECUTABLE_NAME} ${TEST_SRC})
 
+target_compile_features(${TEST_EXECUTABLE_NAME} PUBLIC cxx_std_17)
+
 target_link_libraries(
     ${TEST_EXECUTABLE_NAME}
     gmock_main

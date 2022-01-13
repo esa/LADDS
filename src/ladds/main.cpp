@@ -7,7 +7,7 @@
 #include <iostream>
 
 #include "Simulation.h"
-#include "ladds/io/LoadConfig.h"
+#include "ladds/io/ConfigReader.h"
 #include "ladds/io/Logger.h"
 
 /**
@@ -27,9 +27,9 @@ int main(int argc, char **argv) {
 
   // Read in config
   const auto *cfgFilePath = argv[1];
-  const auto config = LoadConfig::loadConfig(cfgFilePath, logger);
+  auto config = ConfigReader(cfgFilePath, logger);
 
-  logger.get()->set_level(spdlog::level::from_str(config["sim"]["logLevel"].as<std::string>()));
+  logger.get()->set_level(spdlog::level::from_str(config.get<std::string>("sim/logLevel", "info")));
   SPDLOG_LOGGER_INFO(logger.get(), "Config loaded.");
 
   Simulation simulation(logger);

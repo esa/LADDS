@@ -8,14 +8,17 @@
 
 #include <breakupModel/output/VTKWriter.h>
 
+// needed for autopas::AutoPas::getCurrentConfiguration()
+#include <autopas/AutoPasImpl.h>
+
 #include <array>
 #include <tuple>
 #include <vector>
 
 #include "ladds/io/ConjunctionLogger.h"
-#include "ladds/io/HDF5Writer.h"
 #include "ladds/io/SatelliteLoader.h"
 #include "ladds/io/VTUWriter.h"
+#include "ladds/io/hdf5/HDF5Writer.h"
 #include "ladds/particle/Constellation.h"
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
@@ -32,27 +35,28 @@ namespace {
  * @tparam F
  * @param node
  * @param setterFun
- * @param defaultVal
+ * @param defaultVals
  */
 template <class Option, class F>
-void setAutoPasOption(const YAML::Node &node, F setterFun, const std::set<Option> &defaultVal) {
-  if (node.IsDefined()) {
-    const auto options = Option::parseOptions(node.as<std::string>());
-    setterFun(options);
-  } else {
-    setterFun(defaultVal);
-  }
+void setAutoPasOption(ConfigReader &config,
+                      const std::string &valuePath,
+                      F setterFun,
+                      const std::set<Option> &defaultVals) {
+  auto valStr = config.template get<std::string>(
+      valuePath, autopas::utils::ArrayUtils::to_string(defaultVals, " ", {"", ""}), true);
+  const auto options = Option::parseOptions(valStr);
+  setterFun(options);
 }
 }  // namespace
 
-std::unique_ptr<AutoPas_t> Simulation::initAutoPas(const YAML::Node &config) {
+std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config) {
   auto autopas = std::make_unique<AutoPas_t>();
 
-  const auto maxAltitude = config["sim"]["maxAltitude"].as<double>();
-  const auto cutoff = config["autopas"]["cutoff"].as<double>();
-  const auto desiredCellsPerDimension = config["autopas"]["desiredCellsPerDimension"].as<double>();
-  const auto deltaT = config["sim"]["deltaT"].as<double>();
-  const auto verletRebuildFrequency = config["autopas"]["rebuildFrequency"].as<unsigned int>();
+  const auto maxAltitude = config.get<double>("sim/maxAltitude");
+  const auto cutoff = config.get<double>("autopas/cutoff");
+  const auto desiredCellsPerDimension = config.get<double>("autopas/desiredCellsPerDimension", 25);
+  const auto deltaT = config.get<double>("sim/deltaT");
+  const auto verletRebuildFrequency = config.get<unsigned int>("autopas/rebuildFrequency", 1);
   // *8.5 : Assumed max km/s   TODO: get this from input?
   // *2: because particles might flight directly towards each other
   const auto verletSkin = 2 * 8.5 * deltaT * verletRebuildFrequency;
@@ -68,30 +72,33 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(const YAML::Node &config) {
   // -2 because internally there will be two halo cells added on top of maxAltitude
   autopas->setCellSizeFactor((maxAltitude * 2.) / ((cutoff + verletSkin) * (desiredCellsPerDimension - 2)));
 
-  // only restrict AutoPas options if we are not in tuning mode
-  const auto tuningModeNode = config["autopas"]["tuningMode"];
-  const auto tuningMode = tuningModeNode.IsDefined() and tuningModeNode.as<bool>();
-  if (not tuningMode) {
-    setAutoPasOption<autopas::Newton3Option>(config["autopas"]["Newton3"],
-                                             [&](const auto &op) { autopas->setAllowedNewton3Options(op); },
-                                             {autopas::Newton3Option::enabled});
-    setAutoPasOption<autopas::DataLayoutOption>(config["autopas"]["DataLayout"],
-                                                [&](const auto &op) { autopas->setAllowedDataLayouts(op); },
-                                                {autopas::DataLayoutOption::aos});
-    setAutoPasOption<autopas::ContainerOption>(config["autopas"]["Container"],
-                                               [&](const auto &op) { autopas->setAllowedContainers(op); },
-                                               {autopas::ContainerOption::varVerletListsAsBuild});
-    setAutoPasOption<autopas::TraversalOption>(config["autopas"]["Traversal"],
-                                               [&](const auto &op) { autopas->setAllowedTraversals(op); },
-                                               {autopas::TraversalOption::vvl_as_built});
+  // hardcode values that seem to be optimal
+  std::set<autopas::Newton3Option> optimalNewton3Opt{autopas::Newton3Option::enabled};
+  std::set<autopas::DataLayoutOption> optimalDataLayoutOpt{autopas::DataLayoutOption::aos};
+  std::set<autopas::ContainerOption> optimalContainerOpt{autopas::ContainerOption::linkedCells};
+  std::set<autopas::TraversalOption> optimalTraversalOpt{autopas::TraversalOption::lc_c04_HCP};
+  // if tuning mode is enabled use full range of AutoPas defaults
+  if (config.get<bool>("autopas/tuningMode", false)) {
+    optimalNewton3Opt = autopas->getAllowedNewton3Options();
+    optimalDataLayoutOpt = autopas->getAllowedDataLayouts();
+    optimalContainerOpt = autopas->getAllowedContainers();
+    optimalTraversalOpt = autopas->getAllowedTraversals();
   }
+  // however, always allow setting config options via yaml
+  setAutoPasOption<autopas::Newton3Option>(
+      config, "autopas/Newton3", [&](const auto &op) { autopas->setAllowedNewton3Options(op); }, optimalNewton3Opt);
+  setAutoPasOption<autopas::DataLayoutOption>(
+      config, "autopas/DataLayout", [&](const auto &op) { autopas->setAllowedDataLayouts(op); }, optimalDataLayoutOpt);
+  setAutoPasOption<autopas::ContainerOption>(
+      config, "autopas/Container", [&](const auto &op) { autopas->setAllowedContainers(op); }, optimalContainerOpt);
+  setAutoPasOption<autopas::TraversalOption>(
+      config, "autopas/Traversal", [&](const auto &op) { autopas->setAllowedTraversals(op); }, optimalTraversalOpt);
   // arbitrary number. Can be changed to whatever makes sense.
-  autopas->setTuningInterval(10000);
+  autopas->setTuningInterval(std::numeric_limits<unsigned int>::max());
   autopas->setSelectorStrategy(autopas::SelectorStrategyOption::fastestMean);
   autopas->setNumSamples(verletRebuildFrequency);
-  if (config["autopas"]["logLevel"].IsDefined()) {
-    autopas::Logger::get()->set_level(spdlog::level::from_str(config["autopas"]["logLevel"].as<std::string>()));
-  }
+  autopas::Logger::get()->set_level(spdlog::level::from_str(config.get<std::string>("autopas/logLevel", "off")));
+
   autopas->init();
 
   return autopas;
@@ -100,27 +107,25 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(const YAML::Node &config) {
 std::tuple<std::unique_ptr<FileOutput<AutoPas_t>>,
            std::unique_ptr<Acceleration::AccelerationAccumulator<AutoPas_t>>,
            std::unique_ptr<Integrator<AutoPas_t>>>
-Simulation::initIntegrator(AutoPas_t &autopas, const YAML::Node &config) {
+Simulation::initIntegrator(AutoPas_t &autopas, ConfigReader &config) {
   // initialization of the integrator
   std::array<bool, 8> selectedPropagatorComponents{};
-  const auto &configProp = config["sim"]["prop"];
-  if (configProp.IsDefined()) {
-    selectedPropagatorComponents = {
-        configProp["useKEPComponent"].IsDefined() and configProp["useKEPComponent"].as<bool>(),
-        configProp["useJ2Component"].IsDefined() and configProp["useJ2Component"].as<bool>(),
-        configProp["useC22Component"].IsDefined() and configProp["useC22Component"].as<bool>(),
-        configProp["useS22Component"].IsDefined() and configProp["useS22Component"].as<bool>(),
-        configProp["useSOLComponent"].IsDefined() and configProp["useSOLComponent"].as<bool>(),
-        configProp["useLUNComponent"].IsDefined() and configProp["useLUNComponent"].as<bool>(),
-        configProp["useSRPComponent"].IsDefined() and configProp["useSRPComponent"].as<bool>(),
-        configProp["useDRAGComponent"].IsDefined() and configProp["useDRAGComponent"].as<bool>()};
-  }
+  selectedPropagatorComponents = {config.get<bool>("sim/prop/useKEPComponent", false),
+                                  config.get<bool>("sim/prop/useJ2Component", false),
+                                  config.get<bool>("sim/prop/useC22Component", false),
+                                  config.get<bool>("sim/prop/useS22Component", false),
+                                  config.get<bool>("sim/prop/useSOLComponent", false),
+                                  config.get<bool>("sim/prop/useLUNComponent", false),
+                                  config.get<bool>("sim/prop/useSRPComponent", false),
+                                  config.get<bool>("sim/prop/useDRAGComponent", false)};
 
-  auto csvWriter = std::make_unique<FileOutput<AutoPas_t>>(
-      autopas, config["io"]["output_file"].as<std::string>(), OutputFile::CSV, selectedPropagatorComponents);
+  auto csvWriter = std::make_unique<FileOutput<AutoPas_t>>(autopas,
+                                                           config.get<std::string>("io/output_file", "propagator.csv"),
+                                                           OutputFile::CSV,
+                                                           selectedPropagatorComponents);
   auto accumulator = std::make_unique<Acceleration::AccelerationAccumulator<AutoPas_t>>(
       selectedPropagatorComponents, autopas, 0.0, *csvWriter);
-  auto deltaT = config["sim"]["deltaT"].as<double>();
+  auto deltaT = config.get<double>("sim/deltaT");
   auto integrator = std::make_unique<Integrator<AutoPas_t>>(autopas, *accumulator, deltaT);
 
   return std::make_tuple<>(std::move(csvWriter), std::move(accumulator), std::move(integrator));
@@ -143,45 +148,38 @@ void Simulation::updateConstellation(AutoPas_t &autopas,
   }
 }
 
-std::unordered_map<Particle *, std::tuple<Particle *, double>> Simulation::collisionDetection(
-    AutoPas_t &autopas, double deltaT, double conjunctionThreshold) {
+std::tuple<CollisionFunctor::CollisionCollectionT, bool> Simulation::collisionDetection(AutoPas_t &autopas,
+                                                                                        double deltaT,
+                                                                                        double conjunctionThreshold) {
   // pairwise interaction
   CollisionFunctor collisionFunctor(autopas.getCutoff(), deltaT, conjunctionThreshold);
-  autopas.iteratePairwise(&collisionFunctor);
-  return collisionFunctor.getCollisions();
+  bool stillTuning = autopas.iteratePairwise(&collisionFunctor);
+  return {collisionFunctor.getCollisions(), stillTuning};
 }
 
 void Simulation::simulationLoop(AutoPas_t &autopas,
                                 Integrator<AutoPas_t> &integrator,
                                 std::vector<Constellation> &constellations,
-                                const YAML::Node &config) {
-  const auto iterations = config["sim"]["iterations"].as<size_t>();
-  const auto constellationInsertionFrequency =
-      config["io"]["constellationFrequency"].IsDefined() ? config["io"]["constellationFrequency"].as<int>() : 1;
-  const auto constellationCutoff =
-      config["io"]["constellationCutoff"].IsDefined() ? config["io"]["constellationCutoff"].as<double>() : 0.1;
-  const auto progressOutputFrequency =
-      config["io"]["progressOutputFrequency"].IsDefined() ? config["io"]["progressOutputFrequency"].as<int>() : 50;
-  const auto deltaT = config["sim"]["deltaT"].as<double>();
-  const auto conjunctionThreshold = config["sim"]["conjunctionThreshold"].as<double>();
+                                ConfigReader &config) {
+  const auto tuningMode = config.get<bool>("autopas/tuningMode", false);
+  const auto iterations = config.get<size_t>("sim/iterations");
+  const auto constellationInsertionFrequency = config.get<int>("io/constellationFrequency", 1);
+  const auto constellationCutoff = config.get<double>("io/constellationCutoff", 0.1);
+  const auto progressOutputFrequency = config.get<int>("io/progressOutputFrequency", 50);
+  const auto deltaT = config.get<double>("sim/deltaT");
+  const auto conjunctionThreshold = config.get<double>("sim/conjunctionThreshold");
   std::vector<Particle> delayedInsertion;
 
-  const auto vtkWriteFrequency =
-      config["io"]["vtk"]["writeFrequency"].IsDefined() ? config["io"]["vtk"]["writeFrequency"].as<size_t>() : 0ul;
+  const auto vtkWriteFrequency = config.get<size_t>("io/vtk/writeFrequency", 0ul);
+
   auto hdf5WriteFrequency = 0u;
 
   std::shared_ptr<HDF5Writer> hdf5Writer;
   std::shared_ptr<ConjuctionWriterInterface> conjuctionWriter;
-  if (config["io"]["hdf5"].IsDefined()) {
-    hdf5WriteFrequency = config["io"]["hdf5"]["writeFrequency"].IsDefined()
-                             ? config["io"]["hdf5"]["writeFrequency"].as<unsigned int>()
-                             : 0u;
-    const auto hdf5CompressionLvl = config["io"]["hdf5"]["compressionLevel"].IsDefined()
-                                        ? config["io"]["hdf5"]["compressionLevel"].as<unsigned int>()
-                                        : 0u;
-    const auto hdf5FileName = config["io"]["hdf5"]["fileName"].IsDefined()
-                                  ? config["io"]["hdf5"]["fileName"].as<std::string>()
-                                  : "simulationData.h5";
+  if (config.defines("io/hdf5")) {
+    hdf5WriteFrequency = config.get<unsigned int>("io/hdf5/writeFrequency", 0u);
+    const auto hdf5CompressionLvl = config.get<unsigned int>("io/hdf5/compressionLevel", 0u);
+    const auto hdf5FileName = config.get<std::string>("io/hdf5/fileName", "simulationData.h5");
 
     hdf5Writer = std::make_shared<HDF5Writer>(hdf5FileName, hdf5CompressionLvl);
     conjuctionWriter = hdf5Writer;
@@ -191,7 +189,10 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
 
   size_t totalConjunctions{0ul};
 
-  for (size_t i = 0ul; i < iterations; ++i) {
+  config.printParsedValues();
+
+  // in tuning mode ignore the iteration counter
+  for (size_t i = 0ul; i < iterations or tuningMode; ++i) {
     // update positions
     timers.integrator.start();
     integrator.integrate(false);
@@ -217,8 +218,13 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     // TODO Check for particles that burn up
 
     timers.collisionDetection.start();
-    auto collisions = collisionDetection(autopas, deltaT, conjunctionThreshold);
+    auto [collisions, stillTuning] = collisionDetection(autopas, deltaT, conjunctionThreshold);
     timers.collisionDetection.stop();
+
+    if (tuningMode and not stillTuning) {
+      dumpCalibratedConfig(config, autopas);
+      return;
+    }
 
     timers.collisionWriting.start();
     totalConjunctions += collisions.size();
@@ -279,7 +285,7 @@ std::vector<Particle> Simulation::checkedInsert(autopas::AutoPas<Particle> &auto
   return delayedInsertion;
 }
 
-void Simulation::run(const YAML::Node &config) {
+void Simulation::run(ConfigReader &config) {
   timers.total.start();
 
   timers.initialization.start();
@@ -296,4 +302,14 @@ void Simulation::run(const YAML::Node &config) {
 
   timers.total.stop();
   timers.printTimers(config);
+}
+
+void Simulation::dumpCalibratedConfig(ConfigReader &config, const AutoPas_t &autopas) const {
+  auto autopasConfig = autopas.getCurrentConfig();
+  config.setValue("autopas/Newton3", autopasConfig.newton3.to_string());
+  config.setValue("autopas/DataLayout", autopasConfig.dataLayout.to_string());
+  config.setValue("autopas/Container", autopasConfig.container.to_string());
+  config.setValue("autopas/Traversal", autopasConfig.traversal.to_string());
+  config.setValue("autopas/tuningMode", "off");
+  config.dumpConfig("calibratedConfig.yaml");
 }

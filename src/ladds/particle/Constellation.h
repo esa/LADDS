@@ -13,6 +13,7 @@
 #include <random>
 
 #include "ladds/particle/Particle.h"
+#include "ladds/io/ConfigReader.h"
 
 /**
  * The Constellation class contains a collection of Particles that inserts these particles into
@@ -32,7 +33,7 @@ class Constellation {
    * @param altitudeDeviation : used to create satellites with normally distributed
    * altitudes. Equals the standard deviation of a normal distribution
    */
-  Constellation(const YAML::Node &constellationConfig, const YAML::Node &config);
+  Constellation(const YAML::Node &constellationConfig, ConfigReader &config);
   /**
    * determines which satellites are being added to the simulation by adding each shell
    * within a time span proportional to the shells size. shells are added plane by plane

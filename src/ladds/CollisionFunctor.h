@@ -31,7 +31,8 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
   }
 
   [[nodiscard]] bool allowsNonNewton3() final {
-    return true;
+    // as we are only interested in any interaction [i,j] it makes no sense to also look at [j,i]
+    return false;
   }
 
   [[nodiscard]] constexpr static auto getNeededAttr() {
@@ -55,7 +56,10 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
 
   void endTraversal(bool newton3) final;
 
-  [[nodiscard]] const std::unordered_map<Particle *, std::tuple<Particle *, double>> &getCollisions() const;
+  using CollisionT = std::tuple<Particle *, Particle *, double>;
+  using CollisionCollectionT = std::vector<CollisionT>;
+
+  [[nodiscard]] const CollisionCollectionT &getCollisions() const;
 
   void AoSFunctor(Particle &i, Particle &j, bool newton3) final;
 
@@ -74,7 +78,7 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
 
   // Buffer struct that is safe against false sharing
   struct ThreadData {
-    std::unordered_map<Particle *, std::tuple<Particle *, double>> collisions{};
+    CollisionCollectionT collisions{};
   } __attribute__((aligned(64)));
 
   // make sure that the size of ThreadData is correct
@@ -83,7 +87,7 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
   // Buffer per thread
   std::vector<ThreadData> _threadData{};
   // key = particle with the smaller id
-  std::unordered_map<Particle *, std::tuple<Particle *, double>> _collisions{};
+  CollisionCollectionT _collisions{};
   const double _cutoffSquare;
   const double _dt;
   const double _minorCutoffSquare;

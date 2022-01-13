@@ -17,11 +17,11 @@ size_t Constellation::particleID = 1000000;
 
 std::mt19937 Constellation::generator{42};
 
-Constellation::Constellation(const YAML::Node &constellationConfig,const YAML::Node &config) {
-  interval = config["io"]["constellationFrequency"].IsDefined() ? config["io"]["constellationFrequency"].as<int>() : 1;
+Constellation::Constellation(const YAML::Node &constellationConfig,ConfigReader &config) {
+  interval = config.get<int>("io/constellationFrequency",1,true);
   // altitudeSpread = 3 * sigma , altitudeDeviation = sigma (= standardDeviation)
-  altitudeDeviation = config["io"]["altitudeSpread"].as<double>() / 3.0;
-  deltaT = config["sim"]["deltaT"].as<double>();
+  altitudeDeviation = config.get<double>("io/altitudeSpread") / 3.0;
+  deltaT = config.get<double>("sim/deltaT");
   setStartTime(constellationConfig["constellation"]["startTime"].as<std::string>());
   setDuration(constellationConfig["constellation"]["duration"].as<std::string>());
 
