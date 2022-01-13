@@ -77,11 +77,8 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
 std::vector<Constellation> SatelliteLoader::loadConstellations(ConfigReader &config, const Logger &logger) {
   std::vector<Constellation> constellations;
   auto constellationList = config.get<std::string>("io/constellationList", "", true);
-  // altitudeSpread = 3 * sigma , altitudeDeviation = sigma (= standardDeviation)
-  auto altitudeDeviation = config.get<double>("io/altitudeSpread", 0.0) / 3.0;
   if (not constellationList.empty()) {
-    const auto insertionFrequency = config.get<int>("io/constellationFrequency", 1);
-    auto constellationDataStr = config.get<std::string>("io/constellationList");
+    auto constellationDataStr = config.get<std::string>("io/constellationList");;
     // count constellation by counting ';'
     int nConstellations = 1;
     for (char con : constellationDataStr) {
@@ -93,13 +90,22 @@ std::vector<Constellation> SatelliteLoader::loadConstellations(ConfigReader &con
     // parse constellation info
     constellations.reserve(nConstellations);
     for (int i = 0; i < nConstellations; ++i) {
-      unsigned long offset = constellationDataStr.find(';', 0);
-      if (offset == 0) {
-        constellations.emplace_back(Constellation(constellationDataStr, insertionFrequency, altitudeDeviation));
-        break;
-      } else {
-        constellations.emplace_back(
-            Constellation(constellationDataStr.substr(0, offset), insertionFrequency, altitudeDeviation));
+      unsigned long offset =
+          (i == nConstellations - 1) ? constellationDataStr.size() : constellationDataStr.find(';', 0);
+      std::string constellationDir = constellationDataStr.substr(0, offset);
+
+      YAML::Node constellationConfig;
+      try {
+        constellationConfig =
+            YAML::LoadFile(std::string(DATADIR) + constellationDir + "/shells_" + constellationDir + ".yaml");
+      } catch (YAML::Exception &e) {
+        std::cout << e.msg << std::endl;
+        logger.log(Logger::Level::warn, "Error loading cfg, Exiting...");
+        exit(1);
+      }
+
+      constellations.emplace_back(Constellation(constellationConfig, config));
+      if (i != nConstellations - 1) {
         constellationDataStr.erase(0, offset + 1);
       }
     }
@@ -110,9 +116,17 @@ std::vector<Constellation> SatelliteLoader::loadConstellations(ConfigReader &con
     }
 
     SPDLOG_LOGGER_INFO(logger.get(),
-                       "{} more particles will be added from {} constellations",
+                       "{} more satellites will be added from {} constellations:",
                        constellationTotalNumSatellites,
                        nConstellations);
+  }
+  for(auto & c : constellations){
+      SPDLOG_LOGGER_INFO(logger.get(),
+                         "{}: insertion starts at iteration: {}, is fully deployed within {} iterations, inserts {} satellites",
+                         c.getConstellationName(),
+                         c.getStartTime(),
+                         c.getDuration(),
+                         c.getConstellationSize());
   }
   return constellations;
 }
