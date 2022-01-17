@@ -98,112 +98,112 @@ class Particle final : public autopas::ParticleFP64 {
   }
 
   /**
-   * @brief Calculates distance from the origin of the coordinate frame
+   * Calculates distance from the origin of the coordinate frame
    *
    * @return Euclidean norm of the #position vector
    */
   [[nodiscard]] double getHeight() const;
 
   /**
-   * @brief Calculates speed of the debris
+   * Calculates speed of the debris
    *
    * @return Euclidean norm of the #velocity vector
    */
   [[nodiscard]] double getSpeed() const;
 
   /**
-   * @brief Calculates the euclidean norm of the #acc_t0
+   * Calculates the euclidean norm of the #acc_t0
    *
    * @return Calculates the euclidean norm of the #acc_t0
    */
   [[nodiscard]] double getAccT0Norm() const;
 
   /**
-   * @brief Calculates the euclidean norm of the #acc_t1
+   * Calculates the euclidean norm of the #acc_t1
    *
    * @return Calculates the euclidean norm of the #acc_t1
    */
   [[nodiscard]] double getAccT1Norm() const;
 
   /**
-   * @brief Getter function for #position vector
+   * Getter function for #position vector
    *
    * @return 3D vector representation of the debris #position
    */
   [[nodiscard]] const std::array<double, 3> &getPosition() const;
 
   /**
-   * @brief Setter function for #position vector
+   * Setter function for #position vector
    *
    * @param position 3D vector representation of the debris #position
    */
   void setPosition(const std::array<double, 3> &position);
 
   /**
-   * @brief Getter function for #velocity vector
+   * Getter function for #velocity vector
    *
    * @return 3D vector representation of the debris #velocity
    */
   [[nodiscard]] const std::array<double, 3> &getVelocity() const;
 
   /**
-   * @brief Setter function for #velocity vector
+   * Setter function for #velocity vector
    *
    * @param velocity 3D vector representation of the debris #velocity
    */
   void setVelocity(const std::array<double, 3> &velocity);
 
   /**
-   * @brief Getter function for #acc_t0 vector
+   * Getter function for #acc_t0 vector
    *
    * @return 3D vector representation of the debris #acc_t0
    */
   [[nodiscard]] const std::array<double, 3> &getAccT0() const;
 
   /**
-   * @brief Setter function for #acc_t0 vector
+   * Setter function for #acc_t0 vector
    *
    * @param accT0 3D vector representation of the debris #acc_t0
    */
   void setAccT0(const std::array<double, 3> &accT0);
 
   /**
-   * @brief Getter function for #acc_t1 vector
+   * Getter function for #acc_t1 vector
    *
    * @return 3D vector representation of the debris #acc_t1
    */
   [[nodiscard]] const std::array<double, 3> &getAccT1() const;
 
   /**
-   * @brief Setter function for #acc_t1 vector
+   * Setter function for #acc_t1 vector
    *
    * @param accT1 3D vector representation of the debris #acc_t1
    */
   void setAccT1(const std::array<double, 3> &accT1);
 
   /**
-   * @brief Getter function for #aom
+   * Getter function for #aom
    *
    * @return value of #aom
    */
   [[nodiscard]] double getAom() const;
 
   /**
-   * @brief Setter function for #aom
+   * Setter function for #aom
    *
    * @param aom New value #aom
    */
   void setAom(double aom);
 
   /**
-   * @brief Getter function for #bc_inv
+   * Getter function for #bc_inv
    *
    * @return Value of #bc_inv
    */
   [[nodiscard]] double getBcInv() const;
 
   /**
-   * @brief Setter function for #bc_inv
+   * Setter function for #bc_inv
    *
    * @param bcInv New value of#bc_inv
    */
