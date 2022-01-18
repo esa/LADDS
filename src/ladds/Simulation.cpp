@@ -124,7 +124,7 @@ Simulation::initIntegrator(AutoPas_t &autopas, ConfigReader &config) {
                                                            OutputFile::CSV,
                                                            selectedPropagatorComponents);
   auto accumulator = std::make_unique<Acceleration::AccelerationAccumulator<AutoPas_t>>(
-      selectedPropagatorComponents, autopas, 0.0, *csvWriter);
+      selectedPropagatorComponents, autopas, 0.0, csvWriter.get());
   auto deltaT = config.get<double>("sim/deltaT");
   auto integrator = std::make_unique<Integrator<AutoPas_t>>(autopas, *accumulator, deltaT);
 
