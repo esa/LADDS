@@ -55,9 +55,11 @@ TEST(CollisionFunctorTest, ThreeParticles) {
 /**
  * Set up two particles per ActivityState, all very close to each other.
  * We expect exactly the following collisions:
+ *   passiveSmall      x  passiveSmall
  *   passiveSmall      x  passiveLarge
  *   passiveSmall      x  evasive
  *   passiveSmall      x  evasivePreserving
+ *   passiveLarge      x  passiveLarge
  * Thus the following collisions to be disregarded:
  *   evasive           x  passiveLarge
  *   evasive           x  evasive
@@ -68,31 +70,38 @@ TEST(CollisionFunctorTest, ThreeParticles) {
 TEST(CollisionFunctorTest, MixActivityStates) {
   constexpr double cutoff{1.};
   constexpr bool newton3{false};
-  constexpr size_t numDebris{6};
+  constexpr size_t numDebris{8};
 
   std::vector<Particle> debris;
   debris.reserve(numDebris);
 
-  // passive small
+  // passive small 1
   debris.emplace_back(
       std::array<double, 3>{0., 0., 0.}, std::array<double, 3>{0., 0., 0.}, 0, Particle::ActivityState::passive);
   debris.back().setRadius(0.001);
-  // passive large
+  // passive small 2
+  debris.emplace_back(
+      std::array<double, 3>{0., 0., 0.1}, std::array<double, 3>{0., 0., 0.}, 0, Particle::ActivityState::passive);
+  debris.back().setRadius(0.001);
+  // passive large 1
   debris.emplace_back(
       std::array<double, 3>{0.1, 0., 0.}, std::array<double, 3>{0., 0., 0.}, 1, Particle::ActivityState::passive);
+  // passive large 2
+  debris.emplace_back(
+      std::array<double, 3>{0.1, 0., 0.1}, std::array<double, 3>{0., 0., 0.}, 1, Particle::ActivityState::passive);
   // evasive 1
   debris.emplace_back(
       std::array<double, 3>{0., 0.1, 0.}, std::array<double, 3>{0., 0., 0.}, 2, Particle::ActivityState::evasive);
   // evasive 2
   debris.emplace_back(
-      std::array<double, 3>{0.1, 0.1, 0.}, std::array<double, 3>{0., 0., 0.}, 3, Particle::ActivityState::evasive);
+      std::array<double, 3>{0., 0.1, 0.1}, std::array<double, 3>{0., 0., 0.}, 3, Particle::ActivityState::evasive);
   // evasivePreserving 1
-  debris.emplace_back(std::array<double, 3>{0., 0., 0.1},
+  debris.emplace_back(std::array<double, 3>{0.1, 0.1, 0.},
                       std::array<double, 3>{0., 0., 0.},
                       4,
                       Particle::ActivityState::evasivePreserving);
   // evasivePreserving 2
-  debris.emplace_back(std::array<double, 3>{0.1, 0., 0.1},
+  debris.emplace_back(std::array<double, 3>{0.1, 0.1, 0.1},
                       std::array<double, 3>{0., 0., 0.},
                       5,
                       Particle::ActivityState::evasivePreserving);
@@ -120,11 +129,23 @@ TEST(CollisionFunctorTest, MixActivityStates) {
 
   // set up expectations
   decltype(collisionIdPairs) expectations{
+      // passive small 1 collides with everything
       {debris[0].getID(), debris[1].getID()},
       {debris[0].getID(), debris[2].getID()},
       {debris[0].getID(), debris[3].getID()},
       {debris[0].getID(), debris[4].getID()},
       {debris[0].getID(), debris[5].getID()},
+      {debris[0].getID(), debris[6].getID()},
+      {debris[0].getID(), debris[7].getID()},
+      // passive small 2 collides with everything (collsion with passive small 1 already covered above)
+      {debris[1].getID(), debris[2].getID()},
+      {debris[1].getID(), debris[3].getID()},
+      {debris[1].getID(), debris[4].getID()},
+      {debris[1].getID(), debris[5].getID()},
+      {debris[1].getID(), debris[6].getID()},
+      {debris[1].getID(), debris[7].getID()},
+      // passive large 1 and 2 collide
+      {debris[2].getID(), debris[3].getID()},
   };
 
   EXPECT_EQ(collisions.size(), expectations.size());

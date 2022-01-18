@@ -30,13 +30,18 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   using autopas::utils::ArrayMath::mulScalar;
   using autopas::utils::ArrayMath::sub;
 
-  // skip if we look at a deleted particle
+  // skip if interaction involves:
+  //  - any deleted particles
+  //  - two actively evasive satellites
+  //  - one evasive and one of detectable size
   if (i.isDummy() or j.isDummy()) {
     return;
   }
-  // skip if neither is passive nor small
-  if ((i.getActivityState() > Particle::ActivityState::passive or i.getRadius() > _minDetectionRadius) and
-      (j.getActivityState() > Particle::ActivityState::passive or j.getRadius() > _minDetectionRadius)) {
+  const auto &iActivity = i.getActivityState();
+  const auto &jActivity = j.getActivityState();
+  if ((iActivity > Particle::ActivityState::passive and jActivity > Particle::ActivityState::passive) or
+      (iActivity > Particle::ActivityState::passive and j.getRadius() >= _minDetectionRadius) or
+      (jActivity > Particle::ActivityState::passive and i.getRadius() >= _minDetectionRadius)) {
     return;
   }
 
