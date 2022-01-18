@@ -27,7 +27,8 @@ TEST(CollisionFunctorTest, ThreeParticles) {
   for (size_t i = 0; i < numDebris; ++i) {
     debris.emplace_back(std::array<double, 3>{static_cast<double>(i), 0., 0.},
                         std::array<double, 3>{0., static_cast<double>(i), 0.},
-                        i);
+                        i,
+                        Particle::ActivityState::passive);
   }
 
   CollisionFunctor collisionFunctor(cutoff, 10.0, cutoff);

@@ -28,7 +28,8 @@ void CollisionFunctorIntegrationTest::SetUpTestSuite() {
                                0.,
                                0.,
                            },
-                           0};
+                           0,
+                           Particle::ActivityState::passive};
   _debris.reserve(numDebris);
 
   // fix seed for randomPosition()
