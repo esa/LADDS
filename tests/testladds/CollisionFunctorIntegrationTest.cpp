@@ -6,29 +6,29 @@
 
 #include "CollisionFunctorIntegrationTest.h"
 
-#include <autopas/AutoPas.h>
+#include <autopas/AutoPasDecl.h>
 #include <autopasTools/generators/RandomGenerator.h>
 #include <gmock/gmock-matchers.h>
 #include <gmock/gmock-more-matchers.h>
 #include <ladds/CollisionFunctor.h>
 
-extern template class autopas::AutoPas<Debris>;
-extern template bool autopas::AutoPas<Debris>::iteratePairwise(CollisionFunctor *);
+extern template class autopas::AutoPas<Particle>;
+extern template bool autopas::AutoPas<Particle>::iteratePairwise(CollisionFunctor *);
 
 void CollisionFunctorIntegrationTest::SetUpTestSuite() {
   using autopasTools::generators::RandomGenerator;
   constexpr size_t numDebris = 15;
-  Debris defaultParticle{{
-                             0.,
-                             0.,
-                             0.,
-                         },
-                         {
-                             0.,
-                             0.,
-                             0.,
-                         },
-                         0};
+  Particle defaultParticle{{
+                               0.,
+                               0.,
+                               0.,
+                           },
+                           {
+                               0.,
+                               0.,
+                               0.,
+                           },
+                           0};
   _debris.reserve(numDebris);
 
   // fix seed for randomPosition()
@@ -71,10 +71,19 @@ TEST_P(CollisionFunctorIntegrationTest, testAutoPasAlgorithm) {
 
   const auto &[traversal, dataLayout, newton3, cellSizeFactor] = GetParam();
 
-  CollisionFunctor functor(_cutoff);
+  // This is currently necessary until we implement the SoA functor
+  if (dataLayout == autopas::DataLayoutOption::soa) {
+    GTEST_SKIP_("SoAFunctor currently not implemented!");
+  }
+
+  CollisionFunctor functor(_cutoff, 10.0, 0.1 * _cutoff);
+
+  if (not functor.allowsNonNewton3() and newton3 == autopas::Newton3Option::disabled) {
+    GTEST_SKIP_("Functor does not support Newton3==disabled!");
+  }
 
   // configure the AutoPas container
-  autopas::AutoPas<Debris> autopas;
+  autopas::AutoPas<Particle> autopas;
   // allow all container options since the traversal determines it uniquely
   autopas.setAllowedContainers({autopas::ContainerOption::getAllOptions()});
   autopas.setAllowedTraversals({traversal});
@@ -102,7 +111,7 @@ TEST_P(CollisionFunctorIntegrationTest, testAutoPasAlgorithm) {
   auto collisionPtrs = functor.getCollisions();
   std::vector<std::pair<size_t, size_t>> collisionIDs;
   collisionIDs.reserve(collisionPtrs.size());
-  for (const auto &[pi, pj] : collisionPtrs) {
+  for (const auto &[pi, pj, dist] : collisionPtrs) {
     collisionIDs.emplace_back(pi->getID(), pj->getID());
   }
 
@@ -110,7 +119,8 @@ TEST_P(CollisionFunctorIntegrationTest, testAutoPasAlgorithm) {
 }
 
 // Generate tests for all configuration combinations
-INSTANTIATE_TEST_SUITE_P(Generated, CollisionFunctorIntegrationTest,
+INSTANTIATE_TEST_SUITE_P(Generated,
+                         CollisionFunctorIntegrationTest,
                          testing::Combine(testing::ValuesIn(autopas::TraversalOption::getAllOptions()),
                                           testing::ValuesIn(autopas::DataLayoutOption::getAllOptions()),
                                           testing::ValuesIn(autopas::Newton3Option::getAllOptions()),

@@ -34,3 +34,10 @@
 # IDE Stuff
 *.idea
 *build*
+.cache
+.vscode
+
+# Data folder
+data
+*.ipynb_checkpoints
+results

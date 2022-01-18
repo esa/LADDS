@@ -10,7 +10,7 @@
 #include <autopas/options/Newton3Option.h>
 #include <autopas/options/TraversalOption.h>
 #include <gtest/gtest.h>
-#include <ladds/Debris.h>
+#include <ladds/particle/Particle.h>
 
 #include "tuple"
 #include "vector"
@@ -53,7 +53,7 @@ class CollisionFunctorIntegrationTest : public testing::TestWithParam<ParameterT
   };
 
   static inline std::vector<std::pair<size_t, size_t>> _reference{};
-  static inline std::vector<Debris> _debris{};
+  static inline std::vector<Particle> _debris{};
   static constexpr double _cutoff{1.};
   static constexpr std::array<double, 3> _boxMin{0., 0., 0.};
   static constexpr std::array<double, 3> _boxMax{5., 5., 5.};

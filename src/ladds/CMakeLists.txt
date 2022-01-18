@@ -14,5 +14,26 @@ target_compile_features(${EXECUTABLE_NAME} PUBLIC cxx_std_17)
 target_include_directories(${EXECUTABLE_NAME} PUBLIC ${LADDS_SOURCE_DIR}/src/)
 
 target_link_libraries(${EXECUTABLE_NAME}
-                      autopas
-                      )
+        PUBLIC
+        autopas
+        debris_sim_lib
+        breakupModel_lib
+        "$<$<BOOL:${LADDS_HDF5}>:hdf5::hdf5_hl;hdf5::hdf5;h5pp::h5pp>"
+)
+
+# note: in spdlog trace is the highest level
+set(
+        LADDS_MAX_LOGLVL
+        "DEBUG"
+        CACHE
+        STRING "Choose the most verbose log level that shall be compiled."
+)
+# let ccmake and cmake-gui offer the default build type options
+set_property(CACHE LADDS_MAX_LOGLVL PROPERTY STRINGS "TRACE;DEBUG;INFO;WARN;ERR;CRITICAL;OFF")
+
+target_compile_definitions(${EXECUTABLE_NAME}
+        PUBLIC
+        SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_${LADDS_MAX_LOGLVL}
+        DATADIR=\"${PROJECT_SOURCE_DIR}/data/\"
+        $<$<BOOL:${LADDS_HDF5}>:LADDS_HDF5=1>
+)

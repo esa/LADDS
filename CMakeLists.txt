@@ -1,4 +1,6 @@
-cmake_minimum_required(VERSION 3.14) #at least 3.14 for FetchContent_MakeAvailable
+cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
+#at least 3.14 for FetchContent_MakeAvailable
+#at least 3.19 for a correctly working FindHDF5 cmake module
 project(LADDS)
 
 set(EXECUTABLE_NAME ladds)
@@ -27,10 +29,14 @@ option(GIT_SUBMODULES_SSH "Use SSH for git submodules instead of HTTPS" OFF)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/)
 
 # modules that do NOT need the main target
+include(ladds_sanitizers)
 include(ladds_clang-format)
 include(ladds_doxygen)
 
 include(autopas)
+include(propagator)
+include(breakupModel)
+include(ladds_hdf5)
 
 add_subdirectory(src)
 
@@ -40,3 +46,7 @@ add_subdirectory(tests/testladds)
 
 # modules that need the main target
 include(ladds_compilerWarnings)
+
+# fetch the default configuration file from the cfg folder
+file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/cfg)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cfg/default_cfg.yaml ${CMAKE_CURRENT_BINARY_DIR}/cfg/default_cfg.yaml COPYONLY)

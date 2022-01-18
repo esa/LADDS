@@ -1,0 +1,6 @@
+pos.csv filter=lfs diff=lfs merge=lfs -text
+v.csv filter=lfs diff=lfs merge=lfs -text
+*/pos_*.csv filter=lfs diff=lfs merge=lfs -text
+*/v_*.csv filter=lfs diff=lfs merge=lfs -text
+*/shells_*.txt filter=lfs diff=lfs merge=lfs -text
+*/xparams_*.txt filter=lfs diff=lfs merge=lfs -text

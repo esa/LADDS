@@ -9,6 +9,6 @@
  */
 
 #include "autopas/AutoPasImpl.h"
-#include "ladds/Debris.h"
+#include "ladds/particle/Particle.h"
 
-template class autopas::AutoPas<Debris>;
+template class autopas::AutoPas<Particle>;
