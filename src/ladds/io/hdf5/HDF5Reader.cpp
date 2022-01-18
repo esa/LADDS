@@ -29,9 +29,10 @@ std::vector<Particle> HDF5Reader::readParticles(size_t iteration) const {
 
   particles.reserve(pos.size());
   for (size_t i = 0; i < pos.size(); ++i) {
+    // TODO parse activity state
     particles.emplace_back(std::array<double, 3>{pos[i].x, pos[i].y, pos[i].z},
                            std::array<double, 3>{vel[i].x, vel[i].y, vel[i].z},
-                           ids[i]);
+                           ids[i], Particle::ActivityState::passive);
   }
 #endif
   return particles;

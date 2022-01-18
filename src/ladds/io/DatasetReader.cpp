@@ -33,7 +33,8 @@ std::vector<Particle> DatasetReader::readDataset(const std::string &position_fil
 
                    const std::array<double, 3> posArray = {x, y, z};
                    const std::array<double, 3> velArray = {vx, vy, vz};
-                   return Particle(posArray, velArray, particleId++);
+                   // TODO: parse activity information and set it here!
+                   return Particle(posArray, velArray, particleId++, Particle::ActivityState::passive);
                  });
   return particleCollection;
 }

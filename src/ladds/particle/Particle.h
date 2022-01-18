@@ -16,9 +16,40 @@
  */
 class Particle final : public autopas::ParticleFP64 {
  public:
-  explicit Particle(std::array<double, 3> pos, std::array<double, 3> v, size_t debrisId)
-      : autopas::ParticleFP64(pos, v, debrisId) {}
+  /**
+   * Describes how active a particle behaves. This is relevant for the propagator to determine which forces are applied.
+   */
+  enum class ActivityState : int {
+    /**
+     * Simply float around space and is subject to all external influences.
+     */
+    passive,
 
+    /**
+     * Can actively change its trajectory to avoid collisions.
+     */
+    evasive,
+
+    /**
+     * Same as evasive but additionally can actively maneuver to preserve their orbit.
+     * This is modelled only only applying Keplerian forces.
+     */
+    evasivePreserving,
+  };
+
+  /**
+   * Constructor
+   * @param pos
+   * @param v
+   * @param debrisId
+   * @param activityState
+   */
+  Particle(std::array<double, 3> pos, std::array<double, 3> v, size_t debrisId, ActivityState activityState)
+      : autopas::ParticleFP64(pos, v, debrisId), activityState(activityState) {}
+
+  /**
+   * Destructor.
+   */
   ~Particle() final = default;
 
   /**
@@ -210,6 +241,18 @@ class Particle final : public autopas::ParticleFP64 {
   void setBcInv(double bcInv);
 
   /**
+   * Getter for the activityState.
+   * @return
+   */
+  ActivityState getActivityState() const;
+
+  /**
+   * Setter for the activityState.
+   * @param activityState
+   */
+  void setActivityState(ActivityState activityState);
+
+  /**
    * Stream operator
    * @param os
    * @param particle
@@ -235,4 +278,9 @@ class Particle final : public autopas::ParticleFP64 {
    * Used for Acceleration::DragComponent::apply().
    */
   double bc_inv{0.};
+
+  /**
+   * If a particle can actively influence its orbit. See ActivityState.
+   */
+  ActivityState activityState;
 };

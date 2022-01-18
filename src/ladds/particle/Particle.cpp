@@ -72,6 +72,14 @@ void Particle::setBcInv(const double bcInv) {
   bc_inv = bcInv;
 }
 
+Particle::ActivityState Particle::getActivityState() const {
+  return activityState;
+}
+
+void Particle::setActivityState(Particle::ActivityState activityState) {
+  Particle::activityState = activityState;
+}
+
 std::ostream &operator<<(std::ostream &os, const Particle &particle) {
   os << particle.toString();
   return os;

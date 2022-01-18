@@ -18,7 +18,8 @@ namespace SatelliteToParticleConverter {
   const auto &position = autopas::utils::ArrayMath::mulScalar(satellite.getPosition(), 1. / 1000.0);
   const auto &velocity = autopas::utils::ArrayMath::mulScalar(satellite.getVelocity(), 1. / 1000.0);
 
-  return Particle(position, velocity, satellite.getId());
+  // TODO: add activity information to the satellite class and use it here!
+  return Particle{position, velocity, satellite.getId(), Particle::ActivityState::passive};
 }
 
 /**

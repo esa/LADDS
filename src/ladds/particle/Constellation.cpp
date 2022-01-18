@@ -148,7 +148,7 @@ std::vector<Particle> Constellation::readDatasetConstellation(const std::string 
 
                    const std::array<double, 3> posArray = {x, y, z};
                    const std::array<double, 3> velArray = {vx, vy, vz};
-                   return Particle(posArray, velArray, particleId++);
+                   return Particle(posArray, velArray, particleId++, Particle::ActivityState::passive);
                  });
   return particleCollection;
 }
