@@ -11,8 +11,12 @@
 
 #include <algorithm>
 
-CollisionFunctor::CollisionFunctor(double cutoff, double dt, double minorCutoff)
-    : Functor(cutoff), _cutoffSquare(cutoff * cutoff), _dt(dt), _minorCutoffSquare(minorCutoff * minorCutoff) {
+CollisionFunctor::CollisionFunctor(double cutoff, double dt, double minorCutoff, double minDetectionRadius)
+    : Functor(cutoff),
+      _cutoffSquare(cutoff * cutoff),
+      _dt(dt),
+      _minorCutoffSquare(minorCutoff * minorCutoff),
+      _minDetectionRadius(minDetectionRadius) {
   _threadData.resize(autopas::autopas_get_max_threads());
 }
 
@@ -26,8 +30,13 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   using autopas::utils::ArrayMath::mulScalar;
   using autopas::utils::ArrayMath::sub;
 
-  // skip interaction with deleted particles
+  // skip if we look at a deleted particle
   if (i.isDummy() or j.isDummy()) {
+    return;
+  }
+  // skip if neither is passive nor small
+  if ((i.getActivityState() > Particle::ActivityState::passive or i.getRadius() > _minDetectionRadius) and
+      (j.getActivityState() > Particle::ActivityState::passive or j.getRadius() > _minDetectionRadius)) {
     return;
   }
 

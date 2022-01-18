@@ -82,7 +82,8 @@ class Simulation {
    */
   std::tuple<CollisionFunctor::CollisionCollectionT, bool> collisionDetection(AutoPas_t &autopas,
                                                                               double deltaT,
-                                                                              double conjunctionThreshold);
+                                                                              double conjunctionThreshold,
+                                                                              double minDetectionRadius);
 
   /**
    * Updates the configuration with the latest AutoPas configuration and writes it to a new YAML file.

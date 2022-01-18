@@ -150,9 +150,10 @@ void Simulation::updateConstellation(AutoPas_t &autopas,
 
 std::tuple<CollisionFunctor::CollisionCollectionT, bool> Simulation::collisionDetection(AutoPas_t &autopas,
                                                                                         double deltaT,
-                                                                                        double conjunctionThreshold) {
+                                                                                        double conjunctionThreshold,
+                                                                                        double minDetectionRadius) {
   // pairwise interaction
-  CollisionFunctor collisionFunctor(autopas.getCutoff(), deltaT, conjunctionThreshold);
+  CollisionFunctor collisionFunctor(autopas.getCutoff(), deltaT, conjunctionThreshold, minDetectionRadius);
   bool stillTuning = autopas.iteratePairwise(&collisionFunctor);
   return {collisionFunctor.getCollisions(), stillTuning};
 }
@@ -168,6 +169,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
   const auto progressOutputFrequency = config.get<int>("io/progressOutputFrequency", 50);
   const auto deltaT = config.get<double>("sim/deltaT");
   const auto conjunctionThreshold = config.get<double>("sim/conjunctionThreshold");
+  const auto minDetectionRadius = config.get<double>("sim/minDetectionRadius", 0.1);
   std::vector<Particle> delayedInsertion;
 
   const auto vtkWriteFrequency = config.get<size_t>("io/vtk/writeFrequency", 0ul);
@@ -218,7 +220,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     // TODO Check for particles that burn up
 
     timers.collisionDetection.start();
-    auto [collisions, stillTuning] = collisionDetection(autopas, deltaT, conjunctionThreshold);
+    auto [collisions, stillTuning] = collisionDetection(autopas, deltaT, conjunctionThreshold, minDetectionRadius);
     timers.collisionDetection.stop();
 
     if (tuningMode and not stillTuning) {

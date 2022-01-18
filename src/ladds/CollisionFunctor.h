@@ -20,7 +20,7 @@
  */
 class CollisionFunctor final : public autopas::Functor<Particle, CollisionFunctor> {
  public:
-  explicit CollisionFunctor(double cutoff, double dt, double minorCutoff);
+  explicit CollisionFunctor(double cutoff, double dt, double minorCutoff, double minDetectionRadius);
 
   [[nodiscard]] bool isRelevantForTuning() final {
     return true;
@@ -91,4 +91,9 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
   const double _cutoffSquare;
   const double _dt;
   const double _minorCutoffSquare;
+  /**
+   * Minimal object size in meter that is assumed to be detectable.
+   * Objects larger than this can be evaded by evasive particles.
+   */
+  const double _minDetectionRadius;
 };
