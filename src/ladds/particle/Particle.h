@@ -253,6 +253,30 @@ class Particle final : public autopas::ParticleFP64 {
   void setActivityState(ActivityState activityState);
 
   /**
+   * Getter for mass.
+   * @return
+   */
+  double getMass() const;
+
+  /**
+   * Setter for mass.
+   * @param mass
+   */
+  void setMass(double mass);
+
+  /**
+   * Getter for radius.
+   * @return
+   */
+  double getRadius() const;
+
+  /**
+   * Setter for radius.
+   * @param radius
+   */
+  void setRadius(double radius);
+
+  /**
    * Stream operator
    * @param os
    * @param particle
@@ -271,8 +295,17 @@ class Particle final : public autopas::ParticleFP64 {
   std::array<double, 3> acc_t1{};
   /**
    * Area to mass ration.
+   * @note FIXME: can this be removed?
    */
   double aom{0.};
+  /**
+   * Mass of the object.
+   */
+  double mass{1.};
+  /**
+   * Radius of the object when approximating it as a ball.
+   */
+  double radius{1.};
   /**
    * C_cA)/m is the inverse of the ballistic coefficient.
    * Used for Acceleration::DragComponent::apply().

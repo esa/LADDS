@@ -84,3 +84,19 @@ std::ostream &operator<<(std::ostream &os, const Particle &particle) {
   os << particle.toString();
   return os;
 }
+
+double Particle::getMass() const {
+  return mass;
+}
+
+void Particle::setMass(double mass) {
+  Particle::mass = mass;
+}
+
+double Particle::getRadius() const {
+  return radius;
+}
+
+void Particle::setRadius(double radius) {
+  Particle::radius = radius;
+}
