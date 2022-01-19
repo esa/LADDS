@@ -12,15 +12,16 @@
 
 #include <string>
 
-#include "HDF5Writer.h"
+#include "HDF5Definitions.h"
 #include "ladds/particle/Particle.h"
+
 class HDF5Reader {
  public:
   explicit HDF5Reader(const std::string &filename);
 
   std::vector<Particle> readParticles(size_t iteration) const;
 
-  std::vector<HDF5Writer::CollisionInfo> readCollisions(size_t iteration) const;
+  std::vector<HDF5Definitions::CollisionInfo> readCollisions(size_t iteration) const;
 
   /**
    * Finds the last iteration that is stored in the file.

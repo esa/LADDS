@@ -85,10 +85,10 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestCollisionData) {
   // 4. check that read data is equal to generated data
   EXPECT_EQ(conjunctions.size(), conjunctionsHDF5.size());
   for (const auto &[ptrARef, ptrBRef, distRef] : conjunctions) {
-    const auto idARef = static_cast<HDF5Writer::IntType>(ptrARef->getID());
-    const auto idBRef = static_cast<HDF5Writer::IntType>(ptrBRef->getID());
+    const auto idARef = static_cast<HDF5Definitions::IntType>(ptrARef->getID());
+    const auto idBRef = static_cast<HDF5Definitions::IntType>(ptrBRef->getID());
 
-    HDF5Writer::CollisionInfo collisionInfo{idARef, idBRef, static_cast<HDF5Writer::FloatType>(distRef)};
+    HDF5Definitions::CollisionInfo collisionInfo{idARef, idBRef, static_cast<HDF5Definitions::FloatType>(distRef)};
     EXPECT_THAT(conjunctionsHDF5, ::testing::Contains(collisionInfo));
   }
   // cleanup

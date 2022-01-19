@@ -44,41 +44,6 @@ class HDF5Writer final : public ConjuctionWriterInterface {
    */
   void writeConjunctions(size_t iteration, const CollisionFunctor::CollisionCollectionT &collisions) override;
 
-  /**
-   * Type to which any floating point data will be cast before writing.
-   */
-  using FloatType = float;
-  /**
-   * Type to which any integer data will be cast before writing.
-   */
-  using IntType = unsigned int;
-
-  /**
-   * This represents one line of 3D vector data in the HDF5 file.
-   */
-  template <class T>
-  struct Vec3 {
-    T x, y, z;
-  };
-
-  static constexpr auto groupParticleData = "ParticleData/";
-  static constexpr auto datasetParticlePositions = "/Particles/Positions";
-  static constexpr auto datasetParticleVelocities = "/Particles/Velocities";
-  static constexpr auto datasetParticleIDs = "/Particles/IDs";
-
-  static constexpr auto groupCollisionData = "CollisionData/";
-  static constexpr auto datasetCollisions = "/Collisions";
-
-  /**
-   * Type for the information of a single collision.
-   */
-  struct CollisionInfo {
-    unsigned int idA, idB;
-    float distanceSquared;
-    bool operator==(const CollisionInfo &rhs) const;
-    bool operator!=(const CollisionInfo &rhs) const;
-  };
-
  private:
 #ifdef LADDS_HDF5
   /**
