@@ -21,70 +21,70 @@
  * ConstellationGeneration notebook
  */
 class Constellation {
- public:
-  /**
-   * Constructs a constellation object
+public:
+    /**
+     * Constructs a constellation object
 
-   * @param constellationConfig : YAML::Node object with the constellation data. Valid
-   * constellation data can be created using the ConstellationGeneration notebook
-   * and must be in the projects data folder
-   * @param interval : the interval of satellites being added to the simulation is
-   * passed for internal logic
-   * @param altitudeDeviation : used to create satellites with normally distributed
-   * altitudes. Equals the standard deviation of a normal distribution
-   */
-  Constellation(const YAML::Node &constellationConfig, ConfigReader &config);
-  /**
-   * determines which satellites are being added to the simulation by adding each shell
-   * within a time span proportional to the shells size. shells are added plane by plane
-   * and linearly over time
-   * @return std::vector<Particle> : satellites to be added to the simulation
-   */
-  std::vector<Particle> tick();
+     * @param constellationConfig : YAML::Node object with the constellation data. Valid
+     * constellation data can be created using the ConstellationGeneration notebook
+     * and must be in the projects data folder
+     * @param interval : the interval of satellites being added to the simulation is
+     * passed for internal logic
+     * @param altitudeDeviation : used to create satellites with normally distributed
+     * altitudes. Equals the standard deviation of a normal distribution
+     */
+    Constellation(const YAML::Node &constellationConfig, ConfigReader &config);
+    /**
+     * determines which satellites are being added to the simulation by adding each shell
+     * within a time span proportional to the shells size. shells are added plane by plane
+     * and linearly over time
+     * @return std::vector<Particle> : satellites to be added to the simulation
+     */
+    std::vector<Particle> tick();
 
-  /**
-   * getter for constellationSize = number of satellites in constellation
-   * @return int : constellationSize
-   */
-  [[nodiscard]] size_t getConstellationSize() const;
+    /**
+     * getter for constellationSize = number of satellites in constellation
+     * @return int : constellationSize
+     */
+    [[nodiscard]] size_t getConstellationSize() const;
 
-  /**
-   * getter for constellationName = name of this constellation
-   * @return std::sting : constellationName
-   */
-  [[nodiscard]] std::string getConstellationName() const;
+    /**
+     * getter for constellationName = name of this constellation
+     * @return std::sting : constellationName
+     */
+    [[nodiscard]] std::string getConstellationName() const;
 
-  /**
-   * getter for startTime = timestamp (iteration) where constellation insertion starts
-   * @return size_t : timestamp (iteration) where constellation insertion starts
-   */
-  [[nodiscard]] long getStartTime() const;
+    /**
+     * getter for startTime = timestamp (iteration) where constellation insertion starts
+     * @return size_t : timestamp (iteration) where constellation insertion starts
+     */
+    [[nodiscard]] long getStartTime() const;
 
-  /**
-   * getter for duration = timespan over which constellation insertion takes place
-   * @return size_t : timespan over which constellation insertion takes place
-   */
-  [[nodiscard]] size_t getDuration() const;
+    /**
+     * getter for duration = timespan over which constellation insertion takes place
+     * @return size_t : timespan over which constellation insertion takes place
+     */
+    [[nodiscard]] size_t getDuration() const;
 
- private:
-  /**
-   * stores the satellites of the constellation that have not been added to the simulation
-   */
-  std::deque<Particle> satellites{};
+private:
+    /**
+     * stores the satellites of the constellation that have not been added to the simulation
+     */
+    std::deque<Particle> satellites{};
 
-  /**
-   * the name of the constellation
-   */
-  std::string constellationName;
+    /**
+     * the name of the constellation
+     */
+    std::string constellationName;
 
-  /**
-   * sets internal attribute startTime according to the passed date string
-   * startTime_str
-   * @param startTime a point in time either in iterations or as a date string. if
-   * the string represents a natural number, it is considered as an iteration
-   * and the string is converted to a number, if it is a date string it is converted
-   * to an iteration timestamp before startTime is set to that value
-   */
+    /**
+     * sets internal attribute startTime according to the passed date string
+     * startTime_str
+     * @param startTime a point in time either in iterations or as a date string. if
+     * the string represents a natural number, it is considered as an iteration
+     * and the string is converted to a number, if it is a date string it is converted
+     * to an iteration timestamp before startTime is set to that value
+     */
     void setStartTime(const std::string &startTime_str);
 
     /**
@@ -96,122 +96,150 @@ class Constellation {
      */
     void setDuration(const std::string &duration_str);
 
-  /**
-   * Reads the passed position and velocity csv files. Returns a vector of particles.
-   */
-  static std::vector<Particle> readDatasetConstellation(const std::string &position_filepath,
-                                                        const std::string &velocity_filepath);
+    /**
+     * Reads the passed position and velocity csv files. Returns a vector of particles.
+     */
+    static std::vector<Particle> readDatasetConstellation(const std::string &position_filepath,
+                                                          const std::string &velocity_filepath);
 
-  /**
-   * changes the pos vector by adding a random, normal distributed offset to the altitude
-   * (offset dependent on altitudeVariance)
-   * @param pos input position
-   * @return new position with random altitude
-   */
-  std::array<double, 3> randomDisplacement(const std::array<double, 3> &pos);
+    /**
+     * changes the pos vector by adding a random, normal distributed offset to the altitude
+     * (offset dependent on altitudeVariance)
+     * @param pos input position
+     * @return new position with random altitude
+     */
+    std::array<double, 3> randomDisplacement(const std::array<double, 3> &pos);
 
-  /**
-   * iteration from which constellation starts being added to the simulation
-   */
-  long startTime = 0;
+    /**
+     * calculates the revolutions times of each shell. Is to be used in the constructor
+     * @param nShells
+     */
+    void calculateRevolutionTimes(size_t nShells);
 
-  /**
-   * time span over which satellites of the constellation are being added
-   */
-  size_t duration = 0;
+    /**
+     * calculate rotation matrix
+     */
+    std::array<std::array<double,3>,3> calculateRotationMatrix(std::array<double,3> pos, std::array<double,3> v, size_t shellIndex);
 
-  /**
-   * internal clock that determines which satellites are added to the simulation,
-   * starts the count when constellation is set to 'a' = active
-   */
-  size_t timeActive = 0;
+    /**
+     * apply rotation to the particle
+     * @param p
+     * @param rotation
+     * @return transformed particle
+     */
+    Particle transformSatellite(Particle p,const std::array<std::array<double,3>,3>& rotation);
 
-  /**
-   * the interval of satellites being added to the simulation is
-   * passed for internal logic
-   */
-  size_t interval = 0;
+    /**
+     * iteration from which constellation starts being added to the simulation
+     */
+    long startTime = 0;
 
-  /**
-   * deltaT of the simulation passed to constellations for converting datestring time
-   * into simulation time expressed in iterations
-   */
-  double deltaT;
+    /**
+     * time span over which satellites of the constellation are being added
+     */
+    size_t duration = 0;
 
-  /**
-   * multiples of interval. the constellations state is set to 'a' = active whenever
-   * simulationTime reaches startTime
-   */
-  size_t simulationTime = 0;
+    /**
+     * internal clock that determines which satellites are added to the simulation,
+     * starts the count when constellation is set to 'a' = active
+     */
+    size_t timeActive = 0;
 
-  /**
-   * The three different possible internal states of a constellation object:
-   * inactive: startTime has not been reached yet
-   * active: the constellation is currently being added to the simulation
-   * deployed: the constellation is fully deployed, and tick becomes a NOOP
-   */
-  enum Status { inactive, active, deployed };
+    /**
+     * the interval of satellites being added to the simulation is
+     * passed for internal logic
+     */
+    size_t interval = 0;
 
-  /**
-   * variable that holds the internal state of the constellation object that determines
-   * the behaviour of tick(). There are 3 different states:
-   * inactive: startTime has not been reached yet
-   * active: the constellation is currently being added to the simulation
-   * deployed: the constellation is fully deployed, and tick becomes a NOOP
-   */
-  Status status = Status::inactive;  // active , inactive ,deployed
+    double phaseShift = 0;
 
-  /**
-   * size of the constellation for internal use
-   */
-  size_t constellationSize = 0ul;
+    /**
+     * deltaT of the simulation passed to constellations for converting datestring time
+     * into simulation time expressed in iterations
+     */
+    double deltaT;
 
-  /**
-   * contains information of a shell: altitude, inclination, #planes, #satellitesPerPlane
-   */
-  std::vector<std::array<double, 4>> shells{};
+    /**
+     * multiples of interval. the constellations state is set to 'a' = active whenever
+     * simulationTime reaches startTime
+     */
+    size_t simulationTime = 0;
 
-  /**
-   * contains the time shell i begins its deployment at vector index i
-   */
-  std::vector<double> timestamps{};
+    /**
+     * The three different possible internal states of a constellation object:
+     * inactive: startTime has not been reached yet
+     * active: the constellation is currently being added to the simulation
+     * deployed: the constellation is fully deployed, and tick becomes a NOOP
+     */
+    enum Status { inactive, active, deployed };
 
-  /**
-   * contains the time steps of shell i to enable adding each plane of
-   * shell i linearly over time at vector index i
-   */
-  std::vector<double> timeSteps{};
+    /**
+     * variable that holds the internal state of the constellation object that determines
+     * the behaviour of tick(). There are 3 different states:
+     * inactive: startTime has not been reached yet
+     * active: the constellation is currently being added to the simulation
+     * deployed: the constellation is fully deployed, and tick becomes a NOOP
+     */
+    Status status = Status::inactive;  // active , inactive ,deployed
 
-  /**
-   * keeps track of which shell will be added next
-   */
-  size_t currentShellIndex = 0ul;
+    /**
+     * size of the constellation for internal use
+     */
+    size_t constellationSize = 0ul;
 
-  /**
-   * keeps track of which plane will be added next
-   */
-  int planesDeployed = 0;
+    /**
+     * contains information of a shell: altitude, inclination, #planes, #satellitesPerPlane
+     */
+    std::vector<std::array<double, 4>> shells{};
 
-  /**
-   * deviation parameter of the normal distribution that determines the deviation
-   * of the satellites base altitude. Equals the standard deviation of a normal distribution
-   */
-  double altitudeDeviation;
+    std::vector<double> revolutionTimes{};
 
-  /**
-   * seeded/deterministic random number generator used to add noise to the
-   * altitudes of satellites
-   */
-  static std::mt19937 generator;
+    /**
+     * contains the time shell i begins its deployment at vector index i
+     */
+    std::vector<double> timestamps{};
 
-  /**
-   * normal distribution that determines the deviation of the satellites base
-   * altitude. uses altitudeDeviation as parameter
-   */
-  std::normal_distribution<double> distribution;
+    /**
+     * contains the time steps of shell i to enable adding each plane of
+     * shell i linearly over time at vector index i
+     */
+    std::vector<double> timeSteps{};
 
-  /**
-   * variable used to give every satellite that is part of a constellation an id
-   */
-  static size_t particleID;
+    /**
+     * keeps track of which shell will be added next
+     */
+    size_t currentShellIndex = 0ul;
+
+    /**
+     * keeps track of which plane will be added next
+     */
+    int planesDeployed = 0;
+
+    /**
+     * deviation parameter of the normal distribution that determines the deviation
+     * of the satellites base altitude. Equals the standard deviation of a normal distribution
+     */
+    double altitudeDeviation;
+
+    /**
+     * seeded/deterministic random number generator used to add noise to the
+     * altitudes of satellites
+     */
+    static std::mt19937 generator;
+
+    /**
+     * normal distribution that determines the deviation of the satellites base
+     * altitude. uses altitudeDeviation as parameter
+     */
+    std::normal_distribution<double> distribution;
+
+    /**
+     * variable used to give every satellite that is part of a constellation an id
+     */
+    static size_t particleID;
+
+    /**
+     * 2*PI
+     */
+    const double doublePi = 2 * M_PI;
 };
