@@ -12,6 +12,7 @@
 
 #include <string>
 
+#include "HDF5Definitions.h"
 #include "ladds/TypeDefinitions.h"
 #include "ladds/io/ConjunctionWriterInterface.h"
 
@@ -23,6 +24,7 @@ class HDF5Writer final : public ConjuctionWriterInterface {
  public:
   /**
    * Constructor setting up the file and creating the custom data type.
+   * @note Here the actual file is created on disk.
    * @param filename
    * @param compressionLevel
    */
@@ -45,17 +47,23 @@ class HDF5Writer final : public ConjuctionWriterInterface {
   void writeConjunctions(size_t iteration, const CollisionFunctor::CollisionCollectionT &collisions) override;
 
  private:
+  /**
+   * Highest partilce ID that was written in any previous iteration.
+   * For anything below this IDs static particle data is already written.
+   */
+  HDF5Definitions::IntType maxWrittenParticleID{0};
 #ifdef LADDS_HDF5
   /**
    * Actual file that will be created. All of the data this writer gets ends up in this one file.
    */
   h5pp::File _file;
-#endif
-
-#ifdef LADDS_HDF5
   /**
    * Object holding the info for the hdf5 compound type of the collision data.
    */
   h5pp::hid::h5t collisionInfoH5Type;
+  /**
+   * Object holding the info for the hdf5 compound type of the static particle data.
+   */
+  h5pp::hid::h5t particleStaticDataH5Type;
 #endif
 };

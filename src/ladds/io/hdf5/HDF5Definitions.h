@@ -11,6 +11,7 @@ constexpr auto groupParticleData = "ParticleData/";
 constexpr auto datasetParticlePositions = "/Particles/Positions";
 constexpr auto datasetParticleVelocities = "/Particles/Velocities";
 constexpr auto datasetParticleIDs = "/Particles/IDs";
+constexpr auto tableParticleStaticData = "StaticData";
 constexpr auto groupCollisionData = "CollisionData/";
 constexpr auto datasetCollisions = "/Collisions";
 
@@ -43,5 +44,15 @@ struct CollisionInfo {
   bool operator!=(const CollisionInfo &rhs) const {
     return !(rhs == *this);
   }
+};
+
+/**
+ * Type for information of a single particle that will stay constant throughout the simulation.
+ * This will
+ */
+struct ParticleStaticData {
+  IntType id;
+  FloatType mass, radius;
+  int activityState;
 };
 }  // namespace HDF5Definitions

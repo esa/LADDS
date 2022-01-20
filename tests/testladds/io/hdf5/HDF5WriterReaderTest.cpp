@@ -25,9 +25,9 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestParticleData) {
   particles.reserve(numParticles);
   for (size_t i = 0; i < numParticles; ++i) {
     Particle p{{static_cast<double>(i), static_cast<double>(i), static_cast<double>(i)},
-               {0., 0., 0.},
+               {1., 2., 3.},
                i,
-               Particle::ActivityState::passive};
+               Particle::ActivityState::evasive};
     autopas.addParticle(p);
     particles.push_back(p);
   }
@@ -42,12 +42,26 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestParticleData) {
   HDF5Writer hdf5Writer(filename, 4);
   hdf5Writer.writeParticles(iterationNr, autopas);
 
-  // 3. read data
+  // 3. read data and check that read data is equal to generated data
   HDF5Reader hdf5Reader(filename);
-  auto particlesHDF5 = hdf5Reader.readParticles(iterationNr);
+  EXPECT_THAT(hdf5Reader.readParticles(iterationNr), ::testing::UnorderedElementsAreArray(particles))
+      << "Particle data of initial iteration is not correct!";
 
-  // 4. check that read data is equal to generated data
-  EXPECT_THAT(particlesHDF5, ::testing::UnorderedElementsAreArray(particles));
+  // 4. add more particles and check that they are added correctly to HDF5
+  particles.emplace_back(std::array<double, 3>{0.5, 0.5, 0.5},
+                         std::array<double, 3>{1., 2., 3.},
+                         numParticles,
+                         Particle::ActivityState::evasivePreserving);
+  autopas.addParticle(particles.back());
+
+  // 5. write data
+  hdf5Writer.writeParticles(iterationNr + 1, autopas);
+
+  // 6. read data and check that read data is equal to generated data
+  EXPECT_THAT(hdf5Reader.readParticles(iterationNr + 1), ::testing::UnorderedElementsAreArray(particles))
+      << "Particle data of second iteration is not correct!";
+  ;
+
   // cleanup
   std::remove(filename);
 }
