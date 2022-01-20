@@ -71,11 +71,6 @@ TEST_P(CollisionFunctorIntegrationTest, testAutoPasAlgorithm) {
 
   const auto &[traversal, dataLayout, newton3, cellSizeFactor] = GetParam();
 
-  // This is currently necessary until we implement the SoA functor
-  if (dataLayout == autopas::DataLayoutOption::soa) {
-    GTEST_SKIP_("SoAFunctor currently not implemented!");
-  }
-
   CollisionFunctor functor(_cutoff, 10.0, 0.1 * _cutoff);
 
   if (not functor.allowsNonNewton3() and newton3 == autopas::Newton3Option::disabled) {

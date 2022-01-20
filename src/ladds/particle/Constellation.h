@@ -142,12 +142,6 @@ class Constellation {
   int planesDeployed = 0;
 
   /**
-   * deviation parameter of the normal distribution that determines the deviation
-   * of the satellites base altitude
-   */
-  double altitudeDeviation;
-
-  /**
    * seeded/deterministic random number generator used to add noise to the
    * altitudes of satellites
    */
