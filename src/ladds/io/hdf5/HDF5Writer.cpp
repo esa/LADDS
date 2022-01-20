@@ -95,14 +95,16 @@ void HDF5Writer::writeParticles(size_t iteration, const AutoPas_t &autopas) {
   _file.writeDataset_compressed(vecPos, group + HDF5Definitions::datasetParticlePositions, compressionLvl);
   _file.writeDataset_compressed(vecVel, group + HDF5Definitions::datasetParticleVelocities, compressionLvl);
   _file.writeDataset_compressed(vecId, group + HDF5Definitions::datasetParticleIDs, compressionLvl);
-  // TODO how!?
-  const auto particleStaticDataFullPath =
-      std::string(HDF5Definitions::groupParticleData) + HDF5Definitions::tableParticleStaticData;
-  // it table does not exist yet create it
-  if (not _file.linkExists(particleStaticDataFullPath)) {
-    _file.createTable(particleStaticDataH5Type, particleStaticDataFullPath, "StaticData");
+
+  if (not newStaticData.empty()) {
+    const auto particleStaticDataFullPath =
+        std::string(HDF5Definitions::groupParticleData) + HDF5Definitions::tableParticleStaticData;
+    // it table does not exist yet create it
+    if (not _file.linkExists(particleStaticDataFullPath)) {
+      _file.createTable(particleStaticDataH5Type, particleStaticDataFullPath, "StaticData");
+    }
+    _file.appendTableRecords(newStaticData, particleStaticDataFullPath);
   }
-  _file.appendTableRecords(newStaticData, particleStaticDataFullPath);
 
   maxWrittenParticleID = maxPartilceId;
 #endif
