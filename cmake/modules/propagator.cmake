@@ -19,7 +19,7 @@ FetchContent_Declare(
         Propagatorfetch
         GIT_REPOSITORY ${PropagatorRepoPath}
         # branch: main; latest feature: ActivityState
-        GIT_TAG bc1504c86d0025378caf9d1b34508f30d64b5404
+        GIT_TAG 9f5be5c079b2ff9ff6e64e34751f1429b61c8b46
 )
 
 # Get Propagator source and binary directories from CMake project
