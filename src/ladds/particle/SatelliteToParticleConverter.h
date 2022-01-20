@@ -17,13 +17,14 @@ namespace SatelliteToParticleConverter {
   // Convert all entries from meters to kilometers
   const auto &position = autopas::utils::ArrayMath::mulScalar(satellite.getPosition(), 1. / 1000.0);
   const auto &velocity = autopas::utils::ArrayMath::mulScalar(satellite.getVelocity(), 1. / 1000.0);
-
+  const auto radius = std::sqrt(satellite.getArea() * M_1_PI);
   // TODO: add activity information to the satellite class and use it here!
-  return Particle{position, velocity, satellite.getId(), Particle::ActivityState::passive};
+  return Particle{position, velocity, satellite.getId(), Particle::ActivityState::passive, satellite.getMass(), radius};
 }
 
 /**
  * This function is used to convert the particle data into satellites.
+ * @note This conversion does not retain the information about the satellites radius and activity state!
  * @param  particles: Particles to convert.
  * @retval Converted satellites.
  */

@@ -44,8 +44,13 @@ class Particle final : public autopas::ParticleFP64 {
    * @param debrisId
    * @param activityState
    */
-  Particle(std::array<double, 3> pos, std::array<double, 3> v, size_t debrisId, ActivityState activityState)
-      : autopas::ParticleFP64(pos, v, debrisId), activityState(activityState) {}
+  Particle(std::array<double, 3> pos,
+           std::array<double, 3> v,
+           size_t debrisId,
+           ActivityState activityState,
+           double mass,
+           double radius)
+      : autopas::ParticleFP64(pos, v, debrisId), mass(mass), radius(radius), activityState(activityState) {}
 
   /**
    * Destructor.

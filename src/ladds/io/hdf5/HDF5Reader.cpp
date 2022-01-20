@@ -49,9 +49,9 @@ std::vector<Particle> HDF5Reader::readParticles(size_t iteration) const {
     particles.emplace_back(std::array<double, 3>{pos[i].x, pos[i].y, pos[i].z},
                            std::array<double, 3>{vel[i].x, vel[i].y, vel[i].z},
                            staticData.id,
-                           static_cast<Particle::ActivityState>(staticData.activityState));
-    particles.back().setMass(staticData.mass);
-    particles.back().setRadius(staticData.radius);
+                           static_cast<Particle::ActivityState>(staticData.activityState),
+                           staticData.mass,
+                           staticData.radius);
   }
 #endif
   return particles;

@@ -45,16 +45,22 @@ TEST_F(SimulationTest, testInsertionOverlap) {
    *  4   ---oooo   -------      expected simSize = 4
    */
 
-  Particle p1 = Particle({6871, 0, 0}, {0, 4.8958309146899, 5.83462408131549}, 1, Particle::ActivityState::passive);
+  Particle p1 =
+      Particle({6871, 0, 0}, {0, 4.8958309146899, 5.83462408131549}, 1, Particle::ActivityState::passive, 1., 1.);
   Particle p2 = Particle({6870.99577848984, 4.89582991243564, 5.83462288687537},
                          {-0.00844301944979238, 4.89582790671436, 5.83462049654983},
                          2,
-                         Particle::ActivityState::passive);
-  Particle p3 = Particle({6871, 0, 0}, {0, 4.8958309146899, 5.83462408131549}, 1, Particle::ActivityState::passive);
+                         Particle::ActivityState::passive,
+                         1.,
+                         1.);
+  Particle p3 =
+      Particle({6871, 0, 0}, {0, 4.8958309146899, 5.83462408131549}, 1, Particle::ActivityState::passive, 0, 0);
   Particle p4 = Particle({6870.99577848984, 4.89582991243564, 5.83462288687537},
                          {-0.00844301944979238, 4.89582790671436, 5.83462049654983},
                          4,
-                         Particle::ActivityState::passive);
+                         Particle::ActivityState::passive,
+                         1.,
+                         1.);
   std::vector<Particle> newSatellites;
   newSatellites.push_back(p3);
   newSatellites.push_back(p4);
@@ -119,7 +125,8 @@ TEST_F(SimulationTest, testCriticalRangeInsertion1) {
   auto autopas = simulation.initAutoPas(configReader);
 
   std::array<double, 3> position0 = {6871, 0, 0};
-  Particle p0 = Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0, Particle::ActivityState::passive);
+  Particle p0 =
+      Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0, Particle::ActivityState::passive, 1., 1.);
 
   // vector {+-length,+-length,+-length} has norm 0.04
   double length = sqrt(0.04 * 0.04 / 3.0);
@@ -132,7 +139,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion1) {
   std::array<double, 3> position1 = autopas::utils::ArrayMath::add(
       midPoint, autopas::utils::ArrayMath::mul({1., 1., 1.}, autopas::utils::ArrayMath::add(borderVector, epsilon)));
 
-  Particle p1 = Particle(position1, {0., 0., 0.}, 1, Particle::ActivityState::passive);
+  Particle p1 = Particle(position1, {0., 0., 0.}, 1, Particle::ActivityState::passive, 1., 1.);
 
   autopas->addParticle(p0);
   const auto escapedParticles = autopas->updateContainer();
@@ -161,7 +168,8 @@ TEST_F(SimulationTest, testCriticalRangeInsertion2) {
   auto autopas = simulation.initAutoPas(configReader);
 
   std::array<double, 3> position0 = {6871, 0, 0};
-  Particle p0 = Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0, Particle::ActivityState::passive);
+  Particle p0 =
+      Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0, Particle::ActivityState::passive, 1., 1.);
 
   // vector {+-length,+-length,+-length} has norm 0.04
   double length = sqrt(0.04 * 0.04 / 3.0);
@@ -176,7 +184,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion2) {
   std::array<double, 3> position2 = autopas::utils::ArrayMath::add(
       midPoint, autopas::utils::ArrayMath::mul({1, 1, 1}, autopas::utils::ArrayMath::sub(borderVector, epsilon)));
 
-  Particle p2 = Particle(position2, {0, 0, 0}, 2, Particle::ActivityState::passive);
+  Particle p2 = Particle(position2, {0, 0, 0}, 2, Particle::ActivityState::passive, 1., 1.);
 
   autopas->addParticle(p0);
   const auto escapedParticles = autopas->updateContainer();
@@ -205,7 +213,8 @@ TEST_F(SimulationTest, testCriticalRangeInsertion3) {
   auto autopas = simulation.initAutoPas(configReader);
 
   std::array<double, 3> position0 = {6871, 0, 0};
-  Particle p0 = Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0, Particle::ActivityState::passive);
+  Particle p0 =
+      Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0, Particle::ActivityState::passive, 1., 1.);
 
   // vector {+-length,+-length,+-length} has norm 0.04
   double length = sqrt(0.04 * 0.04 / 3.0);
@@ -220,7 +229,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion3) {
   std::array<double, 3> position3 = autopas::utils::ArrayMath::add(
       midPoint, autopas::utils::ArrayMath::mul({-1, -1, 1}, autopas::utils::ArrayMath::add(borderVector, epsilon)));
 
-  Particle p3 = Particle(position3, {0, 0, 0}, 3, Particle::ActivityState::passive);
+  Particle p3 = Particle(position3, {0, 0, 0}, 3, Particle::ActivityState::passive, 1., 1.);
 
   autopas->addParticle(p0);
   const auto escapedParticles = autopas->updateContainer();
@@ -249,7 +258,8 @@ TEST_F(SimulationTest, testCriticalRangeInsertion4) {
   auto autopas = simulation.initAutoPas(configReader);
 
   std::array<double, 3> position0 = {6871, 0, 0};
-  Particle p0 = Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0, Particle::ActivityState::passive);
+  Particle p0 =
+      Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0, Particle::ActivityState::passive, 1., 1.);
 
   // vector {+-length,+-length,+-length} has norm 0.04
   double length = sqrt(0.04 * 0.04 / 3.0);
@@ -264,7 +274,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion4) {
   std::array<double, 3> position4 = autopas::utils::ArrayMath::add(
       midPoint, autopas::utils::ArrayMath::mul({-1, -1, 1}, autopas::utils::ArrayMath::sub(borderVector, epsilon)));
 
-  Particle p4 = Particle(position4, {0, 0, 0}, 4, Particle::ActivityState::passive);
+  Particle p4 = Particle(position4, {0, 0, 0}, 4, Particle::ActivityState::passive, 1., 1.);
 
   autopas->addParticle(p0);
   const auto escapedParticles = autopas->updateContainer();
@@ -293,7 +303,8 @@ TEST_F(SimulationTest, testCriticalRangeInsertion5) {
   auto autopas = simulation.initAutoPas(configReader);
 
   std::array<double, 3> position0 = {6871, 0, 0};
-  Particle p0 = Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0, Particle::ActivityState::passive);
+  Particle p0 =
+      Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0, Particle::ActivityState::passive, 1., 1.);
 
   // vector {+-length,+-length,+-length} has norm 0.04
   double length = sqrt(0.04 * 0.04 / 3.0);
@@ -308,7 +319,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion5) {
   std::array<double, 3> position5 = autopas::utils::ArrayMath::add(
       midPoint, autopas::utils::ArrayMath::mul({1, -1, 1}, autopas::utils::ArrayMath::sub(borderVector, epsilon)));
 
-  Particle p5 = Particle(position5, {0, 0, 0}, 5, Particle::ActivityState::passive);
+  Particle p5 = Particle(position5, {0, 0, 0}, 5, Particle::ActivityState::passive, 1., 1.);
 
   autopas->addParticle(p0);
   const auto escapedParticles = autopas->updateContainer();
@@ -337,7 +348,8 @@ TEST_F(SimulationTest, testCriticalRangeInsertion6) {
   auto autopas = simulation.initAutoPas(configReader);
 
   std::array<double, 3> position0 = {6871, 0, 0};
-  Particle p0 = Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0, Particle::ActivityState::passive);
+  Particle p0 =
+      Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0, Particle::ActivityState::passive, 1., 1.);
 
   // vector {+-length,+-length,+-length} has norm 0.04
   double length = sqrt(0.04 * 0.04 / 3.0);
@@ -352,7 +364,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion6) {
   std::array<double, 3> position6 = autopas::utils::ArrayMath::add(
       midPoint, autopas::utils::ArrayMath::mul({1, -1, 1}, autopas::utils::ArrayMath::sub(borderVector, epsilon)));
 
-  Particle p6 = Particle(position6, {0, 0, 0}, 6, Particle::ActivityState::passive);
+  Particle p6 = Particle(position6, {0, 0, 0}, 6, Particle::ActivityState::passive, 1., 1.);
 
   autopas->addParticle(p0);
   const auto escapedParticles = autopas->updateContainer();
@@ -381,7 +393,8 @@ TEST_F(SimulationTest, testCriticalRangeInsertion7) {
   auto autopas = simulation.initAutoPas(configReader);
 
   std::array<double, 3> position0 = {6871, 0, 0};
-  Particle p0 = Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0, Particle::ActivityState::passive);
+  Particle p0 =
+      Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0, Particle::ActivityState::passive, 1., 1.);
 
   // vector {+-length,+-length,+-length} has norm 0.04
   double length = sqrt(0.04 * 0.04 / 3.0);
@@ -395,7 +408,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion7) {
   // inside: same location
   std::array<double, 3> position7 = position0;
 
-  Particle p7 = Particle(position7, {0, 0, 0}, 7, Particle::ActivityState::passive);
+  Particle p7 = Particle(position7, {0, 0, 0}, 7, Particle::ActivityState::passive, 1., 1.);
 
   autopas->addParticle(p0);
   const auto escapedParticles = autopas->updateContainer();
@@ -424,7 +437,8 @@ TEST_F(SimulationTest, testCriticalRangeInsertion8) {
   auto autopas = simulation.initAutoPas(configReader);
 
   std::array<double, 3> position0 = {6871, 0, 0};
-  Particle p0 = Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0, Particle::ActivityState::passive);
+  Particle p0 =
+      Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0, Particle::ActivityState::passive, 1., 1.);
 
   // vector {+-length,+-length,+-length} has norm 0.04
   double length = sqrt(0.04 * 0.04 / 3.0);
@@ -438,7 +452,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion8) {
   // inside : midPoint + (0,0.003,0))
   std::array<double, 3> position8 = autopas::utils::ArrayMath::add(midPoint, {0, 0.003, 0});
 
-  Particle p8 = Particle(position8, {0, 0, 0}, 8, Particle::ActivityState::passive);
+  Particle p8 = Particle(position8, {0, 0, 0}, 8, Particle::ActivityState::passive, 1., 1.);
 
   autopas->addParticle(p0);
   const auto escapedParticles = autopas->updateContainer();
@@ -467,7 +481,8 @@ TEST_F(SimulationTest, testCriticalRangeInsertion9) {
   auto autopas = simulation.initAutoPas(configReader);
 
   std::array<double, 3> position0 = {6871, 0, 0};
-  Particle p0 = Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0, Particle::ActivityState::passive);
+  Particle p0 =
+      Particle(position0, {0, 4.8958309146899, 5.83462408131549}, 0, Particle::ActivityState::passive, 1., 1.);
 
   // vector {+-length,+-length,+-length} has norm 0.04
   double length = sqrt(0.04 * 0.04 / 3.0);
@@ -481,7 +496,7 @@ TEST_F(SimulationTest, testCriticalRangeInsertion9) {
   // outside the box : midPoint + (0,0.05,0)
   std::array<double, 3> position9 = autopas::utils::ArrayMath::add(midPoint, {0, 0.05, 0});
 
-  Particle p9 = Particle(position9, {0, 0, 0}, 9, Particle::ActivityState::passive);
+  Particle p9 = Particle(position9, {0, 0, 0}, 9, Particle::ActivityState::passive, 1., 1.);
 
   autopas->addParticle(p0);
   const auto escapedParticles = autopas->updateContainer();

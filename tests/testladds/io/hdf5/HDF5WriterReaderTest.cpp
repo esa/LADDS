@@ -27,7 +27,9 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestParticleData) {
     Particle p{{static_cast<double>(i), static_cast<double>(i), static_cast<double>(i)},
                {1., 2., 3.},
                i,
-               Particle::ActivityState::evasive};
+               Particle::ActivityState::evasive,
+               1.,
+               1.};
     autopas.addParticle(p);
     particles.push_back(p);
   }
@@ -51,7 +53,9 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestParticleData) {
   particles.emplace_back(std::array<double, 3>{0.5, 0.5, 0.5},
                          std::array<double, 3>{1., 2., 3.},
                          numParticles,
-                         Particle::ActivityState::evasivePreserving);
+                         Particle::ActivityState::evasivePreserving,
+                         1.,
+                         1.);
   autopas.addParticle(particles.back());
 
   // 5. write data
@@ -72,7 +76,8 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestCollisionData) {
   std::vector<Particle> particles;
   particles.reserve(numParticles);
   for (size_t i = 0; i < numParticles; ++i) {
-    particles.push_back(Particle{{0., 0., static_cast<double>(i)}, {0., 0., 0.}, i, Particle::ActivityState::passive});
+    particles.emplace_back<Particle>(
+        {{0., 0., static_cast<double>(i)}, {0., 0., 0.}, i, Particle::ActivityState::passive, 1., 1.});
   }
 
   // These conjunctions are just randomly made up and have nothing to do with position data!

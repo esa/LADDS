@@ -28,7 +28,9 @@ TEST(CollisionFunctorTest, ThreeParticles) {
     debris.emplace_back(std::array<double, 3>{static_cast<double>(i), 0., 0.},
                         std::array<double, 3>{0., static_cast<double>(i), 0.},
                         i,
-                        Particle::ActivityState::passive);
+                        Particle::ActivityState::passive,
+                        1.,
+                        1.);
   }
 
   CollisionFunctor collisionFunctor(cutoff, 10.0, cutoff, 0.01);
@@ -76,35 +78,63 @@ TEST(CollisionFunctorTest, MixActivityStates) {
   debris.reserve(numDebris);
 
   // passive small 1
-  debris.emplace_back(
-      std::array<double, 3>{0., 0., 0.}, std::array<double, 3>{0., 0., 0.}, 0, Particle::ActivityState::passive);
+  debris.emplace_back(std::array<double, 3>{0., 0., 0.},
+                      std::array<double, 3>{0., 0., 0.},
+                      0,
+                      Particle::ActivityState::passive,
+                      1.,
+                      1.);
   debris.back().setRadius(0.001);
   // passive small 2
-  debris.emplace_back(
-      std::array<double, 3>{0., 0., 0.1}, std::array<double, 3>{0., 0., 0.}, 0, Particle::ActivityState::passive);
+  debris.emplace_back(std::array<double, 3>{0., 0., 0.1},
+                      std::array<double, 3>{0., 0., 0.},
+                      0,
+                      Particle::ActivityState::passive,
+                      1.,
+                      1.);
   debris.back().setRadius(0.001);
   // passive large 1
-  debris.emplace_back(
-      std::array<double, 3>{0.1, 0., 0.}, std::array<double, 3>{0., 0., 0.}, 1, Particle::ActivityState::passive);
+  debris.emplace_back(std::array<double, 3>{0.1, 0., 0.},
+                      std::array<double, 3>{0., 0., 0.},
+                      1,
+                      Particle::ActivityState::passive,
+                      1.,
+                      1.);
   // passive large 2
-  debris.emplace_back(
-      std::array<double, 3>{0.1, 0., 0.1}, std::array<double, 3>{0., 0., 0.}, 1, Particle::ActivityState::passive);
+  debris.emplace_back(std::array<double, 3>{0.1, 0., 0.1},
+                      std::array<double, 3>{0., 0., 0.},
+                      1,
+                      Particle::ActivityState::passive,
+                      1.,
+                      1.);
   // evasive 1
-  debris.emplace_back(
-      std::array<double, 3>{0., 0.1, 0.}, std::array<double, 3>{0., 0., 0.}, 2, Particle::ActivityState::evasive);
+  debris.emplace_back(std::array<double, 3>{0., 0.1, 0.},
+                      std::array<double, 3>{0., 0., 0.},
+                      2,
+                      Particle::ActivityState::evasive,
+                      1.,
+                      1.);
   // evasive 2
-  debris.emplace_back(
-      std::array<double, 3>{0., 0.1, 0.1}, std::array<double, 3>{0., 0., 0.}, 3, Particle::ActivityState::evasive);
+  debris.emplace_back(std::array<double, 3>{0., 0.1, 0.1},
+                      std::array<double, 3>{0., 0., 0.},
+                      3,
+                      Particle::ActivityState::evasive,
+                      1.,
+                      1.);
   // evasivePreserving 1
   debris.emplace_back(std::array<double, 3>{0.1, 0.1, 0.},
                       std::array<double, 3>{0., 0., 0.},
                       4,
-                      Particle::ActivityState::evasivePreserving);
+                      Particle::ActivityState::evasivePreserving,
+                      1.,
+                      1.);
   // evasivePreserving 2
   debris.emplace_back(std::array<double, 3>{0.1, 0.1, 0.1},
                       std::array<double, 3>{0., 0., 0.},
                       5,
-                      Particle::ActivityState::evasivePreserving);
+                      Particle::ActivityState::evasivePreserving,
+                      1.,
+                      1.);
 
   CollisionFunctor collisionFunctor(cutoff, 10.0, cutoff, 0.01);
 
@@ -165,8 +195,8 @@ TEST_P(CollisionFunctorTest, LinearInterpolationTest) {
   debris.reserve(numDebris);
 
   // Add two particles moving in the same direction on parallel lines
-  debris.emplace_back(x1, v1, 0., Particle::ActivityState::passive);
-  debris.emplace_back(x2, v2, 1., Particle::ActivityState::passive);
+  debris.emplace_back(x1, v1, 0., Particle::ActivityState::passive, 1., 1.);
+  debris.emplace_back(x2, v2, 1., Particle::ActivityState::passive, 1., 1.);
 
   for (size_t i = 0; i < debris.size(); ++i) {
     for (size_t j = i + 1; j < debris.size(); ++j) {
