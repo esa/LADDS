@@ -284,6 +284,20 @@ class Particle final : public autopas::ParticleFP64 {
    */
   friend std::ostream &operator<<(std::ostream &os, const Particle &particle);
 
+  /**
+   * Equality operator
+   * @param rhs
+   * @return
+   */
+  bool operator==(const Particle &rhs) const;
+
+  /**
+   * Inequality operator
+   * @param rhs
+   * @return
+   */
+  bool operator!=(const Particle &rhs) const;
+
  private:
   /**
    *  3D vector representation of the debris acceleration at the last time step.
