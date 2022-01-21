@@ -119,10 +119,11 @@ Simulation::initIntegrator(AutoPas_t &autopas, ConfigReader &config) {
                                   config.get<bool>("sim/prop/useSRPComponent", false),
                                   config.get<bool>("sim/prop/useDRAGComponent", false)};
 
-  auto csvWriter = std::make_unique<FileOutput<AutoPas_t>>(autopas,
-                                                           config.get<std::string>("io/output_file", "propagator.csv"),
-                                                           OutputFile::CSV,
-                                                           selectedPropagatorComponents);
+  std::unique_ptr<FileOutput<AutoPas_t>> csvWriter{nullptr};
+  if (const auto csvFilename = config.get<std::string>("io/output_file", ""); not csvFilename.empty()) {
+    csvWriter =
+        std::make_unique<FileOutput<AutoPas_t>>(autopas, csvFilename, OutputFile::CSV, selectedPropagatorComponents);
+  }
   auto accumulator = std::make_unique<Acceleration::AccelerationAccumulator<AutoPas_t>>(
       selectedPropagatorComponents, autopas, 0.0, *csvWriter);
   auto deltaT = config.get<double>("sim/deltaT");
