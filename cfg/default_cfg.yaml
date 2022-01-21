@@ -1,7 +1,8 @@
 sim:
   logLevel: info    # Available levels are off, critical, err, warn, info, debug, trace
   iterations: 32000 # Number of simulation iterations
-  maxAltitude: 10000 # Maximum satellite altitude [km]
+  maxAltitude: 10000 # Maximum satellite altitude above earth core. This number times two is the simulation box length. [km]
+  minAltitude: 200 # Everything below this altitude above ground will be considered burning up [km]
   deltaT: 10.0 # [s]
   conjunctionThreshold: 0.5 # [km]
 

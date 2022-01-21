@@ -169,6 +169,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
   const auto progressOutputFrequency = config.get<int>("io/progressOutputFrequency", 50);
   const auto deltaT = config.get<double>("sim/deltaT");
   const auto conjunctionThreshold = config.get<double>("sim/conjunctionThreshold");
+  const auto minAltitude = config.get<double>("sim/minAltitude", 200.);
   std::vector<Particle> delayedInsertion;
 
   const auto vtkWriteFrequency = config.get<size_t>("io/vtk/writeFrequency", 0ul);
@@ -198,6 +199,11 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     timers.integrator.start();
     integrator.integrate(false);
     timers.integrator.stop();
+
+    // everything below a threshold now burns up
+    timers.burnUps.start();
+    deleteBurnUps(autopas, minAltitude);
+    timers.burnUps.stop();
 
     timers.constellationInsertion.start();
     // new satellites from constellations inserted over time
@@ -313,4 +319,23 @@ void Simulation::dumpCalibratedConfig(ConfigReader &config, const AutoPas_t &aut
   config.setValue("autopas/Traversal", autopasConfig.traversal.to_string());
   config.setValue("autopas/tuningMode", "off");
   config.dumpConfig("calibratedConfig.yaml");
+}
+
+void Simulation::deleteBurnUps(autopas::AutoPas<Particle> &autopas, double burnUpAltitude) const {
+  const auto critAltitude = burnUpAltitude + Physics::R_EARTH;
+  const auto critAltitudeSquared = critAltitude * critAltitude;
+  // TODO: check if it worthwhile to do this in parallel
+  for (auto particleIter = autopas.getRegionIterator({-critAltitude, -critAltitude, -critAltitude},
+                                                     {critAltitude, critAltitude, critAltitude});
+       particleIter != autopas.end();
+       ++particleIter) {
+    // Altitude above earth core
+    const auto &pos = particleIter->getPosition();
+    const auto particleAltitudeSquared = autopas::utils::ArrayMath::dot(pos, pos);
+    if (particleAltitudeSquared < critAltitudeSquared) {
+      autopas.deleteParticle(particleIter);
+      SPDLOG_LOGGER_DEBUG(
+          logger.get(), "Particle too close to the ground. Considered to be burning up!\n{}", *particleIter);
+    }
+  }
 }
