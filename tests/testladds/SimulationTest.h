@@ -25,14 +25,16 @@ class SimulationTest : public testing::TestWithParam<ParameterTuple> {
 
     // initialize a minimal default configuration
     config["sim"]["maxAltitude"] = 85000.;
+    config["sim"]["minAltitude"] = 200.;
+    config["sim"]["iterations"] = 1;
     config["sim"]["deltaT"] = 1.0;
     config["autopas"]["cutoff"] = 0.02;
     config["autopas"]["skin"] = 0.2;
     config["autopas"]["rebuildFrequency"] = 20;
     config["autopas"]["desiredCellsPerDimension"] = 32;
-    config["io"]["output_file"] = "test";
     config["io"]["constellationCutoff"] = constellationCutoff;
     config["sim"]["prop"]["useKEPComponent"] = true;
+    config["sim"]["conjunctionThreshold"] = 0.5;
 
     configReader = std::make_unique<ConfigReader>(config, logger);
     autopas = simulation.initAutoPas(*configReader);

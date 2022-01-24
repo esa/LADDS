@@ -67,6 +67,29 @@ TEST_F(SimulationTest, testInsertionOverlap) {
 }
 
 /**
+ * Initialize two particles close to the burn up radius, one going towards earth one away from it.
+ * Do one simulation iteration and check that exactly the right one was removed.
+ */
+TEST_F(SimulationTest, testBurnUp) {
+  auto [csvWriter, accumulator, integrator] = simulation.initIntegrator(*autopas, *configReader);
+  const auto &minAltitude = Physics::R_EARTH + configReader->get<double>("sim/minAltitude");
+  // initialize a particle 1km above burn up radius with a trajectory towards earth
+  autopas->addParticle(Particle({minAltitude + 1., 0., 0.}, {-10., 0., 0.}, 0));
+  // initialize a particle 1km above burn up radius with a trajectory away from earth
+  // different position to avoid any interferences
+  autopas->addParticle(Particle({0., minAltitude + 1., 0.}, {0., 10., 0.}, 1));
+  ASSERT_EQ(autopas->getNumberOfParticles(), 2) << "Initial particles not found!";
+
+  // dummy because interface requires it
+  std::vector<Constellation> constellations{};
+  // do one iteration where the burnup is expected to happen
+  simulation.simulationLoop(*autopas, *integrator, constellations, *configReader);
+
+  EXPECT_EQ(autopas->getNumberOfParticles(), 1) << "Exactly one particle should have burnt up!";
+  EXPECT_EQ(autopas->begin()->getID(), 1) << "Remaining particle has unexpected Id!";
+}
+
+/**
  * Tests whether particles are only inserted, when they are outside a critical range
  * and delayed when within that critical range.
  *
@@ -119,5 +142,3 @@ INSTANTIATE_TEST_SUITE_P(Generated,
                          SimulationTest,
                          testing::ValuesIn(generateParameters()),
                          SimulationTest::PrintToStringParamName());
-
-// TEST_F(SimulationTest, testBurnUp) {}

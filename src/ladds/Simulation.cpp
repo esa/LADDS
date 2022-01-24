@@ -222,7 +222,6 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     if (not escapedParticles.empty()) {
       SPDLOG_LOGGER_ERROR(logger.get(), "Particles are escaping! \n{}", escapedParticles);
     }
-    // TODO Check for particles that burn up
 
     timers.collisionDetection.start();
     auto [collisions, stillTuning] = collisionDetection(autopas, deltaT, conjunctionThreshold);
