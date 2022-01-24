@@ -262,9 +262,8 @@ std::vector<Particle> Simulation::checkedInsert(autopas::AutoPas<Particle> &auto
                                                 double constellationCutoff) {
   std::vector<Particle> delayedInsertion = {};
 
-  const double collisionRadius = constellationCutoff;
-  const double collisionRadiusSquared = collisionRadius * collisionRadius;
-  const std::array<double, 3> boxSpan = {collisionRadius, collisionRadius, collisionRadius};
+  const double collisionRadiusSquared = constellationCutoff * constellationCutoff;
+  const std::array<double, 3> boxSpan = {constellationCutoff, constellationCutoff, constellationCutoff};
   for (const auto &satellite : newSatellites) {
     // only insert satellites, if they have a reasonable distance to other satellites
     bool collisionFree = true;
