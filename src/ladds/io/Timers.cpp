@@ -27,6 +27,8 @@ void Timers::printTimers(ConfigReader &config) const {
   std::cout << timerToString(
       "    Collision writer        ", collisionWriting.getTotalTime(), maximumNumberOfDigits, timeSim);
   std::cout << timerToString(
+      "    Collision simulation    ", collisionSimulation.getTotalTime(), maximumNumberOfDigits, timeSim);
+  std::cout << timerToString(
       "    Container update        ", containerUpdate.getTotalTime(), maximumNumberOfDigits, timeSim);
   std::cout << timerToString("    Output                  ", output.getTotalTime(), maximumNumberOfDigits, timeTotal);
   std::cout << timerToString("One iteration               ", timeSim / iterations, maximumNumberOfDigits, timeTotal);

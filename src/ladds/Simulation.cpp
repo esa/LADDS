@@ -19,6 +19,7 @@
 #include "ladds/io/SatelliteLoader.h"
 #include "ladds/io/VTUWriter.h"
 #include "ladds/io/hdf5/HDF5Writer.h"
+#include "ladds/particle/BreakupWrapper.h"
 #include "ladds/particle/Constellation.h"
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
@@ -189,6 +190,9 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     conjuctionWriter = std::make_shared<ConjunctionLogger>("");
   }
 
+  const std::unique_ptr<BreakupWrapper> breakupWrapper =
+      config.defines("sim/breakup") ? std::make_unique<BreakupWrapper>(config, autopas) : nullptr;
+
   size_t totalConjunctions{0ul};
 
   config.printParsedValues();
@@ -241,7 +245,11 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     }
     timers.collisionWriting.stop();
 
-    // TODO insert breakup model here
+    if (breakupWrapper and not collisions.empty()) {
+      timers.collisionSimulation.start();
+      breakupWrapper->simulateBreakup(collisions);
+      timers.collisionSimulation.stop();
+    }
 
     timers.output.start();
     // Visualization:

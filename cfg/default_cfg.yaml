@@ -16,6 +16,10 @@ sim:
     useSRPComponent: true # Solar radiation pressure
     useDRAGComponent: true # Atmospheric drag
 
+  breakup:  # remove this block if no breakup modelling is desired
+    minLc: 0.05 # minimal characteristic length for generated debris [m]
+    enforceMassConservation: true # by default the NASA breakup model does not conserve mass
+
 io:
   # output_file: propagator.csv # Output file for the propagator. Currently, nothing is written.
   posFileName: pos.csv # Name of the CSV file with satellite positions [km]
