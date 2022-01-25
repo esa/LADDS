@@ -305,29 +305,30 @@ class Particle final : public autopas::ParticleFP64 {
 
  private:
   /**
-   *  3D vector representation of the debris acceleration at the last time step.
+   *  3D vector representation of the debris acceleration at the last time step. [km/s^2]
    */
   std::array<double, 3> acc_t0{};
   /**
-   * 3D vector representation of the debris acceleration at the current time step
+   * 3D vector representation of the debris acceleration at the current time step. [km/s^2]
    */
   std::array<double, 3> acc_t1{};
   /**
-   * Area to mass ration.
-   * @note FIXME: can this be removed?
+   * Area to mass relation [km^2/kg].
+   * @note Used in the Propagator in SRPComponent::apply().
    */
   double aom{0.};
   /**
-   * Mass of the object.
+   * Mass of the object [kg].
    */
   double mass{1.};
   /**
-   * Radius of the object when approximating it as a ball.
+   * Radius of the object when approximating it as a ball [m].
    */
   double radius{1.};
   /**
-   * C_cA)/m is the inverse of the ballistic coefficient.
-   * Used for Acceleration::DragComponent::apply().
+   * C_cA)/m is the inverse of the ballistic coefficient. [kg m^2]
+   * @note Used in the Propagator in Acceleration::DragComponent::apply().
+   * FIXME: should probably set to something meaningful
    */
   double bc_inv{0.};
 
