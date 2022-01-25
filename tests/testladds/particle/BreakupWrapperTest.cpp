@@ -14,7 +14,7 @@
 TEST_F(BreakupWrapperTest, testSimulationLoop) {
   auto [csvWriter, accumulator, integrator] = simulation.initIntegrator(*autopas, *configReader);
 
-  // two particles whose paths cross exactly
+  // two particles 1000km above earth whose paths cross exactly at [R+1000, 0, 0]
   size_t highestIdBeforeCrash = 4;
   autopas->addParticle(Particle({Physics::R_EARTH + 1000., -1., 0.}, {0., 2., 0.}, 1));
   autopas->addParticle(Particle({Physics::R_EARTH + 1000., 0., -1.}, {0., 0., 2.}, highestIdBeforeCrash));
