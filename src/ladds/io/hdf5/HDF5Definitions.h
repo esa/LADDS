@@ -11,7 +11,7 @@ constexpr auto groupParticleData = "ParticleData/";
 constexpr auto datasetParticlePositions = "/Particles/Positions";
 constexpr auto datasetParticleVelocities = "/Particles/Velocities";
 constexpr auto datasetParticleIDs = "/Particles/IDs";
-constexpr auto tableParticleStaticData = "StaticData";
+constexpr auto tableParticleConstantProperties = "ConstantProperties";
 constexpr auto groupCollisionData = "CollisionData/";
 constexpr auto datasetCollisions = "/Collisions";
 
@@ -48,9 +48,8 @@ struct CollisionInfo {
 
 /**
  * Type for information of a single particle that will stay constant throughout the simulation.
- * This will
  */
-struct ParticleStaticData {
+struct ParticleConstantProperties {
   IntType id;
   FloatType mass, radius;
   int activityState;

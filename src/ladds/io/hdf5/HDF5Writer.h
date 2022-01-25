@@ -64,6 +64,6 @@ class HDF5Writer final : public ConjuctionWriterInterface {
   /**
    * Object holding the info for the hdf5 compound type of the static particle data.
    */
-  h5pp::hid::h5t particleStaticDataH5Type;
+  h5pp::hid::h5t particleConstantPropertiesH5Type;
 #endif
 };

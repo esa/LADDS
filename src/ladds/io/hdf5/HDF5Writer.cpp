@@ -12,7 +12,7 @@ HDF5Writer::HDF5Writer(const std::string &filename, unsigned int compressionLeve
 #ifdef LADDS_HDF5
     : _file(filename, h5pp::FilePermission::REPLACE),
       collisionInfoH5Type(H5Tcreate(H5T_COMPOUND, sizeof(HDF5Definitions::CollisionInfo))),
-      particleStaticDataH5Type(H5Tcreate(H5T_COMPOUND, sizeof(HDF5Definitions::ParticleStaticData)))
+      particleConstantPropertiesH5Type(H5Tcreate(H5T_COMPOUND, sizeof(HDF5Definitions::ParticleConstantProperties)))
 #endif
 {
 #ifdef LADDS_HDF5
@@ -31,23 +31,23 @@ HDF5Writer::HDF5Writer(const std::string &filename, unsigned int compressionLeve
             HOFFSET(HDF5Definitions::CollisionInfo, distanceSquared),
             h5pp::type::getH5NativeType<decltype(HDF5Definitions::CollisionInfo::distanceSquared)>());
 
-  // ParticleStaticData
-  H5Tinsert(particleStaticDataH5Type,
+  // ParticleConstantProperties
+  H5Tinsert(particleConstantPropertiesH5Type,
             "id",
-            HOFFSET(HDF5Definitions::ParticleStaticData, id),
-            h5pp::type::getH5NativeType<decltype(HDF5Definitions::ParticleStaticData::id)>());
-  H5Tinsert(particleStaticDataH5Type,
+            HOFFSET(HDF5Definitions::ParticleConstantProperties, id),
+            h5pp::type::getH5NativeType<decltype(HDF5Definitions::ParticleConstantProperties::id)>());
+  H5Tinsert(particleConstantPropertiesH5Type,
             "mass",
-            HOFFSET(HDF5Definitions::ParticleStaticData, mass),
-            h5pp::type::getH5NativeType<decltype(HDF5Definitions::ParticleStaticData::mass)>());
-  H5Tinsert(particleStaticDataH5Type,
+            HOFFSET(HDF5Definitions::ParticleConstantProperties, mass),
+            h5pp::type::getH5NativeType<decltype(HDF5Definitions::ParticleConstantProperties::mass)>());
+  H5Tinsert(particleConstantPropertiesH5Type,
             "radius",
-            HOFFSET(HDF5Definitions::ParticleStaticData, radius),
-            h5pp::type::getH5NativeType<decltype(HDF5Definitions::ParticleStaticData::radius)>());
-  H5Tinsert(particleStaticDataH5Type,
+            HOFFSET(HDF5Definitions::ParticleConstantProperties, radius),
+            h5pp::type::getH5NativeType<decltype(HDF5Definitions::ParticleConstantProperties::radius)>());
+  H5Tinsert(particleConstantPropertiesH5Type,
             "activityState",
-            HOFFSET(HDF5Definitions::ParticleStaticData, activityState),
-            h5pp::type::getH5NativeType<decltype(HDF5Definitions::ParticleStaticData::activityState)>());
+            HOFFSET(HDF5Definitions::ParticleConstantProperties, activityState),
+            h5pp::type::getH5NativeType<decltype(HDF5Definitions::ParticleConstantProperties::activityState)>());
 #else
   throw std::runtime_error("LADDS was compiled without HDF5 support, so the HDF5Writer can't do anything!");
 #endif
@@ -60,7 +60,7 @@ void HDF5Writer::writeParticles(size_t iteration, const AutoPas_t &autopas) {
   std::vector<HDF5Definitions::Vec3<HDF5Definitions::FloatType>> vecVel;
   std::vector<HDF5Definitions::IntType> vecId;
   HDF5Definitions::IntType maxPartilceId{0};
-  std::vector<HDF5Definitions::ParticleStaticData> newStaticData;
+  std::vector<HDF5Definitions::ParticleConstantProperties> newConstantProperties;
 
   vecPos.reserve(autopas.getNumberOfParticles());
   vecVel.reserve(autopas.getNumberOfParticles());
@@ -82,11 +82,11 @@ void HDF5Writer::writeParticles(size_t iteration, const AutoPas_t &autopas) {
     vecId.emplace_back(id);
     maxPartilceId = std::max(maxPartilceId, id);
     if (maxWrittenParticleID == 0 or id > maxWrittenParticleID) {
-      newStaticData.emplace_back(
-          HDF5Definitions::ParticleStaticData{id,
-                                              static_cast<HDF5Definitions::FloatType>(particle.getMass()),
-                                              static_cast<HDF5Definitions::FloatType>(particle.getRadius()),
-                                              static_cast<int>(particle.getActivityState())});
+      newConstantProperties.emplace_back(
+          HDF5Definitions::ParticleConstantProperties{id,
+                                                      static_cast<HDF5Definitions::FloatType>(particle.getMass()),
+                                                      static_cast<HDF5Definitions::FloatType>(particle.getRadius()),
+                                                      static_cast<int>(particle.getActivityState())});
     }
   }
 
@@ -96,14 +96,14 @@ void HDF5Writer::writeParticles(size_t iteration, const AutoPas_t &autopas) {
   _file.writeDataset_compressed(vecVel, group + HDF5Definitions::datasetParticleVelocities, compressionLvl);
   _file.writeDataset_compressed(vecId, group + HDF5Definitions::datasetParticleIDs, compressionLvl);
 
-  if (not newStaticData.empty()) {
-    const auto particleStaticDataFullPath =
-        std::string(HDF5Definitions::groupParticleData) + HDF5Definitions::tableParticleStaticData;
+  if (not newConstantProperties.empty()) {
+    const auto particleConstantPropertiesFullPath =
+        std::string(HDF5Definitions::groupParticleData) + HDF5Definitions::tableParticleConstantProperties;
     // it table does not exist yet create it
-    if (not _file.linkExists(particleStaticDataFullPath)) {
-      _file.createTable(particleStaticDataH5Type, particleStaticDataFullPath, "StaticData");
+    if (not _file.linkExists(particleConstantPropertiesFullPath)) {
+      _file.createTable(particleConstantPropertiesH5Type, particleConstantPropertiesFullPath, "ConstantProperties");
     }
-    _file.appendTableRecords(newStaticData, particleStaticDataFullPath);
+    _file.appendTableRecords(newConstantProperties, particleConstantPropertiesFullPath);
   }
 
   maxWrittenParticleID = maxPartilceId;

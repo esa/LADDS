@@ -27,17 +27,17 @@ std::vector<Particle> HDF5Reader::readParticles(size_t iteration) const {
       HDF5Definitions::groupParticleData + std::to_string(iteration) + HDF5Definitions::datasetParticleVelocities);
   const auto ids = file.readDataset<std::vector<HDF5Definitions::IntType>>(
       HDF5Definitions::groupParticleData + std::to_string(iteration) + HDF5Definitions::datasetParticleIDs);
-  const auto pathParticleStaticData =
-      std::string(HDF5Definitions::groupParticleData) + HDF5Definitions::tableParticleStaticData;
-  const auto staticDataVec =
-      file.readTableRecords<std::vector<HDF5Definitions::ParticleStaticData>>(pathParticleStaticData);
+  const auto pathParticleConstantProperties =
+      std::string(HDF5Definitions::groupParticleData) + HDF5Definitions::tableParticleConstantProperties;
+  const auto constantPropertiesVec =
+      file.readTableRecords<std::vector<HDF5Definitions::ParticleConstantProperties>>(pathParticleConstantProperties);
 
   // convert static data to a map for easier access
-  const auto staticDataMap = [&]() {
+  const auto constantPropertiesMap = [&]() {
     // id is redundant in this datastructure but easier maintainable this way
-    std::unordered_map<size_t, HDF5Definitions::ParticleStaticData> map;
-    map.reserve(staticDataVec.size());
-    for (const auto &data : staticDataVec) {
+    std::unordered_map<size_t, HDF5Definitions::ParticleConstantProperties> map;
+    map.reserve(constantPropertiesVec.size());
+    for (const auto &data : constantPropertiesVec) {
       map[data.id] = data;
     }
     return map;
@@ -45,13 +45,13 @@ std::vector<Particle> HDF5Reader::readParticles(size_t iteration) const {
 
   particles.reserve(pos.size());
   for (size_t i = 0; i < pos.size(); ++i) {
-    const auto &staticData = staticDataMap.at(ids[i]);
+    const auto &constantProperties = constantPropertiesMap.at(ids[i]);
     particles.emplace_back(std::array<double, 3>{pos[i].x, pos[i].y, pos[i].z},
                            std::array<double, 3>{vel[i].x, vel[i].y, vel[i].z},
-                           staticData.id,
-                           static_cast<Particle::ActivityState>(staticData.activityState),
-                           staticData.mass,
-                           staticData.radius);
+                           constantProperties.id,
+                           static_cast<Particle::ActivityState>(constantProperties.activityState),
+                           constantProperties.mass,
+                           constantProperties.radius);
   }
 #endif
   return particles;
