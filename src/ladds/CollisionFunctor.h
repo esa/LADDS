@@ -20,6 +20,14 @@
  */
 class CollisionFunctor final : public autopas::Functor<Particle, CollisionFunctor> {
  public:
+  /**
+   * Constructor
+   * @param cutoff Distance for two particles to be considered for sub time step investigation (interpolation).
+   * @param dt time step width
+   * @param minorCutoff Distance where we consider particles to be colliding.
+   * @param minDetectionRadius All particles with a larger are assumed to be detectable by radar.
+   *        Thus collisions with particles that are Particle::ActivityState::evasive will not be considered.
+   */
   explicit CollisionFunctor(double cutoff, double dt, double minorCutoff, double minDetectionRadius);
 
   [[nodiscard]] bool isRelevantForTuning() final {
