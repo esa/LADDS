@@ -83,16 +83,14 @@ TEST(CollisionFunctorTest, MixActivityStates) {
                       0,
                       Particle::ActivityState::passive,
                       1.,
-                      1.);
-  debris.back().setRadius(0.001);
+                      0.001);
   // passive small 2
   debris.emplace_back(std::array<double, 3>{0., 0., 0.1},
                       std::array<double, 3>{0., 0., 0.},
                       0,
                       Particle::ActivityState::passive,
                       1.,
-                      1.);
-  debris.back().setRadius(0.001);
+                      0.001);
   // passive large 1
   debris.emplace_back(std::array<double, 3>{0.1, 0., 0.},
                       std::array<double, 3>{0., 0., 0.},
