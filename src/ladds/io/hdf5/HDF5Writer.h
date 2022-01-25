@@ -49,7 +49,7 @@ class HDF5Writer final : public ConjuctionWriterInterface {
  private:
   /**
    * Highest partilce ID that was written in any previous iteration.
-   * For anything below this IDs static particle data is already written.
+   * For anything below this ID constant particle properties are already written.
    */
   HDF5Definitions::IntType maxWrittenParticleID{0};
 #ifdef LADDS_HDF5
@@ -62,7 +62,7 @@ class HDF5Writer final : public ConjuctionWriterInterface {
    */
   h5pp::hid::h5t collisionInfoH5Type;
   /**
-   * Object holding the info for the hdf5 compound type of the static particle data.
+   * Object holding the info for the hdf5 compound type of the constant particle properties data.
    */
   h5pp::hid::h5t particleConstantPropertiesH5Type;
 #endif
