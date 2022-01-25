@@ -10,6 +10,9 @@ namespace SatelliteToParticleConverter {
 
 /**
  * This function is used to convert the satellite data into particles.
+ * @note Resulting particles always have Particle::ActivityState::passive as we consider results of a collision to be
+ * broken. If a non-catastrophic collision should be simulated the Particle::ActivityState has to be changed on the
+ * returned object.
  * @param  satellite: Satellite to convert.
  * @retval Converted particles.
  */
@@ -18,7 +21,6 @@ namespace SatelliteToParticleConverter {
   const auto &position = autopas::utils::ArrayMath::mulScalar(satellite.getPosition(), 1. / 1000.0);
   const auto &velocity = autopas::utils::ArrayMath::mulScalar(satellite.getVelocity(), 1. / 1000.0);
   const auto radius = std::sqrt(satellite.getArea() * M_1_PI);
-  // TODO: add activity information to the satellite class and use it here!
   return Particle{position, velocity, satellite.getId(), Particle::ActivityState::passive, satellite.getMass(), radius};
 }
 
