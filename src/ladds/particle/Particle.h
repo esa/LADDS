@@ -50,7 +50,11 @@ class Particle final : public autopas::ParticleFP64 {
            ActivityState activityState,
            double mass,
            double radius)
-      : autopas::ParticleFP64(pos, v, debrisId), mass(mass), radius(radius), activityState(activityState) {}
+      : autopas::ParticleFP64(pos, v, debrisId),
+        aom(2. * M_PI * radius / mass * 1e-3),    // convert m -> km
+        mass(mass),
+        radius(radius),
+        activityState(activityState) {}
 
   /**
    * Destructor.
