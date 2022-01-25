@@ -80,6 +80,9 @@ void HDF5Writer::writeParticles(size_t iteration, const AutoPas_t &autopas) {
          static_cast<HDF5Definitions::FloatType>(vel[1]),
          static_cast<HDF5Definitions::FloatType>(vel[2])});
     vecId.emplace_back(id);
+    // track the highest particle id that was written to the file
+    // All particles that have a higher id than the highest id from the last time something was written are new
+    // and their static properties need to be recorded.
     maxParticleId = std::max(maxParticleId, id);
     if (maxWrittenParticleID == 0 or id > maxWrittenParticleID) {
       newConstantProperties.emplace_back(
