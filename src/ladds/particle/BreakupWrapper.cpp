@@ -19,7 +19,7 @@ void BreakupWrapper::simulateBreakup(const CollisionFunctor::CollisionCollection
 
     // Create and run the Breakup Simulation
     auto configSource = std::make_shared<RuntimeInputSource>(
-        minLc, satellites, SimulationType::COLLISION, maxExistingParticleId, std::nullopt, true);
+        minLc, satellites, SimulationType::COLLISION, maxExistingParticleId, std::nullopt, enforceMassConservation);
     BreakupBuilder breakupBuilder{configSource};
     auto breakup = breakupBuilder.getBreakup();
     breakup->run();
