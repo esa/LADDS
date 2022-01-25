@@ -28,7 +28,7 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
    * @param minDetectionRadius All particles with a larger are assumed to be detectable by radar.
    *        Thus collisions with particles that are Particle::ActivityState::evasive will not be considered.
    */
-  explicit CollisionFunctor(double cutoff, double dt, double minorCutoff, double minDetectionRadius);
+  CollisionFunctor(double cutoff, double dt, double minorCutoff, double minDetectionRadius);
 
   [[nodiscard]] bool isRelevantForTuning() final {
     return true;
