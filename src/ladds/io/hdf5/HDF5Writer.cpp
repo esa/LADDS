@@ -59,7 +59,7 @@ void HDF5Writer::writeParticles(size_t iteration, const AutoPas_t &autopas) {
   std::vector<HDF5Definitions::Vec3<HDF5Definitions::FloatType>> vecPos;
   std::vector<HDF5Definitions::Vec3<HDF5Definitions::FloatType>> vecVel;
   std::vector<HDF5Definitions::IntType> vecId;
-  HDF5Definitions::IntType maxPartilceId{0};
+  HDF5Definitions::IntType maxParticleId{0};
   std::vector<HDF5Definitions::ParticleConstantProperties> newConstantProperties;
 
   vecPos.reserve(autopas.getNumberOfParticles());
@@ -80,7 +80,7 @@ void HDF5Writer::writeParticles(size_t iteration, const AutoPas_t &autopas) {
          static_cast<HDF5Definitions::FloatType>(vel[1]),
          static_cast<HDF5Definitions::FloatType>(vel[2])});
     vecId.emplace_back(id);
-    maxPartilceId = std::max(maxPartilceId, id);
+    maxParticleId = std::max(maxParticleId, id);
     if (maxWrittenParticleID == 0 or id > maxWrittenParticleID) {
       newConstantProperties.emplace_back(
           HDF5Definitions::ParticleConstantProperties{id,
@@ -106,7 +106,7 @@ void HDF5Writer::writeParticles(size_t iteration, const AutoPas_t &autopas) {
     _file.appendTableRecords(newConstantProperties, particleConstantPropertiesFullPath);
   }
 
-  maxWrittenParticleID = maxPartilceId;
+  maxWrittenParticleID = maxParticleId;
 #endif
 }
 
