@@ -40,7 +40,7 @@ class Constellation {
    * and linearly over time
    * @return std::vector<Particle> : satellites to be added to the simulation
    */
-  std::vector<Particle> tick();
+  std::vector<Particle> tick(size_t simulationTime);
 
   /**
    * getter for constellationSize = number of satellites in constellation
@@ -85,7 +85,7 @@ class Constellation {
    * and the string is converted to a number, if it is a date string it is converted
    * to an iteration timestamp before startTime is set to that value
    */
-    void setStartTime(const std::string &startTime_str);
+    void setStartTime(const std::string &startTime_str,const std::string &referenceTime_str);
 
     /**
      * sets internal attribute duration according to the passed string parameter
@@ -137,12 +137,6 @@ class Constellation {
    * into simulation time expressed in iterations
    */
   double deltaT;
-
-  /**
-   * multiples of interval. the constellations state is set to 'a' = active whenever
-   * simulationTime reaches startTime
-   */
-  size_t simulationTime = 0;
 
   /**
    * The three different possible internal states of a constellation object:

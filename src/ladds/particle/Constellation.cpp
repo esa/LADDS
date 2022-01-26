@@ -22,7 +22,8 @@ Constellation::Constellation(const YAML::Node &constellationConfig,ConfigReader 
   // altitudeSpread = 3 * sigma , altitudeDeviation = sigma (= standardDeviation)
   altitudeDeviation = config.get<double>("io/altitudeSpread") / 3.0;
   deltaT = config.get<double>("sim/deltaT");
-  setStartTime(constellationConfig["constellation"]["startTime"].as<std::string>());
+  setStartTime(constellationConfig["constellation"]["startTime"].as<std::string>(),
+          config.get<std::string>("sim/referenceTime","2022/01/01"));
   setDuration(constellationConfig["constellation"]["duration"].as<std::string>());
 
   constellationName = constellationConfig["constellation"]["name"].as<std::string>();
@@ -64,9 +65,36 @@ Constellation::Constellation(const YAML::Node &constellationConfig,ConfigReader 
 
   // prepare next ID base for next constellation (C1 starts at 1M, C2 starts at 2M ...)
   particleID = particleID + 1000000 - constellationSize;
+
+  //when the simulation is loaded from a checkpoint the past satellites should NOT be added
+  //(but satellites that start before 0 SHOULD be added when the negative startTime does not stem from a checkpoint)
+  bool checkpointed = config.defines("io/checkpoint/file",false) &&
+          (config.get<std::string>("io/checkpoint/file","") != "");
+
+  if(checkpointed && startTime < 0) {
+      status = Status::active;
+      timeActive = -startTime;
+      //simulate tick without adding anything until present is reached
+      while(static_cast<double>(timeActive) > timestamps[currentShellIndex] + planesDeployed * timeSteps[currentShellIndex]){
+          planesDeployed++;
+          int planeSize = static_cast<int>(shells[currentShellIndex][3]);
+          for (int i = 0; i < planeSize; i++) {
+              satellites.pop_front();
+          }
+          if(planesDeployed >= shells[currentShellIndex][2]){
+              currentShellIndex++;
+              planesDeployed = 0;
+
+              if(currentShellIndex > shells.size()){
+                  status = Status::deployed;
+                  break;
+              }
+          }
+      }
+  }
 }
 
-std::vector<Particle> Constellation::tick() {
+std::vector<Particle> Constellation::tick(size_t simulationTime) {
   std::vector<Particle> particles{};
   switch (status) {
     case Status::deployed:
@@ -109,7 +137,6 @@ std::vector<Particle> Constellation::tick() {
       timeActive += interval;
       break;
   }
-  simulationTime += interval;
   return particles;
 }
 
@@ -129,15 +156,19 @@ size_t Constellation::getDuration() const {
     return duration;
 }
 
-void Constellation::setStartTime(const std::string &startTime_str) {
+void Constellation::setStartTime(const std::string &startTime_str, const std::string &referenceTime_str) {
     //date string
     if(startTime_str.size() > 4){
         if(startTime_str[4] == '/'){
             int year = std::stoi(startTime_str.substr(0, 4));
             int month = std::stoi(startTime_str.substr(5, 2)) - 1;
             int day = std::stoi(startTime_str.substr(8, 2));
+            int refYear = std::stoi(referenceTime_str.substr(0, 4));
+            int refMonth = std::stoi(referenceTime_str.substr(5, 2)) - 1;
+            int refDay = std::stoi(referenceTime_str.substr(8, 2));
             struct tm stm = {0,0,0,day,month,year};
-            struct tm t0 = {0,0,0,1,0,2022};
+            struct tm t0 = {0,0,0,refDay,refMonth,refYear};
+
             time_t stime = std::mktime(&stm) - std::mktime(&t0);
             //integer division cutting off anything smaller than 1ms
             startTime = static_cast<long>(static_cast<long>(stime)*1000) / static_cast<long>(deltaT*1000.0);
