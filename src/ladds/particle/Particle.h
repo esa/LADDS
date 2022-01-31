@@ -140,7 +140,7 @@ class Particle final : public autopas::ParticleFP64 {
   }
 
   /**
-   * Calculates distance from the origin of the coordinate frame
+   * Calculates distance from the origin of the coordinate frame [km]
    *
    * @return Euclidean norm of the #position vector
    */
@@ -168,21 +168,21 @@ class Particle final : public autopas::ParticleFP64 {
   [[nodiscard]] double getAccT1Norm() const;
 
   /**
-   * Getter function for #position vector
+   * Getter function for #position vector [km]
    *
    * @return 3D vector representation of the debris #position
    */
   [[nodiscard]] const std::array<double, 3> &getPosition() const;
 
   /**
-   * Setter function for #position vector
+   * Setter function for #position vector [km]
    *
    * @param position 3D vector representation of the debris #position
    */
   void setPosition(const std::array<double, 3> &position);
 
   /**
-   * Getter function for #velocity vector
+   * Getter function for #velocity vector [km/s]
    *
    * @return 3D vector representation of the debris #velocity
    */
@@ -322,17 +322,17 @@ class Particle final : public autopas::ParticleFP64 {
    * Area to mass relation [km^2/kg].
    * @note Used in the Propagator in SRPComponent::apply().
    */
-  double aom{0.};
+  double aom;
   /**
    * Mass of the object [kg].
    */
-  double mass{1.};
+  double mass;
   /**
    * Radius of the object when approximating it as a ball [m].
    */
-  double radius{1.};
+  double radius;
   /**
-   * C_cA)/m is the inverse of the ballistic coefficient. [kg m^2]
+   * c_D*A/m is the inverse of the ballistic coefficient. [kg m^2]
    * @note Used in the Propagator in Acceleration::DragComponent::apply().
    */
   double bc_inv;
