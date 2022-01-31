@@ -51,7 +51,8 @@ std::vector<Particle> HDF5Reader::readParticles(size_t iteration) const {
                            constantProperties.id,
                            static_cast<Particle::ActivityState>(constantProperties.activityState),
                            constantProperties.mass,
-                           constantProperties.radius);
+                           constantProperties.radius,
+                           2.2);
   }
 #endif
   return particles;

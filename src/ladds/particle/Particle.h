@@ -49,11 +49,13 @@ class Particle final : public autopas::ParticleFP64 {
            size_t debrisId,
            ActivityState activityState,
            double mass,
-           double radius)
+           double radius,
+           double coefficientOfDrag)
       : autopas::ParticleFP64(pos, v, debrisId),
-        aom(2. * M_PI * radius / mass * 1e-3),    // convert m -> km
+        aom(2. * M_PI * radius * 1e-3 / mass),  // convert m -> km
         mass(mass),
         radius(radius),
+        bc_inv(coefficientOfDrag * aom * 1e-6),  // convert km^2 -> m^2
         activityState(activityState) {}
 
   /**
@@ -332,9 +334,8 @@ class Particle final : public autopas::ParticleFP64 {
   /**
    * C_cA)/m is the inverse of the ballistic coefficient. [kg m^2]
    * @note Used in the Propagator in Acceleration::DragComponent::apply().
-   * FIXME: should probably set to something meaningful
    */
-  double bc_inv{0.};
+  double bc_inv;
 
   /**
    * If a particle can actively influence its orbit. See ActivityState.
