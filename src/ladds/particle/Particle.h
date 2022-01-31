@@ -52,10 +52,10 @@ class Particle final : public autopas::ParticleFP64 {
            double radius,
            double coefficientOfDrag)
       : autopas::ParticleFP64(pos, v, debrisId),
-        aom(2. * M_PI * radius * 1e-3 / mass),  // convert m -> km
+        aom(M_PI * radius * radius * 1e-6 / mass),  // convert m^2 -> km^2
         mass(mass),
         radius(radius),
-        bc_inv(coefficientOfDrag * aom * 1e-6),  // convert km^2 -> m^2
+        bc_inv(coefficientOfDrag * aom * 1e6),  // convert km^2 -> m^2
         activityState(activityState) {}
 
   /**
