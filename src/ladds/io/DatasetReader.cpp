@@ -6,34 +6,29 @@
 
 #include "DatasetReader.h"
 
-std::vector<Particle> DatasetReader::readDataset(const std::string &position_filepath,
-                                                 const std::string &velocity_filepath) {
-  CSVReader<double, double, double> pos_csvReader{position_filepath, false};
-  CSVReader<double, double, double> vel_csvReader{velocity_filepath, false};
+std::vector<Particle> DatasetReader::readDataset(const std::string &csvFilepath) {
+  CSVReader<size_t,       // id
+            std::string,  // name
+            double,       // mass
+            double,       // radius
+            std::string,  // Particle::ActivityState
+            double,       // r x
+            double,       // r y
+            double,       // r z
+            double,       // v x
+            double,       // v y
+            double        // v z
+            >
+      csvReader{csvFilepath, true};
+  const auto parsedData = csvReader.getLines();
+
   std::vector<Particle> particleCollection;
-
-  auto positions = pos_csvReader.getLines();
-  auto velocities = vel_csvReader.getLines();
-
-  if (positions.size() != velocities.size()) {
-    std::cout << "Error: Position and velocity file have different number of lines." << std::endl;
-    return particleCollection;
-  }
-
-  particleCollection.reserve(positions.size());
+  particleCollection.reserve(parsedData.size());
 
   size_t particleId = 0;
-  std::transform(positions.begin(),
-                 positions.end(),
-                 velocities.begin(),
-                 std::back_insert_iterator<std::vector<Particle>>(particleCollection),
-                 [&](const auto &pos, const auto &vel) {
-                   const auto &[x, y, z] = pos;
-                   const auto &[vx, vy, vz] = vel;
+  for (const auto &[id, name, mass, radius, activityState, rX, rY, rZ, vX, vY, vZ] : parsedData) {
+    particleCollection.emplace_back(std::array<double, 3>{rX, rY, rZ}, std::array<double, 3>{vX, vY, vZ}, id);
+  }
 
-                   const std::array<double, 3> posArray = {x, y, z};
-                   const std::array<double, 3> velArray = {vx, vy, vz};
-                   return Particle(posArray, velArray, particleId++);
-                 });
   return particleCollection;
 }

@@ -9,5 +9,5 @@ namespace DatasetReader {
 /**
  * Reads the passed position and velocity csv files. Returns a vector of particles.
  */
-std::vector<Particle> readDataset(const std::string &position_filepath, const std::string &velocity_filepath);
+std::vector<Particle> readDataset(const std::string &csvFilepath);
 }  // namespace DatasetReader

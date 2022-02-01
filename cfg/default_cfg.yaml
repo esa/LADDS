@@ -17,8 +17,8 @@ sim:
 
 io:
   output_file: output.csv # Output file name
-  posFileName: pos.csv # Name of the CSV file with satellite positions [km]
-  velFileName: v.csv # Name of the CSV file with satellite velocities [km/s]
+  csv:
+    fileName: initial_population.csv  # CSV file containing all data to initialize the full satellite population
   #progressOutputFrequency : 50 # Frequency of writing iteration number and encounter info to std::out.
   #checkpoint:
   #  file: simulationData.h5
