@@ -134,7 +134,7 @@ Simulation::initIntegrator(AutoPas_t &autopas, ConfigReader &config) {
 void Simulation::updateConstellation(AutoPas_t &autopas,
                                      std::vector<Constellation> &constellations,
                                      std::vector<Particle> &delayedInsertionTotal,
-                                     double constellationCutoff) {
+                                     double constellationCutoff,size_t iteration) {
   // first insert delayed particles from previous insertion and collect the repeatedly delayed
   delayedInsertionTotal = checkedInsert(autopas, delayedInsertionTotal, constellationCutoff);
   // container collecting delayed particles from one constellation at a time in order to append them to
@@ -142,7 +142,7 @@ void Simulation::updateConstellation(AutoPas_t &autopas,
   std::vector<Particle> delayedInsertion;
   for (auto &constellation : constellations) {
     // new satellites are gradually added to the simulation according to their starting time and operation duration
-    auto newSatellites = constellation.tick();
+    auto newSatellites = constellation.tick(iteration);
     delayedInsertion = checkedInsert(autopas, newSatellites, constellationCutoff);
     delayedInsertionTotal.insert(delayedInsertionTotal.end(), delayedInsertion.begin(), delayedInsertion.end());
   }
@@ -163,6 +163,8 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
                                 ConfigReader &config) {
   const auto tuningMode = config.get<bool>("autopas/tuningMode", false);
   const auto iterations = config.get<size_t>("sim/iterations");
+  //TODO: fallback value last iteration of checkpoint
+  const auto startIteration = config.defines("io/checkpoint/file") ? config.get<size_t>("io/checkpoint/iteration",0)+1:0;
   const auto constellationInsertionFrequency = config.get<int>("io/constellationFrequency", 1);
   const auto constellationCutoff = config.get<double>("io/constellationCutoff", 0.1);
   const auto progressOutputFrequency = config.get<int>("io/progressOutputFrequency", 50);
@@ -191,8 +193,9 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
 
   config.printParsedValues();
 
+  size_t iterationLimit = startIteration + iterations;
   // in tuning mode ignore the iteration counter
-  for (size_t i = 0ul; i < iterations or tuningMode; ++i) {
+  for (size_t i = startIteration; i < iterationLimit or tuningMode; ++i) {
     // update positions
     timers.integrator.start();
     integrator.integrate(false);
@@ -201,7 +204,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     timers.constellationInsertion.start();
     // new satellites from constellations inserted over time
     if (i % constellationInsertionFrequency == 0) {
-      updateConstellation(autopas, constellations, delayedInsertion, constellationCutoff);
+      updateConstellation(autopas, constellations, delayedInsertion, constellationCutoff,i);
     }
     timers.constellationInsertion.stop();
 
@@ -246,6 +249,9 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
       hdf5Writer->writeParticles(i, autopas);
     }
     timers.output.stop();
+  }
+  if((startIteration+iterations-1) % hdf5WriteFrequency != 0) {
+      hdf5Writer->writeParticles(iterationLimit - 1, autopas);
   }
   SPDLOG_LOGGER_INFO(logger.get(), "Total conjunctions: {}", totalConjunctions);
 }

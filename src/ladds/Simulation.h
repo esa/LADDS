@@ -73,7 +73,7 @@ class Simulation {
   void updateConstellation(AutoPas_t &autopas,
                            std::vector<Constellation> &constellations,
                            std::vector<Particle> &delayedInsertion,
-                           double constellationCutoff);
+                           double constellationCutoff,size_t iteration);
 
   /**
    * Check for collisions / conjunctions and write statistics about them.

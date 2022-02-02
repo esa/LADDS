@@ -1,6 +1,7 @@
 sim:
   logLevel: info    # Available levels are off, critical, err, warn, info, debug, trace
   iterations: 32000 # Number of simulation iterations
+  referenceTime: 2022/01/01 # date of first iteration, default: 2022/01/01
   maxAltitude: 10000 # Maximum satellite altitude [km]
   deltaT: 10.0 # [s]
   conjunctionThreshold: 0.5 # [km]
