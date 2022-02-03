@@ -170,7 +170,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
   const auto progressOutputFrequency = config.get<int>("io/progressOutputFrequency", 50);
   const auto deltaT = config.get<double>("sim/deltaT");
   const auto conjunctionThreshold = config.get<double>("sim/conjunctionThreshold");
-  const auto minAltitude = config.get<double>("sim/minAltitude", 200.);
+  const auto minAltitude = config.get<double>("sim/minAltitude", 150.);
   std::vector<Particle> delayedInsertion;
 
   const auto vtkWriteFrequency = config.get<size_t>("io/vtk/writeFrequency", 0ul);

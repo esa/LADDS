@@ -32,7 +32,7 @@ class SimulationTest : public testing::TestWithParam<ParameterTuple> {
     config["io"]["constellationCutoff"] = constellationCutoff;
     config["sim"]["conjunctionThreshold"] = 0.5;
     config["sim"]["iterations"] = 1;
-    config["sim"]["minAltitude"] = 200.;
+    config["sim"]["minAltitude"] = 150.;
     config["sim"]["prop"]["useKEPComponent"] = true;
 
     configReader = std::make_unique<ConfigReader>(config, logger);
