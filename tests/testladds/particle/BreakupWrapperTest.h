@@ -7,14 +7,14 @@
 #pragma once
 #include <gtest/gtest.h>
 #include <yaml-cpp/yaml.h>
+
 #include "ladds/Simulation.h"
 #include "ladds/TypeDefinitions.h"
 #include "ladds/io/Logger.h"
 
-class BreakupWrapperTest : public testing::Test{
+class BreakupWrapperTest : public testing::Test {
  public:
-
-  BreakupWrapperTest() : logger("BreakupWrapperTestLogger"), simulation(logger){
+  BreakupWrapperTest() : logger("BreakupWrapperTestLogger"), simulation(logger) {
     logger.get()->set_level(Logger::Level::off);
 
     // initialize a minimal default configuration
@@ -39,6 +39,3 @@ class BreakupWrapperTest : public testing::Test{
   std::unique_ptr<ConfigReader> configReader;
   std::unique_ptr<AutoPas_t> autopas;
 };
-
-
-
