@@ -52,14 +52,21 @@ target_compile_definitions(${TEST_EXECUTABLE_NAME}
     $<$<BOOL:${LADDS_HDF5}>:LADDS_HDF5=1>
 )
 
-gtest_discover_tests(${TEST_EXECUTABLE_NAME})
-
-add_test(
-        NAME validationtest.testValidation.yaml
-        COMMAND
-        ${PROJECT_SOURCE_DIR}/tests/validationtest.py
-        ${CMAKE_BINARY_DIR}/src/ladds/ladds
-        ${PROJECT_SOURCE_DIR}/cfg/testValidation.yaml
-        ${PROJECT_SOURCE_DIR}/tests/data/reference_10.vtu
-        CONFIGURATIONS validation
+gtest_discover_tests(${TEST_EXECUTABLE_NAME}
+    PROPERTIES
+        ENVIRONMENT "TSAN_OPTIONS=suppressions=${LADDS_SOURCE_DIR}/.sanitizerIgnoreList.txt ignore_noninstrumented_modules=1"
 )
+
+# FIXME: reactivate this with a new reference as soon as all relevant branches are combined:
+# [ ] Split-R,V-in-data
+# [ ] varyingParticleNumbers
+# [ ] ActivityState
+#add_test(
+#        NAME validationtest.testValidation.yaml
+#        COMMAND
+#        ${PROJECT_SOURCE_DIR}/tests/validationtest.py
+#        ${CMAKE_BINARY_DIR}/src/ladds/ladds
+#        ${PROJECT_SOURCE_DIR}/cfg/testValidation.yaml
+#        ${PROJECT_SOURCE_DIR}/tests/data/reference_10.vtu
+#        CONFIGURATIONS validation
+#)

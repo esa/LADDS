@@ -90,6 +90,19 @@ std::ostream &operator<<(std::ostream &os, const Particle &particle) {
   return os;
 }
 
+std::istream &operator>>(std::istream &s, Particle::ActivityState &state) {
+  std::string str;
+  s >> str;
+  if (str == "passive") {
+    state = Particle::ActivityState::passive;
+  } else if (str == "evasive") {
+    state = Particle::ActivityState::evasive;
+  } else if (str == "evasivePreserving") {
+    state = Particle::ActivityState::evasivePreserving;
+  }
+  return s;
+}
+
 bool Particle::operator==(const Particle &rhs) const {
   // clang-format off
   return static_cast<const autopas::ParticleBase<double, unsigned long> &>(*this)

@@ -68,10 +68,11 @@ std::vector<HDF5Definitions::CollisionInfo> HDF5Reader::readCollisions(size_t it
 }
 
 size_t HDF5Reader::readLastIterationNr() {
+  std::vector<size_t> allIterations;
+#ifdef LADDS_HDF5
   const auto groupStrLength = std::string(HDF5Definitions::groupParticleData).size();
   // gather all ID datasets. They contain the iteration number in their path
   auto allIdDatasets = file.findDatasets(HDF5Definitions::datasetParticleIDs);
-  std::vector<size_t> allIterations;
   allIterations.reserve(allIdDatasets.size());
   // extract all iteration numbers as size_t
   std::transform(allIdDatasets.begin(), allIdDatasets.end(), std::back_inserter(allIterations), [&](auto &datasetName) {
@@ -81,5 +82,6 @@ size_t HDF5Reader::readLastIterationNr() {
   });
   // sort numerically and return the highest
   std::sort(allIterations.begin(), allIterations.end());
+#endif
   return allIterations.back();
 }

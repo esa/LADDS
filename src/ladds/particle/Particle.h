@@ -342,3 +342,12 @@ class Particle final : public autopas::ParticleFP64 {
    */
   ActivityState activityState;
 };
+
+/**
+ * Input stream operator for the activity state.
+ * @note Needed for the CSVReader.
+ * @param s
+ * @param state
+ * @return
+ */
+std::istream &operator>>(std::istream &s, Particle::ActivityState &state);
