@@ -15,17 +15,14 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
   std::vector<Particle> satellites;
 
   // load CSV ...
-  const auto posFilePathCfg = config.get<std::string>("io/posFileName", "");
-  const auto velFilePathCfg = config.get<std::string>("io/velFileName", "");
-  if (not posFilePathCfg.empty() and not velFilePathCfg.empty()) {
-    const auto posFilePath = std::string(DATADIR) + posFilePathCfg;
-    const auto velFilePath = std::string(DATADIR) + velFilePathCfg;
+  const auto csvFileName = config.get<std::string>("io/csv/fileName", "");
+  if (not csvFileName.empty()) {
+    const auto csvFilePath = std::string(DATADIR) + csvFileName;
 
-    SPDLOG_LOGGER_INFO(
-        logger.get(), "Loading scenario from CSV\nPositions: {}\nVelocities: {}", posFilePath, velFilePath);
+    SPDLOG_LOGGER_INFO(logger.get(), "Loading scenario from CSV: {}", csvFilePath);
 
     // Read in scenario
-    satellites = DatasetReader::readDataset(posFilePath, velFilePath);
+    satellites = DatasetReader::readDataset(csvFilePath);
     SPDLOG_LOGGER_DEBUG(logger.get(), "Parsed {} satellites", satellites.size());
   } else {
     // ... or load checkpoint ...
