@@ -18,7 +18,7 @@ HDF5Reader::HDF5Reader(const std::string &filename)
 #endif
 }
 
-std::vector<Particle> HDF5Reader::readParticles(size_t iteration) const {
+std::vector<Particle> HDF5Reader::readParticles(size_t iteration, double coefficientOfDrag) const {
   std::vector<Particle> particles{};
 #ifdef LADDS_HDF5
   const auto pos = file.readDataset<std::vector<HDF5Definitions::Vec3<HDF5Definitions::FloatType>>>(
@@ -52,7 +52,7 @@ std::vector<Particle> HDF5Reader::readParticles(size_t iteration) const {
                            static_cast<Particle::ActivityState>(constantProperties.activityState),
                            constantProperties.mass,
                            constantProperties.radius,
-                           2.2);
+                           coefficientOfDrag);
   }
 #endif
   return particles;

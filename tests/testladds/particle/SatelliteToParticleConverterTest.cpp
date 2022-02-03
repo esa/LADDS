@@ -11,7 +11,7 @@
 TEST(SatelliteToParticleConverterTest, SatelliteToParticle) {
   // Create a particle.
   const Satellite sat{"name", SatType::DEBRIS, {10., 10., 10.}};
-  const auto particle = SatelliteToParticleConverter::convertSatelliteToParticle(sat);
+  const auto particle = SatelliteToParticleConverter::convertSatelliteToParticle(sat, 2.2);
 
   const auto &expectedPosition = autopas::utils::ArrayMath::mulScalar(sat.getPosition(), 1. / 1000.0);
   const auto &expectedVelocity = autopas::utils::ArrayMath::mulScalar(sat.getVelocity(), 1. / 1000.0);
@@ -38,7 +38,7 @@ TEST(SatelliteToParticleConverterTest, ParticleToSatellite) {
   EXPECT_THAT(sat.getVelocity(), ::testing::ElementsAreArray(expectedVelocity));
   EXPECT_EQ(sat.getMass(), particle.getMass());
 
-  const auto particleConverted = SatelliteToParticleConverter::convertSatelliteToParticle(sat);
+  const auto particleConverted = SatelliteToParticleConverter::convertSatelliteToParticle(sat, 2.2);
   EXPECT_THAT(particleConverted.getPosition(), ::testing::ElementsAreArray(particle.getPosition()));
   EXPECT_THAT(particleConverted.getVelocity(), ::testing::ElementsAreArray(particle.getVelocity()));
   EXPECT_EQ(particleConverted.getMass(), particle.getMass());

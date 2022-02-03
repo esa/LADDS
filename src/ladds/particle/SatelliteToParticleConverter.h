@@ -16,13 +16,18 @@ namespace SatelliteToParticleConverter {
  * @param  satellite: Satellite to convert.
  * @retval Converted particles.
  */
-[[nodiscard]] inline Particle convertSatelliteToParticle(const Satellite &satellite) {
+[[nodiscard]] inline Particle convertSatelliteToParticle(const Satellite &satellite, double coefficientOfDrag) {
   // Convert all entries from meters to kilometers
   const auto &position = autopas::utils::ArrayMath::mulScalar(satellite.getPosition(), 1. / 1000.0);
   const auto &velocity = autopas::utils::ArrayMath::mulScalar(satellite.getVelocity(), 1. / 1000.0);
   const auto radius = std::sqrt(satellite.getArea() * M_1_PI);
-  return Particle{
-      position, velocity, satellite.getId(), Particle::ActivityState::passive, satellite.getMass(), radius, 2.2};
+  return Particle{position,
+                  velocity,
+                  satellite.getId(),
+                  Particle::ActivityState::passive,
+                  satellite.getMass(),
+                  radius,
+                  coefficientOfDrag};
 }
 
 /**

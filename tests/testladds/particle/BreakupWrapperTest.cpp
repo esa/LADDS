@@ -12,6 +12,7 @@
  * Crash two particles into each other and observe that new particles have higher IDs.
  */
 TEST_F(BreakupWrapperTest, testSimulationLoop) {
+  configReader->setValue("sim/coefficientOfDrag", 2.2);
   auto [csvWriter, accumulator, integrator] = simulation.initIntegrator(*autopas, *configReader);
 
   // two particles 1000km above earth whose paths cross exactly at [R+1000, 0, 0]

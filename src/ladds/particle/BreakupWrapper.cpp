@@ -27,7 +27,7 @@ void BreakupWrapper::simulateBreakup(const CollisionFunctor::CollisionCollection
     // insert resulting debris into the simulation
     const auto &newSatellites = breakup->getResult();
     for (const auto &newSat : newSatellites) {
-      autopas.addParticle(SatelliteToParticleConverter::convertSatelliteToParticle(newSat));
+      autopas.addParticle(SatelliteToParticleConverter::convertSatelliteToParticle(newSat, coefficientOfDrag));
     }
   }
 }

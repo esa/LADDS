@@ -47,7 +47,7 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestParticleData) {
 
   // 3. read data and check that read data is equal to generated data
   HDF5Reader hdf5Reader(filename);
-  EXPECT_THAT(hdf5Reader.readParticles(iterationNr), ::testing::UnorderedElementsAreArray(particles))
+  EXPECT_THAT(hdf5Reader.readParticles(iterationNr, 2.2), ::testing::UnorderedElementsAreArray(particles))
       << "Particle data of initial iteration is not correct!";
 
   // 4. add more particles and check that they are added correctly to HDF5
@@ -64,7 +64,7 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestParticleData) {
   hdf5Writer.writeParticles(iterationNr + 1, autopas);
 
   // 6. read data and check that read data is equal to generated data
-  EXPECT_THAT(hdf5Reader.readParticles(iterationNr + 1), ::testing::UnorderedElementsAreArray(particles))
+  EXPECT_THAT(hdf5Reader.readParticles(iterationNr + 1, 2.2), ::testing::UnorderedElementsAreArray(particles))
       << "Particle data of second iteration is not correct!";
   ;
 

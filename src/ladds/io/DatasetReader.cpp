@@ -6,7 +6,7 @@
 
 #include "DatasetReader.h"
 
-std::vector<Particle> DatasetReader::readDataset(const std::string &csvFilepath) {
+std::vector<Particle> DatasetReader::readDataset(const std::string &csvFilepath, double coefficientOfDrag) {
   CSVReader<size_t,                   // id
             std::string,              // name
             double,                   // mass
@@ -27,8 +27,13 @@ std::vector<Particle> DatasetReader::readDataset(const std::string &csvFilepath)
 
   size_t particleId = 0;
   for (const auto &[id, name, mass, radius, activityState, rX, rY, rZ, vX, vY, vZ] : parsedData) {
-    particleCollection.emplace_back(
-        std::array<double, 3>{rX, rY, rZ}, std::array<double, 3>{vX, vY, vZ}, id, activityState, mass, radius, 2.2);
+    particleCollection.emplace_back(std::array<double, 3>{rX, rY, rZ},
+                                    std::array<double, 3>{vX, vY, vZ},
+                                    id,
+                                    activityState,
+                                    mass,
+                                    radius,
+                                    coefficientOfDrag);
   }
 
   return particleCollection;
