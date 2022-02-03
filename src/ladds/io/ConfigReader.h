@@ -38,7 +38,9 @@ class ConfigReader {
    * Primary function to retrieve values from the underlying YAML data.
    * @tparam T Type as which the retrieved data shall be read.
    * @param valuePath Path within the YAML file to the data field.
-   * @param fallbackValue Value to use if the field can not be found. If std::nullopt is used an exception is thrown.
+   * @param fallbackValue Value to use if the field can not be found.
+   *    Has to work with std::to_string() if T != std::string.
+   *    If std::nullopt is used an exception is thrown when no value was found.
    * @param suppressWarning If true no warning is logged when the default value is used.
    * @param fallbackToString If the fallback value is non trivial a function can be passed that provides a string
    * representation.
@@ -68,6 +70,12 @@ class ConfigReader {
                                fallbackValue.value());
           }
           parsedValues.emplace(valuePath, fallbackToString(fallbackValue.value()));
+          // if the value is not a string try to convert it via std::to_string for serialization
+          if constexpr (std::is_same_v<T, std::string>) {
+            setValue(valuePath, fallbackValue.value());
+          } else {
+            setValue(valuePath, std::to_string(fallbackValue.value()));
+          }
           return fallbackValue.value();
         } else {
           throw std::runtime_error("Config option not found: " + valuePath);
