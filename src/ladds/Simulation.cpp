@@ -19,6 +19,7 @@
 #include "ladds/io/SatelliteLoader.h"
 #include "ladds/io/VTUWriter.h"
 #include "ladds/io/hdf5/HDF5Writer.h"
+#include "ladds/particle/BreakupWrapper.h"
 #include "ladds/particle/Constellation.h"
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
@@ -119,10 +120,11 @@ Simulation::initIntegrator(AutoPas_t &autopas, ConfigReader &config) {
                                   config.get<bool>("sim/prop/useSRPComponent", false),
                                   config.get<bool>("sim/prop/useDRAGComponent", false)};
 
-  auto csvWriter = std::make_unique<FileOutput<AutoPas_t>>(autopas,
-                                                           config.get<std::string>("io/output_file", "propagator.csv"),
-                                                           OutputFile::CSV,
-                                                           selectedPropagatorComponents);
+  std::unique_ptr<FileOutput<AutoPas_t>> csvWriter{nullptr};
+  if (const auto csvFilename = config.get<std::string>("io/output_file", ""); not csvFilename.empty()) {
+    csvWriter =
+        std::make_unique<FileOutput<AutoPas_t>>(autopas, csvFilename, OutputFile::CSV, selectedPropagatorComponents);
+  }
   auto accumulator = std::make_unique<Acceleration::AccelerationAccumulator<AutoPas_t>>(
       selectedPropagatorComponents, autopas, 0.0, *csvWriter);
   auto deltaT = config.get<double>("sim/deltaT");
@@ -168,6 +170,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
   const auto progressOutputFrequency = config.get<int>("io/progressOutputFrequency", 50);
   const auto deltaT = config.get<double>("sim/deltaT");
   const auto conjunctionThreshold = config.get<double>("sim/conjunctionThreshold");
+  const auto minAltitude = config.get<double>("sim/minAltitude", 150.);
   std::vector<Particle> delayedInsertion;
 
   const auto vtkWriteFrequency = config.get<size_t>("io/vtk/writeFrequency", 0ul);
@@ -187,6 +190,9 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     conjuctionWriter = std::make_shared<ConjunctionLogger>("");
   }
 
+  const std::unique_ptr<BreakupWrapper> breakupWrapper =
+      config.defines("sim/breakup") ? std::make_unique<BreakupWrapper>(config, autopas) : nullptr;
+
   size_t totalConjunctions{0ul};
 
   config.printParsedValues();
@@ -197,6 +203,11 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     timers.integrator.start();
     integrator.integrate(false);
     timers.integrator.stop();
+
+    // everything below a threshold now burns up
+    timers.burnUps.start();
+    deleteBurnUps(autopas, minAltitude);
+    timers.burnUps.stop();
 
     timers.constellationInsertion.start();
     // new satellites from constellations inserted over time
@@ -215,7 +226,6 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     if (not escapedParticles.empty()) {
       SPDLOG_LOGGER_ERROR(logger.get(), "Particles are escaping! \n{}", escapedParticles);
     }
-    // TODO Check for particles that burn up
 
     timers.collisionDetection.start();
     auto [collisions, stillTuning] = collisionDetection(autopas, deltaT, conjunctionThreshold);
@@ -235,7 +245,11 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     }
     timers.collisionWriting.stop();
 
-    // TODO insert breakup model here
+    if (breakupWrapper and not collisions.empty()) {
+      timers.collisionSimulation.start();
+      breakupWrapper->simulateBreakup(collisions);
+      timers.collisionSimulation.stop();
+    }
 
     timers.output.start();
     // Visualization:
@@ -255,9 +269,8 @@ std::vector<Particle> Simulation::checkedInsert(autopas::AutoPas<Particle> &auto
                                                 double constellationCutoff) {
   std::vector<Particle> delayedInsertion = {};
 
-  const double collisionRadius = constellationCutoff;
-  const double collisionRadiusSquared = collisionRadius * collisionRadius;
-  const std::array<double, 3> boxSpan = {collisionRadius, collisionRadius, collisionRadius};
+  const double collisionRadiusSquared = constellationCutoff * constellationCutoff;
+  const std::array<double, 3> boxSpan = {constellationCutoff, constellationCutoff, constellationCutoff};
   for (const auto &satellite : newSatellites) {
     // only insert satellites, if they have a reasonable distance to other satellites
     bool collisionFree = true;
@@ -312,4 +325,23 @@ void Simulation::dumpCalibratedConfig(ConfigReader &config, const AutoPas_t &aut
   config.setValue("autopas/Traversal", autopasConfig.traversal.to_string());
   config.setValue("autopas/tuningMode", "off");
   config.dumpConfig("calibratedConfig.yaml");
+}
+
+void Simulation::deleteBurnUps(autopas::AutoPas<Particle> &autopas, double burnUpAltitude) const {
+  const auto critAltitude = burnUpAltitude + Physics::R_EARTH;
+  const auto critAltitudeSquared = critAltitude * critAltitude;
+  // TODO: check if it worthwhile to do this in parallel
+  for (auto particleIter = autopas.getRegionIterator({-critAltitude, -critAltitude, -critAltitude},
+                                                     {critAltitude, critAltitude, critAltitude});
+       particleIter != autopas.end();
+       ++particleIter) {
+    // Altitude above earth core
+    const auto &pos = particleIter->getPosition();
+    const auto particleAltitudeSquared = autopas::utils::ArrayMath::dot(pos, pos);
+    if (particleAltitudeSquared < critAltitudeSquared) {
+      autopas.deleteParticle(particleIter);
+      SPDLOG_LOGGER_DEBUG(
+          logger.get(), "Particle too close to the ground. Considered to be burning up!\n{}", *particleIter);
+    }
+  }
 }

@@ -47,8 +47,6 @@ jobs:
 
   test_ASAN:
     runs-on: ubuntu-latest
-    env:
-      TSAN_OPTIONS: ignore_noninstrumented_modules=1
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
@@ -83,8 +81,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: autopas/autopas-build-archer
-    env:
-      TSAN_OPTIONS: ignore_noninstrumented_modules=1
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies

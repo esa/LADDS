@@ -1,0 +1,3 @@
+# Thread sanitizer: ignore anything related to libtbb
+# WARNING: this pattern is very general and might be dangerous
+race:^tbb*

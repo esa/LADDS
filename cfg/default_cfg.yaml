@@ -1,7 +1,8 @@
 sim:
   logLevel: info    # Available levels are off, critical, err, warn, info, debug, trace
   iterations: 32000 # Number of simulation iterations
-  maxAltitude: 10000 # Maximum satellite altitude [km]
+  maxAltitude: 10000 # Maximum satellite altitude above earth core. This number times two is the simulation box length. [km]
+  minAltitude: 150 # Everything below this altitude above ground will be considered burning up [km]
   deltaT: 10.0 # [s]
   conjunctionThreshold: 0.5 # [km]
 
@@ -15,8 +16,12 @@ sim:
     useSRPComponent: true # Solar radiation pressure
     useDRAGComponent: true # Atmospheric drag
 
+  breakup:  # remove this block if no breakup modelling is desired
+    minLc: 0.05 # minimal characteristic length for generated debris [m]
+    enforceMassConservation: true # by default the NASA breakup model does not conserve mass
+
 io:
-  output_file: output.csv # Output file name
+  # output_file: propagator.csv # Output file for the propagator. Currently, nothing is written.
   csv:
     fileName: initial_population.csv  # CSV file containing all data to initialize the full satellite population
   #progressOutputFrequency : 50 # Frequency of writing iteration number and encounter info to std::out.

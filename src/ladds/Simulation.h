@@ -115,6 +115,13 @@ class Simulation {
                                       double constellationCutoff);
 
   /**
+   * Remove all particles below a certain altitude from the particle container.
+   * @param autopas
+   * @param burnUpAltitude Height above ground. [km]
+   */
+  void deleteBurnUps(autopas::AutoPas<Particle> &autopas, double burnUpAltitude) const;
+
+  /**
    * One logger to log them all.
    */
   Logger &logger;
