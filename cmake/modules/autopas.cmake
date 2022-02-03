@@ -13,8 +13,8 @@ endif ()
 FetchContent_Declare(
         autopasfetch
         GIT_REPOSITORY ${autopasRepoPath}
-        # AutoPas::deleteParticle(particle &) 24.01.22
-        GIT_TAG exposeDeleteParticleRef
+        # merge after AutoPas::deleteParticle(particle &) 03.02.22
+        GIT_TAG 2b262a83a24311bdd9b50d8b4db468726a659758
 )
 # Populate dependency
 FetchContent_MakeAvailable(autopasfetch)
