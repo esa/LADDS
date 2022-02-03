@@ -58,9 +58,15 @@ Constellation::Constellation(const YAML::Node &constellationConfig,ConfigReader 
     timestamps.push_back(timestamp);
   }
 
-  // for each shell determine the interval a new plane is added, each shell has its own timestep
-  for (size_t i = 0ul; i < timestamps.size() - 1; ++i) {
-    timeSteps.push_back((timestamps[i + 1] - timestamps[i]) / shells[i][2]);  // = duration_i / nPlanes_i
+  schedule.resize(nShells);
+  for(int i = 0ul; i < timestamps.size() - 1;++i){
+      int nPlanes = shells[i][2];
+      double timeStepSize = (timestamps[i + 1] - timestamps[i]) / nPlanes;
+
+      schedule[i].reserve(nPlanes);
+      for(int j = 0ul;j < nPlanes;j++){
+          schedule[i].push_back(timestamps[i]+j*timeStepSize);
+      }
   }
 
   // prepare next ID base for next constellation (C1 starts at 1M, C2 starts at 2M ...)
@@ -75,7 +81,7 @@ Constellation::Constellation(const YAML::Node &constellationConfig,ConfigReader 
       status = Status::active;
       timeActive = -startTime;
       //simulate tick without adding anything until present is reached
-      while(static_cast<double>(timeActive) > timestamps[currentShellIndex] + planesDeployed * timeSteps[currentShellIndex]){
+      while(static_cast<double>(timeActive) > schedule[currentShellIndex][planesDeployed]){
           planesDeployed++;
           int planeSize = static_cast<int>(shells[currentShellIndex][3]);
           for (int i = 0; i < planeSize; i++) {
@@ -112,10 +118,10 @@ std::vector<Particle> Constellation::tick(size_t simulationTime) {
       }
     case Status::active:
 
-      while (static_cast<double>(timeActive) >=
-             timestamps[currentShellIndex] + planesDeployed * timeSteps[currentShellIndex]) {
+      while (static_cast<double>(timeActive) >= schedule[currentShellIndex][planesDeployed]) {
+        std::cout << constellationName << " " << schedule[currentShellIndex][planesDeployed] << std::endl;
         int planeSize = static_cast<int>(shells[currentShellIndex][3]);
-        particles.reserve(planeSize);
+        particles.reserve(particles.capacity()+planeSize);
         for (int i = 0; i < planeSize; i++) {
           particles.push_back(satellites[0]);
           satellites.pop_front();
