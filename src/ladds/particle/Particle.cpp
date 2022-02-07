@@ -72,7 +72,66 @@ void Particle::setBcInv(const double bcInv) {
   bc_inv = bcInv;
 }
 
+Particle::ActivityState Particle::getActivityState() const {
+  return activityState;
+}
+
+void Particle::setActivityState(Particle::ActivityState activityState) {
+  Particle::activityState = activityState;
+}
+
 std::ostream &operator<<(std::ostream &os, const Particle &particle) {
-  os << particle.toString();
+  // clang-format off
+  os << particle.toString()
+     << "\nMass          : " << particle.getMass()
+     << "\nRadius        : " << particle.getRadius()
+     << "\nActivityState : " << static_cast<int>(particle.getActivityState());
+  // clang-format on
   return os;
+}
+
+std::istream &operator>>(std::istream &s, Particle::ActivityState &state) {
+  std::string str;
+  s >> str;
+  if (str == "passive") {
+    state = Particle::ActivityState::passive;
+  } else if (str == "evasive") {
+    state = Particle::ActivityState::evasive;
+  } else if (str == "evasivePreserving") {
+    state = Particle::ActivityState::evasivePreserving;
+  }
+  return s;
+}
+
+bool Particle::operator==(const Particle &rhs) const {
+  // clang-format off
+  return static_cast<const autopas::ParticleBase<double, unsigned long> &>(*this)
+      == static_cast<const autopas::ParticleBase<double, unsigned long> &>(rhs) and
+      acc_t0 == rhs.acc_t0 and
+      acc_t1 == rhs.acc_t1 and
+      aom == rhs.aom and
+      mass == rhs.mass and
+      radius == rhs.radius and
+      bc_inv == rhs.bc_inv and
+      activityState == rhs.activityState;
+  // clang-format on
+}
+bool Particle::operator!=(const Particle &rhs) const {
+  return !(rhs == *this);
+}
+
+double Particle::getMass() const {
+  return mass;
+}
+
+void Particle::setMass(double mass) {
+  Particle::mass = mass;
+}
+
+double Particle::getRadius() const {
+  return radius;
+}
+
+void Particle::setRadius(double radius) {
+  Particle::radius = radius;
 }

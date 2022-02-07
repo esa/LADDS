@@ -5,9 +5,9 @@ message(STATUS "Adding Propagator.")
 include(FetchContent)
 
 # Select https (default) or ssh path.
-set(PropagatorRepoPath https://github.com/Wombatwarrior/BA_space_debris.git)
+set(PropagatorRepoPath https://github.com/FG-TUM/OrbitPropagator.git)
 if (GIT_SUBMODULES_SSH)
-    set(PropagatorRepoPath git@github.com:Wombatwarrior/BA_space_debris.git)
+    set(PropagatorRepoPath git@github.com:FG-TUM/OrbitPropagator.git)
 endif ()
 
 # disable stuff we do not need
@@ -18,8 +18,8 @@ set(DebrisSim_Simulation OFF CACHE INTERNAL "")
 FetchContent_Declare(
         Propagatorfetch
         GIT_REPOSITORY ${PropagatorRepoPath}
-        # branch: IntegratorComparision; OpenMP parallelization
-        GIT_TAG 58ebb3a7d902a5adef9c9e4a9a62bb87367aa2b9
+        # branch: main; latest feature: ActivityState
+        GIT_TAG 9f5be5c079b2ff9ff6e64e34751f1429b61c8b46
 )
 
 # Get Propagator source and binary directories from CMake project

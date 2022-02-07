@@ -5,6 +5,8 @@ sim:
   minAltitude: 150 # Everything below this altitude above ground will be considered burning up [km]
   deltaT: 10.0 # [s]
   conjunctionThreshold: 0.5 # [km]
+  # TODO: should this go into the prop section?
+  # coefficientOfDrag: 2.2  # c_D for the drag component in the propagator TODO: more doc, where is it used to derive what?
 
   prop: # Which propagation model components should be applied
     useKEPComponent: true # Keplerian propagation

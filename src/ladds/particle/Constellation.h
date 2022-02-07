@@ -29,8 +29,12 @@ class Constellation {
    * passed for internal logic
    * @param altitudeDeviation : used to create satellites with normally distributed
    * altitudes. Equals the standard deviation of a normal distribution
+   * @param coefficientOfDrag c_D used to initialize all satellites.
    */
-  Constellation(const std::string &constellation_data_str, size_t interval, double altitudeDeviation);
+  Constellation(const std::string &constellation_data_str,
+                size_t interval,
+                double altitudeDeviation,
+                double coefficientOfDrag);
   /**
    * determines which satellites are being added to the simulation by adding each shell
    * within a time span proportional to the shells size. shells are added plane by plane
@@ -53,9 +57,14 @@ class Constellation {
 
   /**
    * Reads the passed position and velocity csv files. Returns a vector of particles.
+   * @param position_filepath
+   * @param velocity_filepath
+   * @param coefficientOfDrag
+   * @return
    */
   static std::vector<Particle> readDatasetConstellation(const std::string &position_filepath,
-                                                        const std::string &velocity_filepath);
+                                                        const std::string &velocity_filepath,
+                                                        double coefficientOfDrag);
 
   /**
    * changes the pos vector by adding a random, normal distributed offset to the altitude
