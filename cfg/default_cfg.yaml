@@ -18,7 +18,8 @@ sim:
     useSRPComponent: true # Solar radiation pressure
     useDRAGComponent: true # Atmospheric drag
 
-  breakup:  # remove this block if no breakup modelling is desired
+  breakup:
+    enabled: true # (de-)activate the breakup mechanic
     minLc: 0.05 # minimal characteristic length for generated debris [m]
     enforceMassConservation: true # by default the NASA breakup model does not conserve mass
 

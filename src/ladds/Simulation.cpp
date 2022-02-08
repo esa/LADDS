@@ -192,8 +192,9 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     conjuctionWriter = std::make_shared<ConjunctionLogger>("");
   }
 
+  // only add the breakup model if enabled via yaml
   const std::unique_ptr<BreakupWrapper> breakupWrapper =
-      config.defines("sim/breakup") ? std::make_unique<BreakupWrapper>(config, autopas) : nullptr;
+      config.get<bool>("sim/breakup/enabled") ? std::make_unique<BreakupWrapper>(config, autopas) : nullptr;
 
   size_t totalConjunctions{0ul};
 
