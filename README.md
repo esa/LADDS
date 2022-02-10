@@ -14,6 +14,12 @@ Codebase for the ARIADNA Study between TU Munich and ESA's Advanced Concepts Tea
 * Doxygen
 * clang-format-9
 
+## Important Dependencies
+The following codes play an important role in this project. They are downloaded and managed via CMake at configure time:
+* [AutoPas](https://github.com/AutoPas/AutoPas)
+* [NASA Breakup Model](https://github.com/esa/NASA-breakup-model-cpp/pulls)
+* [Orbit Propagator](https://github.com/FG-TUM/OrbitPropagator)
+
 ## Building
 ```bash
 mkdir build && cd build
