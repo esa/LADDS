@@ -14,6 +14,12 @@ Codebase for the ARIADNA Study between TU Munich and ESA's Advanced Concepts Tea
 * Doxygen
 * clang-format-9
 
+## Important Dependencies
+The following codes play an important role in this project. They are downloaded and managed via CMake at configure time:
+* [AutoPas](https://github.com/AutoPas/AutoPas)
+* [NASA Breakup Model](https://github.com/esa/NASA-breakup-model-cpp/pulls)
+* [Orbit Propagator](https://github.com/FG-TUM/OrbitPropagator)
+
 ## Building
 ```bash
 mkdir build && cd build
@@ -71,15 +77,20 @@ A single `.h5` containing particle and conjunction data from a full simulation r
 │           idA idB distanceSquared
 └── ParticleData
     └── <IterationNr>
-        └── Particles
-            ├── (Dataset) IDs
-            ├── (Dataset) Positions
-            │   x y z
-            └── (Dataset) Velocities
-                x y z
+    │   └── Particles
+    │       ├── (Dataset) IDs
+    │       ├── (Dataset) Positions
+    │       │   x y z
+    │       └── (Dataset) Velocities
+    │           x y z
+    └─── (Dataset) ConstantProperties
+         id mass radius activityState
 ```
 
-Collision data is tracked every iteration, particle data only in intervals that are defined in the YAML file. To keep file size reasonable compression is supported.
+Collision data is tracked every iteration, particle data only in intervals that are defined in the YAML file.
+`ConstantProperties` contains properties of all particles that existed over the course of the simulation. 
+Due to burn ups or breakups the number of particles in any iteration might differ but `id`s are unique! 
+To keep file size reasonable compression is supported.
 
 ### CSV
 If HDF5 output is disabled entirely, collision data is written in a `.csv` file in ASCII layout.

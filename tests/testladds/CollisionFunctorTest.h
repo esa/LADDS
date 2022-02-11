@@ -25,7 +25,6 @@ class CollisionFunctorTest : public testing::TestWithParam<ParameterTuple> {
     std::string operator()(const testing::TestParamInfo<ParamType> &info) const {
       const auto &[x1, x2, v1, v2, dt, expected_dist] = static_cast<ParamType>(info.param);
 
-      auto inputTuple = static_cast<ParamType>(info.param);
       std::stringstream ss;
       ss << "x1_" << autopas::utils::ArrayUtils::to_string(x1, "", {"", ""}) << "x2_"
          << autopas::utils::ArrayUtils::to_string(x2, "", {"", ""}) << "_"

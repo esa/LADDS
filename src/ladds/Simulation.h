@@ -82,7 +82,8 @@ class Simulation {
    */
   std::tuple<CollisionFunctor::CollisionCollectionT, bool> collisionDetection(AutoPas_t &autopas,
                                                                               double deltaT,
-                                                                              double conjunctionThreshold);
+                                                                              double conjunctionThreshold,
+                                                                              double minDetectionRadius);
 
   /**
    * Updates the configuration with the latest AutoPas configuration and writes it to a new YAML file.
@@ -113,6 +114,13 @@ class Simulation {
   std::vector<Particle> checkedInsert(autopas::AutoPas<Particle> &autopas,
                                       const std::vector<Particle> &newSatellites,
                                       double constellationCutoff);
+
+  /**
+   * Remove all particles below a certain altitude from the particle container.
+   * @param autopas
+   * @param burnUpAltitude Height above ground. [km]
+   */
+  void deleteBurnUps(autopas::AutoPas<Particle> &autopas, double burnUpAltitude) const;
 
   /**
    * One logger to log them all.

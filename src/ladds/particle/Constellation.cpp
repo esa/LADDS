@@ -14,7 +14,10 @@
 
 std::mt19937 Constellation::generator{42};
 
-Constellation::Constellation(const std::string &constellation_data_str, size_t interval, double altitudeDeviation)
+Constellation::Constellation(const std::string &constellation_data_str,
+                             size_t interval,
+                             double altitudeDeviation,
+                             double coefficientOfDrag)
     : interval(interval), altitudeDeviation(altitudeDeviation), distribution(0., altitudeDeviation) {
   // split the 3 comma seperated arguments
   auto seperator1 = constellation_data_str.find(',', 0);
@@ -31,7 +34,8 @@ Constellation::Constellation(const std::string &constellation_data_str, size_t i
   // set variables using 3 args
   std::vector<Particle> sats =
       readDatasetConstellation(std::string(DATADIR) + argConstellationName + "/pos_" + argConstellationName + ".csv",
-                               std::string(DATADIR) + argConstellationName + "/v_" + argConstellationName + ".csv");
+                               std::string(DATADIR) + argConstellationName + "/v_" + argConstellationName + ".csv",
+                               coefficientOfDrag);
 
   // convert vector to deque
   constellationSize = sats.size();
@@ -122,7 +126,8 @@ size_t Constellation::getConstellationSize() const {
 }
 
 std::vector<Particle> Constellation::readDatasetConstellation(const std::string &position_filepath,
-                                                              const std::string &velocity_filepath) {
+                                                              const std::string &velocity_filepath,
+                                                              double coefficientOfDrag) {
   CSVReader<double, double, double> pos_csvReader{position_filepath, false};
   CSVReader<double, double, double> vel_csvReader{velocity_filepath, false};
   std::vector<Particle> particleCollection;
@@ -138,18 +143,20 @@ std::vector<Particle> Constellation::readDatasetConstellation(const std::string 
   particleCollection.reserve(positions.size());
 
   size_t particleId = 0;
-  std::transform(positions.begin(),
-                 positions.end(),
-                 velocities.begin(),
-                 std::back_insert_iterator<std::vector<Particle>>(particleCollection),
-                 [&](const auto &pos, const auto &vel) {
-                   const auto &[x, y, z] = pos;
-                   const auto &[vx, vy, vz] = vel;
+  std::transform(
+      positions.begin(),
+      positions.end(),
+      velocities.begin(),
+      std::back_insert_iterator<std::vector<Particle>>(particleCollection),
+      [&](const auto &pos, const auto &vel) {
+        const auto &[x, y, z] = pos;
+        const auto &[vx, vy, vz] = vel;
 
-                   const std::array<double, 3> posArray = {x, y, z};
-                   const std::array<double, 3> velArray = {vx, vy, vz};
-                   return Particle(posArray, velArray, particleId++);
-                 });
+        const std::array<double, 3> posArray = {x, y, z};
+        const std::array<double, 3> velArray = {vx, vy, vz};
+        return Particle(
+            posArray, velArray, particleId++, Particle::ActivityState::evasivePreserving, 1., 1., coefficientOfDrag);
+      });
   return particleCollection;
 }
 
