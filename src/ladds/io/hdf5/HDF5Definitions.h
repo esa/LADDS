@@ -53,7 +53,7 @@ struct CollisionInfo {
  */
 struct ParticleConstantProperties {
   IntType id{};
-  std::string identifier{};
+  const char *identifier{};
   FloatType mass{}, radius{}, bcInv{};
   int activityState{};
 };

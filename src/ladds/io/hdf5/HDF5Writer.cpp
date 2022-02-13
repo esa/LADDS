@@ -36,10 +36,15 @@ HDF5Writer::HDF5Writer(const std::string &filename, unsigned int compressionLeve
             "id",
             HOFFSET(HDF5Definitions::ParticleConstantProperties, id),
             h5pp::type::getH5NativeType<decltype(HDF5Definitions::ParticleConstantProperties::id)>());
+  // Define variable length type for c-string field
+  h5pp::hid::h5t H5_VLEN_STR_TYPE = H5Tcopy(H5T_C_S1);
+  H5Tset_size(H5_VLEN_STR_TYPE, H5T_VARIABLE);
+  H5Tset_strpad(H5_VLEN_STR_TYPE, H5T_STR_NULLTERM);
+  H5Tset_cset(H5_VLEN_STR_TYPE, H5T_CSET_UTF8);
   H5Tinsert(particleConstantPropertiesH5Type,
             "identifier",
             HOFFSET(HDF5Definitions::ParticleConstantProperties, identifier),
-            h5pp::type::getH5NativeType<decltype(HDF5Definitions::ParticleConstantProperties::identifier)>());
+            H5_VLEN_STR_TYPE);
   H5Tinsert(particleConstantPropertiesH5Type,
             "mass",
             HOFFSET(HDF5Definitions::ParticleConstantProperties, mass),
@@ -95,7 +100,7 @@ void HDF5Writer::writeParticles(size_t iteration, const AutoPas_t &autopas) {
     if (maxWrittenParticleID == 0 or id > maxWrittenParticleID) {
       newConstantProperties.emplace_back(
           HDF5Definitions::ParticleConstantProperties{id,
-                                                      particle.getIdentifier(),
+                                                      particle.getIdentifier().c_str(),
                                                       static_cast<HDF5Definitions::FloatType>(particle.getMass()),
                                                       static_cast<HDF5Definitions::FloatType>(particle.getRadius()),
                                                       static_cast<HDF5Definitions::FloatType>(particle.getBcInv()),
