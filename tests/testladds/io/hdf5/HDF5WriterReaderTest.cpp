@@ -57,7 +57,7 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestParticleData) {
                          Particle::ActivityState::evasivePreserving,
                          1.,
                          1.,
-                         2.2);
+                         Particle::calculateBcInv(0., 1., 1., 2.2));
   autopas.addParticle(particles.back());
 
   // 5. write data

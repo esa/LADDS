@@ -37,6 +37,10 @@ HDF5Writer::HDF5Writer(const std::string &filename, unsigned int compressionLeve
             HOFFSET(HDF5Definitions::ParticleConstantProperties, id),
             h5pp::type::getH5NativeType<decltype(HDF5Definitions::ParticleConstantProperties::id)>());
   H5Tinsert(particleConstantPropertiesH5Type,
+            "identifier",
+            HOFFSET(HDF5Definitions::ParticleConstantProperties, identifier),
+            h5pp::type::getH5NativeType<decltype(HDF5Definitions::ParticleConstantProperties::identifier)>());
+  H5Tinsert(particleConstantPropertiesH5Type,
             "mass",
             HOFFSET(HDF5Definitions::ParticleConstantProperties, mass),
             h5pp::type::getH5NativeType<decltype(HDF5Definitions::ParticleConstantProperties::mass)>());
@@ -44,6 +48,10 @@ HDF5Writer::HDF5Writer(const std::string &filename, unsigned int compressionLeve
             "radius",
             HOFFSET(HDF5Definitions::ParticleConstantProperties, radius),
             h5pp::type::getH5NativeType<decltype(HDF5Definitions::ParticleConstantProperties::radius)>());
+  H5Tinsert(particleConstantPropertiesH5Type,
+            "bcInv",
+            HOFFSET(HDF5Definitions::ParticleConstantProperties, bcInv),
+            h5pp::type::getH5NativeType<decltype(HDF5Definitions::ParticleConstantProperties::bcInv)>());
   H5Tinsert(particleConstantPropertiesH5Type,
             "activityState",
             HOFFSET(HDF5Definitions::ParticleConstantProperties, activityState),
@@ -87,8 +95,10 @@ void HDF5Writer::writeParticles(size_t iteration, const AutoPas_t &autopas) {
     if (maxWrittenParticleID == 0 or id > maxWrittenParticleID) {
       newConstantProperties.emplace_back(
           HDF5Definitions::ParticleConstantProperties{id,
+                                                      particle.getIdentifier(),
                                                       static_cast<HDF5Definitions::FloatType>(particle.getMass()),
                                                       static_cast<HDF5Definitions::FloatType>(particle.getRadius()),
+                                                      static_cast<HDF5Definitions::FloatType>(particle.getBcInv()),
                                                       static_cast<int>(particle.getActivityState())});
     }
   }

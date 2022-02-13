@@ -21,13 +21,17 @@ namespace SatelliteToParticleConverter {
   const auto &position = autopas::utils::ArrayMath::mulScalar(satellite.getPosition(), 1. / 1000.0);
   const auto &velocity = autopas::utils::ArrayMath::mulScalar(satellite.getVelocity(), 1. / 1000.0);
   const auto radius = std::sqrt(satellite.getArea() * M_1_PI);
+  const auto mass = satellite.getMass();
   return Particle{position,
                   velocity,
                   satellite.getId(),
+                  // FIXME? Back and forth conversion would eliminate identifier
+                  "",
                   Particle::ActivityState::passive,
-                  satellite.getMass(),
+                  mass,
                   radius,
-                  coefficientOfDrag};
+                  // FIXME? Back and forth conversion would eliminate bstar
+                  Particle::calculateBcInv(0., mass, radius, coefficientOfDrag)};
 }
 
 /**

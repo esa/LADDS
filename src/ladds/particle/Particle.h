@@ -17,6 +17,17 @@
 class Particle final : public autopas::ParticleFP64 {
  public:
   /**
+   * calculate the inverse ballistic coefficient from bstar if available,
+   * otherwise fall back to radius and mass.
+   *
+   * @param bstar [1/R_EARTH]
+   * @param radius [m]
+   * @param mass [kg]
+   * @param coefficientOfDrag
+   */
+  static double calculateBcInv(double bstar, double mass, double radius, double coefficientOfDrag);
+
+  /**
    * Describes how active a particle behaves. This is relevant for the propagator to determine which forces are applied.
    */
   enum class ActivityState : int {
@@ -47,16 +58,18 @@ class Particle final : public autopas::ParticleFP64 {
   Particle(std::array<double, 3> pos,
            std::array<double, 3> v,
            size_t debrisId,
+           const std::string &identifier,
            ActivityState activityState,
            double mass,
            double radius,
-           double coefficientOfDrag)
+           double bcInv)
       : autopas::ParticleFP64(pos, v, debrisId),
         aom(M_PI * radius * radius * 1e-6 / mass),  // convert m^2 -> km^2
         mass(mass),
         radius(radius),
-        bc_inv(coefficientOfDrag * aom * 1e6),  // convert km^2 -> m^2
-        activityState(activityState) {}
+        bc_inv(bcInv),
+        activityState(activityState),
+        identifier(identifier) {}
 
   /**
    * Destructor.
@@ -288,6 +301,18 @@ class Particle final : public autopas::ParticleFP64 {
   void setRadius(double radius);
 
   /**
+   * Getter for identifier.
+   * @return
+   */
+  std::string getIdentifier() const;
+
+  /**
+   * Setter for identifier.
+   * @param
+   */
+  void setIdentifier(const std::string &identifier);
+
+  /**
    * Stream operator
    * @param os
    * @param particle
@@ -341,6 +366,11 @@ class Particle final : public autopas::ParticleFP64 {
    * If a particle can actively influence its orbit. See ActivityState.
    */
   ActivityState activityState;
+
+  /**
+   * Unique string identifier to relate objects to catalogue objects
+   */
+  std::string identifier;
 };
 
 /**

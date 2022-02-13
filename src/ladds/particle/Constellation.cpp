@@ -143,20 +143,28 @@ std::vector<Particle> Constellation::readDatasetConstellation(const std::string 
   particleCollection.reserve(positions.size());
 
   size_t particleId = 0;
-  std::transform(
-      positions.begin(),
-      positions.end(),
-      velocities.begin(),
-      std::back_insert_iterator<std::vector<Particle>>(particleCollection),
-      [&](const auto &pos, const auto &vel) {
-        const auto &[x, y, z] = pos;
-        const auto &[vx, vy, vz] = vel;
+  std::transform(positions.begin(),
+                 positions.end(),
+                 velocities.begin(),
+                 std::back_insert_iterator<std::vector<Particle>>(particleCollection),
+                 [&](const auto &pos, const auto &vel) {
+                   const auto &[x, y, z] = pos;
+                   const auto &[vx, vy, vz] = vel;
 
-        const std::array<double, 3> posArray = {x, y, z};
-        const std::array<double, 3> velArray = {vx, vy, vz};
-        return Particle(
-            posArray, velArray, particleId++, Particle::ActivityState::evasivePreserving, 1., 1., coefficientOfDrag);
-      });
+                   const std::array<double, 3> posArray = {x, y, z};
+                   const std::array<double, 3> velArray = {vx, vy, vz};
+                   const double mass{1.};
+                   const double radius{1.};
+                   // TODO: get proper constellation name
+                   return Particle(posArray,
+                                   velArray,
+                                   particleId++,
+                                   "Constellation",
+                                   Particle::ActivityState::evasivePreserving,
+                                   mass,
+                                   radius,
+                                   Particle::calculateBcInv(0., mass, radius, coefficientOfDrag));
+                 });
   return particleCollection;
 }
 

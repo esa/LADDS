@@ -17,15 +17,20 @@ TEST_F(BreakupWrapperTest, testSimulationLoop) {
 
   // two particles 1000km above earth whose paths cross exactly at [R+1000, 0, 0]
   size_t highestIdBeforeCrash = 4;
-  autopas->addParticle(
-      Particle({Physics::R_EARTH + 1000., -1., 0.}, {0., 2., 0.}, 1, Particle::ActivityState::passive, 1., 1., 2.2));
+  autopas->addParticle(Particle({Physics::R_EARTH + 1000., -1., 0.},
+                                {0., 2., 0.},
+                                1,
+                                Particle::ActivityState::passive,
+                                1.,
+                                1.,
+                                Particle::calculateBcInvculateBcInv(0., 1., 1., 2.2)));
   autopas->addParticle(Particle({Physics::R_EARTH + 1000., 0., -1.},
                                 {0., 0., 2.},
                                 highestIdBeforeCrash,
                                 Particle::ActivityState::passive,
                                 1.,
                                 1.,
-                                2.2));
+                                Particle::calculateBcInv(0., 1., 1., 2.2)));
 
   // dummy
   std::vector<Constellation> constellations;
