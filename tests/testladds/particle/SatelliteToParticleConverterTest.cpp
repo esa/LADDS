@@ -31,6 +31,7 @@ TEST(SatelliteToParticleConverterTest, ParticleToSatellite) {
   const Particle particle{{10., 11., 12},
                           {1., 2., 3.},
                           42,
+                          "dummy",
                           Particle::ActivityState::passive,
                           1.,
                           1.,

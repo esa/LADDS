@@ -21,12 +21,13 @@ class BreakupWrapperTest : public testing::Test {
     config["autopas"]["cutoff"] = 3;
     config["sim"]["deltaT"] = 1.0;
     config["sim"]["maxAltitude"] = 85000.;
+    config["sim"]["coefficientOfDrag"] = 2.2;
 
     // optional parameters which are necessary for the tests here
     // no propagator components are activated (not even kepler) to keep trajectories simpler
     config["sim"]["iterations"] = 1;
     config["sim"]["conjunctionThreshold"] = 0.01;
-    config["sim"]["breakup"]["foo"] = 42;
+    config["sim"]["breakup"]["enabled"] = true;
 
     configReader = std::make_unique<ConfigReader>(config, logger);
     autopas = simulation.initAutoPas(*configReader);
