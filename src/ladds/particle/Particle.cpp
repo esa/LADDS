@@ -95,7 +95,7 @@ void Particle::setActivityState(Particle::ActivityState activityState) {
   Particle::activityState = activityState;
 }
 
-std::string Particle::getIdentifier() const {
+const std::string &Particle::getIdentifier() const {
   return identifier;
 }
 

@@ -304,7 +304,7 @@ class Particle final : public autopas::ParticleFP64 {
    * Getter for identifier.
    * @return
    */
-  [[nodiscard]] std::string getIdentifier() const;
+  [[nodiscard]] const std::string &getIdentifier() const;
 
   /**
    * Setter for identifier.
