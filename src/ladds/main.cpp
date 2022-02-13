@@ -7,9 +7,9 @@
 #include <iostream>
 
 #include "Simulation.h"
+#include "ladds/Version.h"
 #include "ladds/io/ConfigReader.h"
 #include "ladds/io/Logger.h"
-#include "ladds/Version.h"
 
 /**
  * The entrypoint of the program.
