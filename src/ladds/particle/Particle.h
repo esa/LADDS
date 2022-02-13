@@ -268,7 +268,7 @@ class Particle final : public autopas::ParticleFP64 {
    * Getter for the activityState.
    * @return
    */
-  ActivityState getActivityState() const;
+  [[nodiscard]] ActivityState getActivityState() const;
 
   /**
    * Setter for the activityState.
@@ -280,7 +280,7 @@ class Particle final : public autopas::ParticleFP64 {
    * Getter for mass.
    * @return
    */
-  double getMass() const;
+  [[nodiscard]] double getMass() const;
 
   /**
    * Setter for mass.
@@ -292,7 +292,7 @@ class Particle final : public autopas::ParticleFP64 {
    * Getter for radius.
    * @return
    */
-  double getRadius() const;
+  [[nodiscard]] double getRadius() const;
 
   /**
    * Setter for radius.
@@ -304,7 +304,7 @@ class Particle final : public autopas::ParticleFP64 {
    * Getter for identifier.
    * @return
    */
-  std::string getIdentifier() const;
+  [[nodiscard]] std::string getIdentifier() const;
 
   /**
    * Setter for identifier.
