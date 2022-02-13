@@ -109,6 +109,7 @@ std::ostream &operator<<(std::ostream &os, const Particle &particle) {
      << "\nIdentifier    : " << particle.getIdentifier()
      << "\nMass          : " << particle.getMass()
      << "\nRadius        : " << particle.getRadius()
+     << "\nBcInv         : " << particle.getBcInv()
      << "\nActivityState : " << static_cast<int>(particle.getActivityState());
   // clang-format on
   return os;
@@ -133,10 +134,11 @@ bool Particle::operator==(const Particle &rhs) const {
       == static_cast<const autopas::ParticleBase<double, unsigned long> &>(rhs) and
       acc_t0 == rhs.acc_t0 and
       acc_t1 == rhs.acc_t1 and
-      aom == rhs.aom and
-      mass == rhs.mass and
-      radius == rhs.radius and
-      bc_inv == rhs.bc_inv and
+      // the following values can only be compared upon float32 bit precision since we write them as such to HDF5
+      (std::abs(aom - rhs.aom) < 1e-7) and
+      (std::abs(mass - rhs.mass) < 1e-7) and
+      (std::abs(radius - rhs.radius) < 1e-7) and
+      (std::abs(bc_inv - rhs.bc_inv) < 1e-7) and
       activityState == rhs.activityState and
       identifier == rhs.identifier;
   // clang-format on
