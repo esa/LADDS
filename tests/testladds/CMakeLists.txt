@@ -55,7 +55,7 @@ target_compile_definitions(${TEST_EXECUTABLE_NAME}
 gtest_discover_tests(${TEST_EXECUTABLE_NAME}
     PROPERTIES
         ENVIRONMENT "LSAN_OPTIONS=suppressions=${LADDS_SOURCE_DIR}/.lsanIgnoreList.txt ignore_noninstrumented_modules=1"
-        ENVIRONMENT "TSAN_OPTIONS=suppressions=${LADDS_SOURCE_DIR}/.tsanIgnoreList.txt ignore_noninstrumented_modules=1"
+                    "TSAN_OPTIONS=suppressions=${LADDS_SOURCE_DIR}/.tsanIgnoreList.txt ignore_noninstrumented_modules=1"
 )
 
 add_test(
