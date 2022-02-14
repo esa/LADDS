@@ -10,7 +10,7 @@
 
 std::vector<Particle> DatasetReader::readDataset(const std::string &csvFilepath, double coefficientOfDrag) {
   CSVReader<size_t,                   // id
-            std::string,              // identifier
+            std::string,              // cosparId
             std::string,              // name
             double,                   // bstar
             double,                   // mass
@@ -29,12 +29,12 @@ std::vector<Particle> DatasetReader::readDataset(const std::string &csvFilepath,
   std::vector<Particle> particleCollection;
   particleCollection.reserve(parsedData.size());
 
-  for (const auto &[id, identifier, name, bstar, mass, radius, activityState, rX, rY, rZ, vX, vY, vZ] : parsedData) {
+  for (const auto &[id, cosparId, name, bstar, mass, radius, activityState, rX, rY, rZ, vX, vY, vZ] : parsedData) {
     const double bcInv = Particle::calculateBcInv(bstar, mass, radius, coefficientOfDrag);
     particleCollection.emplace_back(std::array<double, 3>{rX, rY, rZ},
                                     std::array<double, 3>{vX, vY, vZ},
                                     id,
-                                    identifier,
+                                    cosparId,
                                     activityState,
                                     mass,
                                     radius,
