@@ -69,7 +69,6 @@ jobs:
           lfs: true
       - name: Build project
         run: |
-          cat data/initial_population.csv
           mkdir build
           cd build
           CC=clang CXX=clang++ cmake \
