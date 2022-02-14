@@ -17,7 +17,7 @@ double Particle::calculateBcInv(double bstar, double mass, double radius, double
   } else {
     // or via bstar
     // @note see https://en.wikipedia.org/wiki/BSTAR
-    // B* == p_0 * c_D * A / (2 m) == bc_inv * p_0 / m
+    // B* == p_0 * c_D * A / (2 m) == bc_inv * p_0 / 2
     constexpr double p0Inv = 1. / (2.461 * 1e-5 * Physics::R_EARTH);  // 1/(kg/(m^2 * R_EARTH)) == R_EARTH * m^2/kg
     return bstar * 2. * p0Inv;                                        // m^2/kg
   }
