@@ -58,16 +58,13 @@ gtest_discover_tests(${TEST_EXECUTABLE_NAME}
         ENVIRONMENT "TSAN_OPTIONS=suppressions=${LADDS_SOURCE_DIR}/.tsanIgnoreList.txt ignore_noninstrumented_modules=1"
 )
 
-# FIXME: reactivate this with a new reference as soon as all relevant branches are combined:
-# [ ] Split-R,V-in-data
-# [ ] varyingParticleNumbers
-# [ ] ActivityState
-#add_test(
-#        NAME validationtest.testValidation.yaml
-#        COMMAND
-#        ${PROJECT_SOURCE_DIR}/tests/validationtest.py
-#        ${CMAKE_BINARY_DIR}/src/ladds/ladds
-#        ${PROJECT_SOURCE_DIR}/cfg/testValidation.yaml
-#        ${PROJECT_SOURCE_DIR}/tests/data/reference_10.vtu
-#        CONFIGURATIONS validation
-#)
+add_test(
+        NAME validationtest.testValidation.yaml
+        COMMAND
+        ${PROJECT_SOURCE_DIR}/tests/validationtest.py
+        ${CMAKE_BINARY_DIR}/src/ladds/ladds
+        ${PROJECT_SOURCE_DIR}/cfg/testValidation.yaml
+        output_209.vtu
+        ${PROJECT_SOURCE_DIR}/tests/data/reference_validationTest.vtu
+        CONFIGURATIONS validation
+)
