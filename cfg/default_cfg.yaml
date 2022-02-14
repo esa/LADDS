@@ -18,7 +18,7 @@ sim:
     coefficientOfDrag: 2.2  # c_D for the drag component used in all objects where no BSTAR is available
 
   breakup:
-    enabled: true # (de-)activate the breakup mechanic
+    enabled: false # (de-)activate the breakup mechanic
     minLc: 0.05 # minimal characteristic length for generated debris [m]
     enforceMassConservation: true # by default the NASA breakup model does not conserve mass
 
