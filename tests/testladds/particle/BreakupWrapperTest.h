@@ -21,7 +21,7 @@ class BreakupWrapperTest : public testing::Test {
     config["autopas"]["cutoff"] = 3;
     config["sim"]["deltaT"] = 1.0;
     config["sim"]["maxAltitude"] = 85000.;
-    config["sim"]["coefficientOfDrag"] = 2.2;
+    config["sim"]["prop"]["coefficientOfDrag"] = 2.2;
 
     // optional parameters which are necessary for the tests here
     // no propagator components are activated (not even kepler) to keep trajectories simpler

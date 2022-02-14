@@ -15,7 +15,7 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
   std::vector<Particle> satellites;
 
   // if the value is not set this is the only place that should define the default value as it is the first to access it
-  const auto coefficientOfDrag = config.get<double>("sim/coefficientOfDrag", 2.2);
+  const auto coefficientOfDrag = config.get<double>("sim/prop/coefficientOfDrag", 2.2);
 
   // load CSV ...
   const auto csvFileName = config.get<std::string>("io/csv/fileName", "");
@@ -76,7 +76,7 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
 
 std::vector<Constellation> SatelliteLoader::loadConstellations(ConfigReader &config, const Logger &logger) {
   std::vector<Constellation> constellations;
-  auto coefficientOfDrag = config.get<double>("sim/coefficientOfDrag");
+  auto coefficientOfDrag = config.get<double>("sim/prop/coefficientOfDrag");
   auto constellationList = config.get<std::string>("io/constellationList", "", true);
   // altitudeSpread = 3 * sigma , altitudeDeviation = sigma (= standardDeviation)
   auto altitudeDeviation = config.get<double>("io/altitudeSpread", 0.0) / 3.0;

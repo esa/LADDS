@@ -23,7 +23,7 @@ class BreakupWrapper {
   BreakupWrapper(ConfigReader &config, AutoPas_t &autopas)
       : minLc{config.get<double>("sim/breakup/minLc", 0.05)},
         enforceMassConservation{config.get<bool>("sim/breakup/enforceMassConservation", true)},
-        coefficientOfDrag{config.get<double>("sim/coefficientOfDrag")},
+        coefficientOfDrag{config.get<double>("sim/prop/coefficientOfDrag")},
         autopas{autopas} {
     // find the highest existing particle id:
     // Particles are not sorted by id and might neither be starting by 0 nor be consecutive (e.g. due to burn-ups)
