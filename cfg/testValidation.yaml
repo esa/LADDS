@@ -1,36 +1,35 @@
 sim:
   logLevel: info    # Available levels are off, critical, err, warn, info, debug, trace
-  iterations: 100 # Number of simulation iterations
-  maxAltitude: 85000 # Maximum satellite altitude [km]
-  deltaT: 0.1 # [s]
-  conjunctionThreshold: 5.0 # [km]
+  iterations: 210 # Number of simulation iterations
+  maxAltitude: 10000 # Maximum satellite altitude above earth core. This number times two is the simulation box length. [km]
+  minAltitude: 150 # Everything below this altitude above ground will be considered burning up [km]
+  deltaT: 1 # [s]
+  conjunctionThreshold: 0.5 # [km]
 
   prop: # Which propagation model components should be applied
     useKEPComponent: true # Keplerian propagation
     useJ2Component: true # J2 spherical harmonic approximation
     useC22Component: true # C22 spherical harmonic approximation
     useS22Component: true # S22 spherical harmonic approximation
-    useSOLComponent: true # Solar gravitational pull
-    useLUNComponent: true # Lunar gravitational pull
+    useSOLComponent: false # Solar gravitational pull
+    useLUNComponent: false # Lunar gravitational pull
     useSRPComponent: true # Solar radiation pressure
     useDRAGComponent: true # Atmospheric drag
+    coefficientOfDrag: 2.2  # c_D for the drag component used in all objects where no BSTAR is available
+
+  breakup:
+    enabled: false # (de-)activate the breakup mechanic
+    minLc: 0.05 # minimal characteristic length for generated debris [m]
+    enforceMassConservation: true # by default the NASA breakup model does not conserve mass
 
 io:
-  output_file: output.csv # Output file name
-  posFileName: pos_test.csv # Name of the CSV file with satellite positions [km]
-  velFileName: v_test.csv # Name of the CSV file with satellite velocities [km/s]
-  #progressOutputFrequency : 50 # Frequency of writing iteration number and encounter info to std::out.
+  csv:
+    fileName: initial_population.csv  # CSV file containing all data to initialize the full satellite population
+  progressOutputFrequency : 100 # Frequency of writing iteration number and encounter info to std::out.
   vtk:
-    writeFrequency: 99 # Frequency of writing vtk files [iterations]
-
-  #constellationList: AstraPhase2,100,7200 # ';'-seperated constellations consisting of path (to constellation directory), start time, duration
-  constellationFrequency: 10 # Frequency of adding satellites to simulation [iterations]
-  constellationCutoff: 0.1 # satellites of constellations are only inserted when there is no object within constellationCutoff range
-  altitudeSpread: 1.0 # [km] normal distributed altitude deviations are usually smaller than this value (~99.74% chance)
+    writeFrequency: 209 # Frequency of writing vtk files [iterations]
 
 autopas:
   logLevel: off
-  cutoff: 0.02 # Cutoff for autopas force interaction
-  skin: 0.20 # twice the maximum distance a particle can travel between two list rebuilds
-  rebuildFrequency: 20
-  desiredCellsPerDimension: 32 # Desired number of cells per dimension
+  cutoff: 80.0 # Cutoff for autopas force interaction
+  tuningMode: false # can be used to obtain good values for  the following four parameters
