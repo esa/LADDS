@@ -14,7 +14,7 @@
 #ifdef LADDS_HDF5
 TEST_F(HDF5WriterReaderTest, WriteReadTestParticleData) {
   // 1. create some data
-  constexpr size_t numParticles = 10;
+  constexpr size_t numParticles = 2;
   autopas::AutoPas<Particle> autopas;
   autopas.setBoxMin({0., 0., 0.});
   autopas.setBoxMax(
@@ -27,10 +27,11 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestParticleData) {
     Particle p{{static_cast<double>(i), static_cast<double>(i), static_cast<double>(i)},
                {1., 2., 3.},
                i,
+               "dummy",
                Particle::ActivityState::evasive,
                1.,
                1.,
-               2.2};
+               Particle::calculateBcInv(0., 1., 1., 2.2)};
     autopas.addParticle(p);
     particles.push_back(p);
   }
@@ -54,10 +55,11 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestParticleData) {
   particles.emplace_back(std::array<double, 3>{0.5, 0.5, 0.5},
                          std::array<double, 3>{1., 2., 3.},
                          numParticles,
+                         "dummy",
                          Particle::ActivityState::evasivePreserving,
                          1.,
                          1.,
-                         2.2);
+                         Particle::calculateBcInv(0., 1., 1., 2.2));
   autopas.addParticle(particles.back());
 
   // 5. write data
@@ -78,8 +80,14 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestCollisionData) {
   std::vector<Particle> particles;
   particles.reserve(numParticles);
   for (size_t i = 0; i < numParticles; ++i) {
-    particles.emplace_back<Particle>(
-        {{0., 0., static_cast<double>(i)}, {0., 0., 0.}, i, Particle::ActivityState::passive, 1., 1., 2.2});
+    particles.emplace_back<Particle>({{0., 0., static_cast<double>(i)},
+                                      {0., 0., 0.},
+                                      i,
+                                      "dummy",
+                                      Particle::ActivityState::passive,
+                                      1.,
+                                      1.,
+                                      Particle::calculateBcInv(0., 1., 1., 2.2)});
   }
 
   // These conjunctions are just randomly made up and have nothing to do with position data!

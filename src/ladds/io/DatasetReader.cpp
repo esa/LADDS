@@ -6,9 +6,13 @@
 
 #include "DatasetReader.h"
 
+#include <satellitePropagator/physics/AccelerationComponents/DragComponent.h>
+
 std::vector<Particle> DatasetReader::readDataset(const std::string &csvFilepath, double coefficientOfDrag) {
   CSVReader<size_t,                   // id
+            std::string,              // cosparId
             std::string,              // name
+            double,                   // bstar
             double,                   // mass
             double,                   // radius
             Particle::ActivityState,  // Particle::ActivityState
@@ -25,15 +29,16 @@ std::vector<Particle> DatasetReader::readDataset(const std::string &csvFilepath,
   std::vector<Particle> particleCollection;
   particleCollection.reserve(parsedData.size());
 
-  size_t particleId = 0;
-  for (const auto &[id, name, mass, radius, activityState, rX, rY, rZ, vX, vY, vZ] : parsedData) {
+  for (const auto &[id, cosparId, name, bstar, mass, radius, activityState, rX, rY, rZ, vX, vY, vZ] : parsedData) {
+    const double bcInv = Particle::calculateBcInv(bstar, mass, radius, coefficientOfDrag);
     particleCollection.emplace_back(std::array<double, 3>{rX, rY, rZ},
                                     std::array<double, 3>{vX, vY, vZ},
                                     id,
+                                    cosparId,
                                     activityState,
                                     mass,
                                     radius,
-                                    coefficientOfDrag);
+                                    bcInv);
   }
 
   return particleCollection;

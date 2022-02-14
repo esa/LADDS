@@ -37,28 +37,41 @@ TEST_F(SimulationTest, testInsertionOverlap) {
    */
   const std::vector<size_t> expectedDelayedParticles{2, 1, 1, 0, 0, 0};
 
-  const std::vector<Particle> initialSatellites{
-      Particle(
-          {6871., 0., 0.}, {0, 4.8958309146899, 5.83462408131549}, 1, Particle::ActivityState::passive, 1., 1., 2.2),
-      Particle({6870.99577848984, 4.89582991243564, 5.83462288687537},
-               {-0.00844301944979238, 4.89582790671436, 5.83462049654983},
-               2,
-               Particle::ActivityState::passive,
-               1.,
-               1.,
-               2.2)};
+  const std::vector<Particle> initialSatellites{Particle({6871., 0., 0.},
+                                                         {0, 4.8958309146899, 5.83462408131549},
+                                                         1,
+                                                         "initial 1",
+                                                         Particle::ActivityState::passive,
+                                                         1.,
+                                                         1.,
+                                                         Particle::calculateBcInv(0., 1., 1., 2.2)),
+                                                Particle({6870.99577848984, 4.89582991243564, 5.83462288687537},
+                                                         {-0.00844301944979238, 4.89582790671436, 5.83462049654983},
+                                                         2,
+                                                         "initial 2",
+                                                         Particle::ActivityState::passive,
+                                                         1.,
+                                                         1.,
+                                                         Particle::calculateBcInv(0., 1., 1., 2.2))};
   for (const auto &s : initialSatellites) {
     autopas->addParticle(s);
   }
-  const std::vector<Particle> newSatellites{
-      Particle({6871., 0., 0.}, {0, 4.8958309146899, 5.83462408131549}, 1, Particle::ActivityState::passive, 0, 0, 2.2),
-      Particle({6870.99577848984, 4.89582991243564, 5.83462288687537},
-               {-0.00844301944979238, 4.89582790671436, 5.83462049654983},
-               4,
-               Particle::ActivityState::passive,
-               1.,
-               1.,
-               2.2)};
+  const std::vector<Particle> newSatellites{Particle({6871., 0., 0.},
+                                                     {0, 4.8958309146899, 5.83462408131549},
+                                                     1,
+                                                     "new 1",
+                                                     Particle::ActivityState::passive,
+                                                     0,
+                                                     0,
+                                                     Particle::calculateBcInv(0., 1., 1., 2.2)),
+                                            Particle({6870.99577848984, 4.89582991243564, 5.83462288687537},
+                                                     {-0.00844301944979238, 4.89582790671436, 5.83462049654983},
+                                                     4,
+                                                     "new 2",
+                                                     Particle::ActivityState::passive,
+                                                     1.,
+                                                     1.,
+                                                     Particle::calculateBcInv(0., 1., 1., 2.2))};
 
   auto constellationCutoff = config["io"]["constellationCutoff"].as<double>();
 
@@ -82,15 +95,28 @@ TEST_F(SimulationTest, testInsertionOverlap) {
  * Do one simulation iteration and check that exactly the right one was removed.
  */
 TEST_F(SimulationTest, testBurnUp) {
+  configReader->setValue("sim/breakup/enabled", true);
   auto [csvWriter, accumulator, integrator] = simulation.initIntegrator(*autopas, *configReader);
   const auto &minAltitude = Physics::R_EARTH + configReader->get<double>("sim/minAltitude");
   // initialize a particle 1km above burn up radius with a trajectory towards earth
-  autopas->addParticle(
-      Particle({minAltitude + 1., 0., 0.}, {-10., 0., 0.}, 0, Particle::ActivityState::passive, 1., 1., 2.2));
+  autopas->addParticle(Particle({minAltitude + 1., 0., 0.},
+                                {-10., 0., 0.},
+                                0,
+                                "1km above ground towards earth",
+                                Particle::ActivityState::passive,
+                                1.,
+                                1.,
+                                Particle::calculateBcInv(0., 1., 1., 2.2)));
   // initialize a particle 1km above burn up radius with a trajectory away from earth
   // different position to avoid any interferences
-  autopas->addParticle(
-      Particle({0., minAltitude + 1., 0.}, {0., 10., 0.}, 1, Particle::ActivityState::passive, 1., 1., 2.2));
+  autopas->addParticle(Particle({0., minAltitude + 1., 0.},
+                                {0., 10., 0.},
+                                1,
+                                "1km above ground away from earth",
+                                Particle::ActivityState::passive,
+                                1.,
+                                1.,
+                                Particle::calculateBcInv(0., 1., 1., 2.2)));
   ASSERT_EQ(autopas->getNumberOfParticles(), 2) << "Initial particles not found!";
 
   // dummy because interface requires it
@@ -111,11 +137,24 @@ TEST_F(SimulationTest, testBurnUp) {
 TEST_P(SimulationTest, testCheckedInsert) {
   const auto &[posTestParticle, positionIsSafe] = GetParam();
 
-  autopas->addParticle(
-      Particle(testCheckedInsertParticlePos, zeroVec, 0, Particle::ActivityState::passive, 1., 1., 2.2));
+  autopas->addParticle(Particle(testCheckedInsertParticlePos,
+                                zeroVec,
+                                0,
+                                "existing",
+                                Particle::ActivityState::passive,
+                                1.,
+                                1.,
+                                Particle::calculateBcInv(0., 1., 1., 2.2)));
 
   // particle that will be inserted
-  Particle p1{posTestParticle, zeroVec, 1, Particle::ActivityState::passive, 1., 1., 2.2};
+  Particle p1{posTestParticle,
+              zeroVec,
+              1,
+              "tester",
+              Particle::ActivityState::passive,
+              1.,
+              1.,
+              Particle::calculateBcInv(0., 1., 1., 2.2)};
 
   const auto escapedParticles = autopas->updateContainer();
   ASSERT_TRUE(escapedParticles.empty()) << "Test setup faulty!";

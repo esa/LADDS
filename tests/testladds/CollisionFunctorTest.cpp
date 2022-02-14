@@ -28,10 +28,11 @@ TEST(CollisionFunctorTest, ThreeParticles) {
     debris.emplace_back(std::array<double, 3>{static_cast<double>(i), 0., 0.},
                         std::array<double, 3>{0., static_cast<double>(i), 0.},
                         i,
+                        "dummy",
                         Particle::ActivityState::passive,
                         1.,
                         1.,
-                        2.2);
+                        Particle::calculateBcInv(0., 1., 1., 2.2));
   }
 
   CollisionFunctor collisionFunctor(cutoff, 10.0, cutoff, 0.01);
@@ -82,66 +83,74 @@ TEST(CollisionFunctorTest, MixActivityStates) {
   debris.emplace_back(std::array<double, 3>{0., 0., 0.},
                       std::array<double, 3>{0., 0., 0.},
                       0,
+                      "passive small 1",
                       Particle::ActivityState::passive,
                       1.,
                       0.001,
-                      2.2);
+                      Particle::calculateBcInv(0., 1., 1., 2.2));
   // passive small 2
   debris.emplace_back(std::array<double, 3>{0., 0., 0.1},
                       std::array<double, 3>{0., 0., 0.},
                       0,
+                      "passive small 2",
                       Particle::ActivityState::passive,
                       1.,
                       0.001,
-                      2.2);
+                      Particle::calculateBcInv(0., 1., 1., 2.2));
   // passive large 1
   debris.emplace_back(std::array<double, 3>{0.1, 0., 0.},
                       std::array<double, 3>{0., 0., 0.},
                       1,
+                      "passive large 1",
                       Particle::ActivityState::passive,
                       1.,
                       1.,
-                      2.2);
+                      Particle::calculateBcInv(0., 1., 1., 2.2));
   // passive large 2
   debris.emplace_back(std::array<double, 3>{0.1, 0., 0.1},
                       std::array<double, 3>{0., 0., 0.},
                       1,
+                      "passive large 2",
                       Particle::ActivityState::passive,
                       1.,
                       1.,
-                      2.2);
+                      Particle::calculateBcInv(0., 1., 1., 2.2));
   // evasive 1
   debris.emplace_back(std::array<double, 3>{0., 0.1, 0.},
                       std::array<double, 3>{0., 0., 0.},
                       2,
+                      "evasive 1",
                       Particle::ActivityState::evasive,
                       1.,
                       1.,
-                      2.2);
+                      Particle::calculateBcInv(0., 1., 1., 2.2));
   // evasive 2
   debris.emplace_back(std::array<double, 3>{0., 0.1, 0.1},
                       std::array<double, 3>{0., 0., 0.},
                       3,
+                      "evasive 2",
                       Particle::ActivityState::evasive,
                       1.,
                       1.,
-                      2.2);
+                      Particle::calculateBcInv(0., 1., 1., 2.2));
   // evasivePreserving 1
   debris.emplace_back(std::array<double, 3>{0.1, 0.1, 0.},
                       std::array<double, 3>{0., 0., 0.},
                       4,
+                      "evasivePreserving 1",
                       Particle::ActivityState::evasivePreserving,
                       1.,
                       1.,
-                      2.2);
+                      Particle::calculateBcInv(0., 1., 1., 2.2));
   // evasivePreserving 2
   debris.emplace_back(std::array<double, 3>{0.1, 0.1, 0.1},
                       std::array<double, 3>{0., 0., 0.},
                       5,
+                      "evasivePreserving 2",
                       Particle::ActivityState::evasivePreserving,
                       1.,
                       1.,
-                      2.2);
+                      Particle::calculateBcInv(0., 1., 1., 2.2));
 
   CollisionFunctor collisionFunctor(cutoff, 10.0, cutoff, 0.01);
 
@@ -202,8 +211,10 @@ TEST_P(CollisionFunctorTest, LinearInterpolationTest) {
   debris.reserve(numDebris);
 
   // Add two particles moving in the same direction on parallel lines
-  debris.emplace_back(x1, v1, 0., Particle::ActivityState::passive, 1., 1., 2.2);
-  debris.emplace_back(x2, v2, 1., Particle::ActivityState::passive, 1., 1., 2.2);
+  debris.emplace_back(
+      x1, v1, 0., "A", Particle::ActivityState::passive, 1., 1., Particle::calculateBcInv(0., 1., 1., 2.2));
+  debris.emplace_back(
+      x2, v2, 1., "B", Particle::ActivityState::passive, 1., 1., Particle::calculateBcInv(0., 1., 1., 2.2));
 
   for (size_t i = 0; i < debris.size(); ++i) {
     for (size_t j = i + 1; j < debris.size(); ++j) {

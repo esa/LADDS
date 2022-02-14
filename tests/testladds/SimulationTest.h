@@ -27,6 +27,7 @@ class SimulationTest : public testing::TestWithParam<ParameterTuple> {
     config["autopas"]["cutoff"] = 0.02;
     config["sim"]["deltaT"] = 1.0;
     config["sim"]["maxAltitude"] = 85000.;
+    config["sim"]["coefficientOfDrag"] = 2.2;
 
     // optional parameters which are necessary for the tests here
     config["io"]["constellationCutoff"] = constellationCutoff;

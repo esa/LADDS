@@ -42,3 +42,4 @@ data
 *.ipynb_checkpoints
 results
 MASTER
+my_notebooks

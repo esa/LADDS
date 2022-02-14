@@ -28,7 +28,14 @@ TEST(SatelliteToParticleConverterTest, SatelliteToParticle) {
 
 TEST(SatelliteToParticleConverterTest, ParticleToSatellite) {
   // Create a particle.
-  const Particle particle{{10., 11., 12}, {1., 2., 3.}, 42, Particle::ActivityState::passive, 1., 1., 2.2};
+  const Particle particle{{10., 11., 12},
+                          {1., 2., 3.},
+                          42,
+                          "dummy",
+                          Particle::ActivityState::passive,
+                          1.,
+                          1.,
+                          Particle::calculateBcInv(0., 1., 1., 2.2)};
   const auto sat = SatelliteToParticleConverter::convertParticleToSatellite(particle);
 
   const auto &expectedPosition = autopas::utils::ArrayMath::mulScalar(particle.getPosition(), 1000.0);

@@ -29,10 +29,11 @@ void CollisionFunctorIntegrationTest::SetUpTestSuite() {
                                0.,
                            },
                            0,
+                           "dummy",
                            Particle::ActivityState::passive,
                            1.,
                            1.,
-                           2.2};
+                           Particle::calculateBcInv(0., 1., 1., 2.2)};
   _debris.reserve(numDebris);
 
   // fix seed for randomPosition()

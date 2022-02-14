@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <string>
+
 namespace HDF5Definitions {
 constexpr auto groupParticleData = "ParticleData/";
 constexpr auto datasetParticlePositions = "/Particles/Positions";
@@ -50,8 +52,9 @@ struct CollisionInfo {
  * Type for information of a single particle that will stay constant throughout the simulation.
  */
 struct ParticleConstantProperties {
-  IntType id;
-  FloatType mass, radius;
-  int activityState;
+  IntType id{};
+  const char *identifier{};
+  FloatType mass{}, radius{}, bcInv{};
+  int activityState{};
 };
 }  // namespace HDF5Definitions

@@ -49,10 +49,11 @@ std::vector<Particle> HDF5Reader::readParticles(size_t iteration, double coeffic
     particles.emplace_back(std::array<double, 3>{pos[i].x, pos[i].y, pos[i].z},
                            std::array<double, 3>{vel[i].x, vel[i].y, vel[i].z},
                            constantProperties.id,
+                           constantProperties.identifier,
                            static_cast<Particle::ActivityState>(constantProperties.activityState),
                            constantProperties.mass,
                            constantProperties.radius,
-                           coefficientOfDrag);
+                           constantProperties.bcInv);
   }
 #endif
   return particles;

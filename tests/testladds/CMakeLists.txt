@@ -54,7 +54,8 @@ target_compile_definitions(${TEST_EXECUTABLE_NAME}
 
 gtest_discover_tests(${TEST_EXECUTABLE_NAME}
     PROPERTIES
-        ENVIRONMENT "TSAN_OPTIONS=suppressions=${LADDS_SOURCE_DIR}/.sanitizerIgnoreList.txt ignore_noninstrumented_modules=1"
+        ENVIRONMENT "LSAN_OPTIONS=suppressions=${LADDS_SOURCE_DIR}/.lsanIgnoreList.txt ignore_noninstrumented_modules=1"
+        ENVIRONMENT "TSAN_OPTIONS=suppressions=${LADDS_SOURCE_DIR}/.tsanIgnoreList.txt ignore_noninstrumented_modules=1"
 )
 
 # FIXME: reactivate this with a new reference as soon as all relevant branches are combined:
