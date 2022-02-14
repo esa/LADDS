@@ -23,6 +23,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install \
             git \
+            git-lfs \
             clang \
             cmake \
             libhdf5-dev \
@@ -55,6 +56,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install \
               git \
+              git-lfs \
               clang \
               cmake \
               libhdf5-dev \
@@ -91,6 +93,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -y \
+              git-lfs \
               libhdf5-dev \
               libtbb-dev \
               python3-numpy \
