@@ -1,0 +1,20 @@
+#pragma once
+
+#include <string>
+
+const std::string LADDS_VERSION_MAJOR = "0";
+const std::string LADDS_VERSION_MINOR = "0";
+const std::string LADDS_VERSION_PATCH = "1";
+const std::string LADDS_VERSION_BRANCH = "_@LADDS_VERSION_BRANCH@";
+// this is the current git commit id
+const std::string LADDS_VERSION_HASH = "_@LADDS_VERSION_HASH@";
+// append "dirty" if uncommited code was used
+const std::string LADDS_VERSION_IS_DIRTY = "@LADDS_VERSION_IS_DIRTY@";
+// final combined version string
+const std::string LADDS_VERSION =
+	LADDS_VERSION_MAJOR + "."
+	+ LADDS_VERSION_MINOR + "."
+	+ LADDS_VERSION_PATCH
+	+ LADDS_VERSION_BRANCH
+	+ LADDS_VERSION_HASH
+	+ LADDS_VERSION_IS_DIRTY;
