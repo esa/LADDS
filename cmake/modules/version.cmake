@@ -14,7 +14,7 @@ if (Git_FOUND AND EXISTS "${LADDS_SOURCE_DIR}/.git" )
             COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
             OUTPUT_VARIABLE LADDS_VERSION_HASH)
     string(STRIP "${LADDS_VERSION_HASH}" LADDS_VERSION_HASH)
-    # check dirty
+    # check if git state is dirty
     execute_process(
             COMMAND ${GIT_EXECUTABLE} diff --quiet --exit-code
             RESULT_VARIABLE is_dirty_result )
