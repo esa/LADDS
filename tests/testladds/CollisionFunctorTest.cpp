@@ -35,7 +35,7 @@ TEST(CollisionFunctorTest, ThreeParticles) {
                         Particle::calculateBcInv(0., 1., 1., 2.2));
   }
 
-  CollisionFunctor collisionFunctor(cutoff, 10.0, cutoff, 0.01);
+  CollisionFunctor collisionFunctor(cutoff, 10.0, 1., 0.01);
 
   for (size_t i = 0; i < debris.size(); ++i) {
     for (size_t j = i + 1; j < debris.size(); ++j) {
@@ -152,7 +152,7 @@ TEST(CollisionFunctorTest, MixActivityStates) {
                       1.,
                       Particle::calculateBcInv(0., 1., 1., 2.2));
 
-  CollisionFunctor collisionFunctor(cutoff, 10.0, cutoff, 0.01);
+  CollisionFunctor collisionFunctor(cutoff, 10.0, 1., 0.01);
 
   for (size_t i = 0; i < debris.size(); ++i) {
     for (size_t j = i + 1; j < debris.size(); ++j) {
@@ -198,23 +198,69 @@ TEST(CollisionFunctorTest, MixActivityStates) {
   EXPECT_THAT(collisionIdPairs, ::testing::UnorderedElementsAreArray(expectations));
 }
 
+/**
+ * Two particles each with radius 1 are placed at a distance of 3.
+ * Using collisionDistanceFactor 1 they should not be considered colliding, using 2 they should.
+ */
+TEST(CollisionFunctorTest, CollisionDistanceFactorTest) {
+  constexpr double cutoff{80.0};
+  constexpr double dt{1.};
+  constexpr bool newton3{false};
+  constexpr double particleMass{1.};
+  constexpr double particleRadius{1.};
+
+  std::vector<Particle> debris{{{0., 0., 0.},
+                                {1., 0., 0.},
+                                1,
+                                "A",
+                                Particle::ActivityState::passive,
+                                particleMass,
+                                particleRadius,
+                                Particle::calculateBcInv(0., particleMass, particleRadius, 2.2)},
+                               {{3., 0., 0.},
+                                {-1., 0., 0.},
+                                2,
+                                "B",
+                                Particle::ActivityState::passive,
+                                particleMass,
+                                particleRadius,
+                                Particle::calculateBcInv(0., particleMass, particleRadius, 2.2)}};
+
+  // test for different factors
+  for (const double collisionDistanceFactor : {1., 2.}) {
+    CollisionFunctor collisionFunctor(cutoff, dt, collisionDistanceFactor, 0.1);
+    collisionFunctor.AoSFunctor(debris[0], debris[1], newton3);
+    collisionFunctor.endTraversal(newton3);
+    if (collisionDistanceFactor == 1.) {
+      // distance too far -> no collisions
+      EXPECT_EQ(collisionFunctor.getCollisions().size(), 0);
+    } else if (collisionDistanceFactor == 2.) {
+      // over approximation should now include particles -> collision
+      EXPECT_EQ(collisionFunctor.getCollisions().size(), 1);
+    } else {
+      GTEST_FAIL() << "Unexpected collisionDistanceFactor: " << collisionDistanceFactor;
+    }
+  }
+}
+
 TEST_P(CollisionFunctorTest, LinearInterpolationTest) {
   constexpr double cutoff{80.0};
   constexpr bool newton3{false};
   constexpr size_t numDebris{2};
+  constexpr double particleRadius{1.};
 
   const auto &[x1, x2, v1, v2, dt, expected_dist] = GetParam();
 
-  CollisionFunctor collisionFunctor(cutoff, dt, 0.1 * cutoff, 0.1);
+  CollisionFunctor collisionFunctor(cutoff, dt, 10., 0.1);
 
   std::vector<Particle> debris;
   debris.reserve(numDebris);
 
   // Add two particles moving in the same direction on parallel lines
   debris.emplace_back(
-      x1, v1, 0., "A", Particle::ActivityState::passive, 1., 1., Particle::calculateBcInv(0., 1., 1., 2.2));
+      x1, v1, 0., "A", Particle::ActivityState::passive, 1., particleRadius, Particle::calculateBcInv(0., 1., 1., 2.2));
   debris.emplace_back(
-      x2, v2, 1., "B", Particle::ActivityState::passive, 1., 1., Particle::calculateBcInv(0., 1., 1., 2.2));
+      x2, v2, 1., "B", Particle::ActivityState::passive, 1., particleRadius, Particle::calculateBcInv(0., 1., 1., 2.2));
 
   for (size_t i = 0; i < debris.size(); ++i) {
     for (size_t j = i + 1; j < debris.size(); ++j) {
@@ -229,7 +275,19 @@ TEST_P(CollisionFunctorTest, LinearInterpolationTest) {
 
   decltype(collisions) expected{{&debris[0], &debris[1], expected_dist}};
 
-  EXPECT_THAT(collisionFunctor.getCollisions(), ::testing::UnorderedElementsAreArray(expected));
+  // helper function for debugging output
+  auto getIDsStringFromPointers = [](const auto &collisions) {
+    std::stringstream ss;
+    std::vector<std::tuple<size_t, size_t>> ids;
+    for (const auto &[ptrA, ptrB, dist] : collisions) {
+      ss << "[" << ptrA->getID() << "|" << ptrB->getID() << "|" << dist << "]";
+    }
+    return ss.str();
+  };
+
+  EXPECT_THAT(collisionFunctor.getCollisions(), ::testing::UnorderedElementsAreArray(expected))
+      << "Expected tuples: " << getIDsStringFromPointers(expected)
+      << "\nFound    tuples: " << getIDsStringFromPointers(collisions);
 }
 
 // Generate tests for all configuration combinations

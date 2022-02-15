@@ -78,11 +78,14 @@ class Simulation {
   /**
    * Check for collisions / conjunctions and write statistics about them.
    * @param autopas
+   * @param deltaT
+   * @param collisionDistanceFactor See CollisionFunctor::_collisionDistanceFactor
+   * @param minDetectionRadius
    * @return Tuple of the collisions and whether AutoPas is currently in tuning mode.
    */
   std::tuple<CollisionFunctor::CollisionCollectionT, bool> collisionDetection(AutoPas_t &autopas,
                                                                               double deltaT,
-                                                                              double conjunctionThreshold,
+                                                                              double collisionDistanceFactor,
                                                                               double minDetectionRadius);
 
   /**
