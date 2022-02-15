@@ -54,8 +54,8 @@ target_compile_definitions(${TEST_EXECUTABLE_NAME}
 
 gtest_discover_tests(${TEST_EXECUTABLE_NAME}
     PROPERTIES
-        ENVIRONMENT "LSAN_OPTIONS='suppressions=${LADDS_SOURCE_DIR}/.lsanIgnoreList.txt ignore_noninstrumented_modules=1'"
-        "TSAN_OPTIONS='suppressions=${LADDS_SOURCE_DIR}/.tsanIgnoreList.txt ignore_noninstrumented_modules=1'"
+        ENVIRONMENT "TSAN_OPTIONS=suppressions=${LADDS_SOURCE_DIR}/.tsanIgnoreList.txt ignore_noninstrumented_modules=1"
+        ENVIRONMENT "LSAN_OPTIONS=suppressions=${LADDS_SOURCE_DIR}/.lsanIgnoreList.txt ignore_noninstrumented_modules=1"
 )
 
 add_test(
@@ -67,4 +67,9 @@ add_test(
         output_209.vtu
         ${PROJECT_SOURCE_DIR}/tests/data/reference_validationTest.vtu
         CONFIGURATIONS validation
+)
+set_tests_properties(validationtest.testValidation.yaml
+        PROPERTIES
+        ENVIRONMENT "TSAN_OPTIONS=suppressions=${LADDS_SOURCE_DIR}/.tsanIgnoreList.txt ignore_noninstrumented_modules=1"
+        ENVIRONMENT "LSAN_OPTIONS=suppressions=${LADDS_SOURCE_DIR}/.lsanIgnoreList.txt ignore_noninstrumented_modules=1"
 )
