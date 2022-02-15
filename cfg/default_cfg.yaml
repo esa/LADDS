@@ -23,8 +23,8 @@ sim:
     enforceMassConservation: true # by default the NASA breakup model does not conserve mass
 
 io:
-  # output_file: propagator.csv # Output file for the propagator. Currently, nothing is written.
   csv:
+    # propagatorOutput: propagator.csv # Output file for the propagator. Currently, nothing is written.
     fileName: initial_population.csv  # CSV file containing all data to initialize the full satellite population
   #progressOutputFrequency : 50 # Frequency of writing iteration number and encounter info to std::out.
   #checkpoint:

@@ -121,7 +121,7 @@ Simulation::initIntegrator(AutoPas_t &autopas, ConfigReader &config) {
                                   config.get<bool>("sim/prop/useDRAGComponent", false)};
 
   std::unique_ptr<FileOutput<AutoPas_t>> csvWriter{nullptr};
-  if (const auto csvFilename = config.get<std::string>("io/output_file", ""); not csvFilename.empty()) {
+  if (const auto csvFilename = config.get<std::string>("io/csv/propagatorOutput", ""); not csvFilename.empty()) {
     csvWriter =
         std::make_unique<FileOutput<AutoPas_t>>(autopas, csvFilename, OutputFile::CSV, selectedPropagatorComponents);
   }
