@@ -14,18 +14,18 @@
 void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, const Logger &logger) {
   std::vector<Particle> satellites;
 
-  // load CSV ...
-  const auto posFilePathCfg = config.get<std::string>("io/posFileName", "");
-  const auto velFilePathCfg = config.get<std::string>("io/velFileName", "");
-  if (not posFilePathCfg.empty() and not velFilePathCfg.empty()) {
-    const auto posFilePath = std::string(DATADIR) + posFilePathCfg;
-    const auto velFilePath = std::string(DATADIR) + velFilePathCfg;
+  // if the value is not set this is the only place that should define the default value as it is the first to access it
+  const auto coefficientOfDrag = config.get<double>("sim/prop/coefficientOfDrag", 2.2);
 
-    SPDLOG_LOGGER_INFO(
-        logger.get(), "Loading scenario from CSV\nPositions: {}\nVelocities: {}", posFilePath, velFilePath);
+  // load CSV ...
+  const auto csvFileName = config.get<std::string>("io/csv/fileName", "");
+  if (not csvFileName.empty()) {
+    const auto csvFilePath = std::string(DATADIR) + csvFileName;
+
+    SPDLOG_LOGGER_INFO(logger.get(), "Loading scenario from CSV: {}", csvFilePath);
 
     // Read in scenario
-    satellites = DatasetReader::readDataset(posFilePath, velFilePath);
+    satellites = DatasetReader::readDataset(csvFilePath, coefficientOfDrag);
     SPDLOG_LOGGER_DEBUG(logger.get(), "Parsed {} satellites", satellites.size());
   } else {
     // ... or load checkpoint ...
@@ -37,7 +37,7 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
       HDF5Reader hdfReader(checkpointPath);
       // either load the given iteration or fall back to the last iteration stored in the file
       auto iteration = config.get<size_t>("io/checkpoint/iteration", hdfReader.readLastIterationNr());
-      satellites = hdfReader.readParticles(iteration);
+      satellites = hdfReader.readParticles(iteration, coefficientOfDrag);
     } else {
       // ... or fail
       throw std::runtime_error("No valid input option found! Exiting...");
@@ -76,6 +76,7 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
 
 std::vector<Constellation> SatelliteLoader::loadConstellations(ConfigReader &config, const Logger &logger) {
   std::vector<Constellation> constellations;
+  auto coefficientOfDrag = config.get<double>("sim/prop/coefficientOfDrag");
   auto constellationList = config.get<std::string>("io/constellationList", "", true);
   // altitudeSpread = 3 * sigma , altitudeDeviation = sigma (= standardDeviation)
   auto altitudeDeviation = config.get<double>("io/altitudeSpread", 0.0) / 3.0;
@@ -95,11 +96,12 @@ std::vector<Constellation> SatelliteLoader::loadConstellations(ConfigReader &con
     for (int i = 0; i < nConstellations; ++i) {
       unsigned long offset = constellationDataStr.find(';', 0);
       if (offset == 0) {
-        constellations.emplace_back(Constellation(constellationDataStr, insertionFrequency, altitudeDeviation));
+        constellations.emplace_back(
+            Constellation(constellationDataStr, insertionFrequency, altitudeDeviation, coefficientOfDrag));
         break;
       } else {
-        constellations.emplace_back(
-            Constellation(constellationDataStr.substr(0, offset), insertionFrequency, altitudeDeviation));
+        constellations.emplace_back(Constellation(
+            constellationDataStr.substr(0, offset), insertionFrequency, altitudeDeviation, coefficientOfDrag));
         constellationDataStr.erase(0, offset + 1);
       }
     }

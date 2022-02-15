@@ -28,7 +28,12 @@ void CollisionFunctorIntegrationTest::SetUpTestSuite() {
                                0.,
                                0.,
                            },
-                           0};
+                           0,
+                           "dummy",
+                           Particle::ActivityState::passive,
+                           1.,
+                           1.,
+                           Particle::calculateBcInv(0., 1., 1., 2.2)};
   _debris.reserve(numDebris);
 
   // fix seed for randomPosition()
@@ -76,7 +81,7 @@ TEST_P(CollisionFunctorIntegrationTest, testAutoPasAlgorithm) {
     GTEST_SKIP_("SoAFunctor currently not implemented!");
   }
 
-  CollisionFunctor functor(_cutoff, 10.0, 0.1 * _cutoff);
+  CollisionFunctor functor(_cutoff, 10.0, 0.1 * _cutoff, 0.1);
 
   if (not functor.allowsNonNewton3() and newton3 == autopas::Newton3Option::disabled) {
     GTEST_SKIP_("Functor does not support Newton3==disabled!");

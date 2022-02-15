@@ -14,7 +14,7 @@
 #ifdef LADDS_HDF5
 TEST_F(HDF5WriterReaderTest, WriteReadTestParticleData) {
   // 1. create some data
-  constexpr size_t numParticles = 10;
+  constexpr size_t numParticles = 2;
   autopas::AutoPas<Particle> autopas;
   autopas.setBoxMin({0., 0., 0.});
   autopas.setBoxMax(
@@ -24,7 +24,14 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestParticleData) {
   std::vector<Particle> particles;
   particles.reserve(numParticles);
   for (size_t i = 0; i < numParticles; ++i) {
-    Particle p{{static_cast<double>(i), static_cast<double>(i), static_cast<double>(i)}, {0., 0., 0.}, i};
+    Particle p{{static_cast<double>(i), static_cast<double>(i), static_cast<double>(i)},
+               {1., 2., 3.},
+               i,
+               "dummy",
+               Particle::ActivityState::evasive,
+               1.,
+               1.,
+               Particle::calculateBcInv(0., 1., 1., 2.2)};
     autopas.addParticle(p);
     particles.push_back(p);
   }
@@ -39,12 +46,30 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestParticleData) {
   HDF5Writer hdf5Writer(filename, 4);
   hdf5Writer.writeParticles(iterationNr, autopas);
 
-  // 3. read data
+  // 3. read data and check that read data is equal to generated data
   HDF5Reader hdf5Reader(filename);
-  auto particlesHDF5 = hdf5Reader.readParticles(iterationNr);
+  EXPECT_THAT(hdf5Reader.readParticles(iterationNr, 2.2), ::testing::UnorderedElementsAreArray(particles))
+      << "Particle data of initial iteration is not correct!";
 
-  // 4. check that read data is equal to generated data
-  EXPECT_THAT(particlesHDF5, ::testing::UnorderedElementsAreArray(particles));
+  // 4. add more particles and check that they are added correctly to HDF5
+  particles.emplace_back(std::array<double, 3>{0.5, 0.5, 0.5},
+                         std::array<double, 3>{1., 2., 3.},
+                         numParticles,
+                         "dummy",
+                         Particle::ActivityState::evasivePreserving,
+                         1.,
+                         1.,
+                         Particle::calculateBcInv(0., 1., 1., 2.2));
+  autopas.addParticle(particles.back());
+
+  // 5. write data
+  hdf5Writer.writeParticles(iterationNr + 1, autopas);
+
+  // 6. read data and check that read data is equal to generated data
+  EXPECT_THAT(hdf5Reader.readParticles(iterationNr + 1, 2.2), ::testing::UnorderedElementsAreArray(particles))
+      << "Particle data of second iteration is not correct!";
+  ;
+
   // cleanup
   std::remove(filename);
 }
@@ -55,7 +80,14 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestCollisionData) {
   std::vector<Particle> particles;
   particles.reserve(numParticles);
   for (size_t i = 0; i < numParticles; ++i) {
-    particles.push_back(Particle{{0., 0., static_cast<double>(i)}, {0., 0., 0.}, i});
+    particles.emplace_back<Particle>({{0., 0., static_cast<double>(i)},
+                                      {0., 0., 0.},
+                                      i,
+                                      "dummy",
+                                      Particle::ActivityState::passive,
+                                      1.,
+                                      1.,
+                                      Particle::calculateBcInv(0., 1., 1., 2.2)});
   }
 
   // These conjunctions are just randomly made up and have nothing to do with position data!
@@ -82,10 +114,10 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestCollisionData) {
   // 4. check that read data is equal to generated data
   EXPECT_EQ(conjunctions.size(), conjunctionsHDF5.size());
   for (const auto &[ptrARef, ptrBRef, distRef] : conjunctions) {
-    const auto idARef = static_cast<HDF5Writer::IntType>(ptrARef->getID());
-    const auto idBRef = static_cast<HDF5Writer::IntType>(ptrBRef->getID());
+    const auto idARef = static_cast<HDF5Definitions::IntType>(ptrARef->getID());
+    const auto idBRef = static_cast<HDF5Definitions::IntType>(ptrBRef->getID());
 
-    HDF5Writer::CollisionInfo collisionInfo{idARef, idBRef, static_cast<HDF5Writer::FloatType>(distRef)};
+    HDF5Definitions::CollisionInfo collisionInfo{idARef, idBRef, static_cast<HDF5Definitions::FloatType>(distRef)};
     EXPECT_THAT(conjunctionsHDF5, ::testing::Contains(collisionInfo));
   }
   // cleanup

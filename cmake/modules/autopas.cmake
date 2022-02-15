@@ -13,8 +13,8 @@ endif ()
 FetchContent_Declare(
         autopasfetch
         GIT_REPOSITORY ${autopasRepoPath}
-        # fix missing include in WrapOpenMP generation 18.11.21
-        GIT_TAG a7639469b56b2de7f506fb0ebddaca76da5863e6
+        # merge after AutoPas::deleteParticle(particle &) 03.02.22
+        GIT_TAG 2b262a83a24311bdd9b50d8b4db468726a659758
 )
 # Populate dependency
 FetchContent_MakeAvailable(autopasfetch)
