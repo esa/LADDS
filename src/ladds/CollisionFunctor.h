@@ -100,7 +100,7 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
   const double _dt;
 
   /**
-   * Factor multiplied to the sum of radii to over approximate collision distances.
+   * Factor multiplied with the sum of radii to over approximate collision distances.
    */
   const double _collisionDistanceFactor;
   /**

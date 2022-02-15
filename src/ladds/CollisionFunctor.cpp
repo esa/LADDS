@@ -98,6 +98,7 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   const auto distanceSquare_lines = dot(dr_lines, dr_lines);
   const auto scaledObjectSeparation = (iRadius + jRadius) * _collisionDistanceFactor;
 
+  // return if particles are far enough away (i.e. further than sum of their scaled sizes)
   if (distanceSquare_lines > (scaledObjectSeparation * scaledObjectSeparation)) return;
 
   // store pointers to colliding pair
