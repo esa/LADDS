@@ -31,7 +31,7 @@ if not os.path.isfile(output_path):
 # path to the given reference vtu
 reference_path=sys.argv[4]
 if not os.path.isfile(reference_path):
-    sys.exit("Reference file not found! Expected: " + os.getcwd() + '/' + output_path)
+    sys.exit("Reference file not found! Expected: " + os.getcwd() + '/' + reference_path)
 
 # read all positions and velocities data from output and reference
 reader = vtkXMLUnstructuredGridReader()
