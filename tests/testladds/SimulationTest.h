@@ -31,7 +31,7 @@ class SimulationTest : public testing::TestWithParam<ParameterTuple> {
 
     // optional parameters which are necessary for the tests here
     config["io"]["constellationCutoff"] = constellationCutoff;
-    config["sim"]["conjunctionThreshold"] = 0.5;
+    config["sim"]["collisionDistanceFactor"] = 1.;
     config["sim"]["iterations"] = 1;
     config["sim"]["minAltitude"] = 150.;
     config["sim"]["prop"]["useKEPComponent"] = true;

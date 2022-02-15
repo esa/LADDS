@@ -4,7 +4,7 @@ sim:
   maxAltitude: 10000 # Maximum satellite altitude above earth core. This number times two is the simulation box length. [km]
   minAltitude: 150 # Everything below this altitude above ground will be considered burning up [km]
   deltaT: 10.0 # [s]
-  conjunctionThreshold: 0.5 # [km]
+  collisionDistanceFactor: 1.0 # Factor multiplied to the sum of radii to over approximate collision distances.
 
   prop: # Which propagation model components should be applied
     useKEPComponent: true # Keplerian propagation

@@ -11,11 +11,11 @@
 
 #include <algorithm>
 
-CollisionFunctor::CollisionFunctor(double cutoff, double dt, double minorCutoff, double minDetectionRadius)
+CollisionFunctor::CollisionFunctor(double cutoff, double dt, double collisionDistanceFactor, double minDetectionRadius)
     : Functor(cutoff),
       _cutoffSquare(cutoff * cutoff),
       _dt(dt),
-      _minorCutoffSquare(minorCutoff * minorCutoff),
+      _collisionDistanceFactor(collisionDistanceFactor),
       _minDetectionRadius(minDetectionRadius) {
   _threadData.resize(autopas::autopas_get_max_threads());
 }
@@ -39,9 +39,11 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   }
   const auto &iActivity = i.getActivityState();
   const auto &jActivity = j.getActivityState();
+  const auto &iRadius = i.getRadius();
+  const auto &jRadius = j.getRadius();
   if ((iActivity != Particle::ActivityState::passive and jActivity != Particle::ActivityState::passive) or
-      (iActivity != Particle::ActivityState::passive and j.getRadius() >= _minDetectionRadius) or
-      (jActivity != Particle::ActivityState::passive and i.getRadius() >= _minDetectionRadius)) {
+      (iActivity != Particle::ActivityState::passive and jRadius >= _minDetectionRadius) or
+      (jActivity != Particle::ActivityState::passive and iRadius >= _minDetectionRadius)) {
     return;
   }
 
@@ -94,8 +96,9 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
 
   const auto dr_lines = sub(p1, p2);
   const auto distanceSquare_lines = dot(dr_lines, dr_lines);
+  const auto scaledObjectSeparation = (iRadius + jRadius) * _collisionDistanceFactor;
 
-  if (distanceSquare_lines > _minorCutoffSquare) return;
+  if (distanceSquare_lines > (scaledObjectSeparation * scaledObjectSeparation)) return;
 
   // store pointers to colliding pair
   if (i.getID() < j.getID()) {
