@@ -11,8 +11,8 @@ sim:
     useJ2Component: true # J2 spherical harmonic approximation
     useC22Component: true # C22 spherical harmonic approximation
     useS22Component: true # S22 spherical harmonic approximation
-    useSOLComponent: false # Solar gravitational pull
-    useLUNComponent: false # Lunar gravitational pull
+    useSOLComponent: true # Solar gravitational pull
+    useLUNComponent: true # Lunar gravitational pull
     useSRPComponent: true # Solar radiation pressure
     useDRAGComponent: true # Atmospheric drag
     coefficientOfDrag: 2.2  # c_D for the drag component used in all objects where no BSTAR is available
