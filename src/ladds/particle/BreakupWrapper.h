@@ -21,7 +21,7 @@
 class BreakupWrapper {
  public:
   BreakupWrapper(ConfigReader &config, AutoPas_t &autopas)
-      : minLc{config.get<double>("sim/breakup/minLc", 0.05)},
+      : minLc{config.get<double>("sim/breakup/minLc", 0.01)},
         enforceMassConservation{config.get<bool>("sim/breakup/enforceMassConservation", true)},
         coefficientOfDrag{config.get<double>("sim/prop/coefficientOfDrag")},
         autopas{autopas} {

@@ -19,7 +19,7 @@ sim:
 
   breakup:
     enabled: false # (de-)activate the breakup mechanic
-    minLc: 0.05 # minimal characteristic length for generated debris [m]
+    minLc: 0.01 # minimal characteristic length for generated debris [m]
     enforceMassConservation: true # by default the NASA breakup model does not conserve mass
 
 io:
