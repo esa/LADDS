@@ -34,6 +34,8 @@ jobs:
             python3-numpy \
             python3-vtk7
     - uses: actions/checkout@v2
+      with:
+        lfs: true
     - name: Build project
       run: |
         mkdir build
@@ -63,6 +65,8 @@ jobs:
               python3-numpy \
               python3-vtk7
       - uses: actions/checkout@v2
+        with:
+          lfs: true
       - name: Build project
         run: |
           mkdir build
@@ -94,6 +98,8 @@ jobs:
               python3-numpy \
               python3-vtk7
       - uses: actions/checkout@v2
+        with:
+          lfs: true
       - name: Build project
         run: |
           mkdir build
