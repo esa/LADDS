@@ -70,6 +70,5 @@ add_test(
 )
 set_tests_properties(validationtest.testValidation.yaml
         PROPERTIES
-        ENVIRONMENT "TSAN_OPTIONS=suppressions=${LADDS_SOURCE_DIR}/.tsanIgnoreList.txt ignore_noninstrumented_modules=1"
-        ENVIRONMENT "LSAN_OPTIONS=suppressions=${LADDS_SOURCE_DIR}/.lsanIgnoreList.txt ignore_noninstrumented_modules=1"
+        ENVIRONMENT "TSAN_OPTIONS=suppressions=${LADDS_SOURCE_DIR}/.tsanIgnoreList.txt ignore_noninstrumented_modules=1;LSAN_OPTIONS=suppressions=${LADDS_SOURCE_DIR}/.lsanIgnoreList.txt ignore_noninstrumented_modules=1"
 )
