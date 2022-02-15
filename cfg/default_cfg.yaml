@@ -5,6 +5,7 @@ sim:
   minAltitude: 150 # Everything below this altitude above ground will be considered burning up [km]
   deltaT: 10.0 # [s]
   collisionDistanceFactor: 1.0 # Factor multiplied with the sum of radii to over approximate collision distances.
+  timestepsPerCollisionDetection: 1
 
   prop: # Which propagation model components should be applied
     useKEPComponent: true # Keplerian propagation

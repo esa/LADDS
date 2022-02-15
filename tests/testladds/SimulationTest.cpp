@@ -129,6 +129,60 @@ TEST_F(SimulationTest, testBurnUp) {
 }
 
 /**
+ * Two particles flying towards each other. Should collide in the second iteration (=1) but collision detection is only
+ * active in iterations 0 and 2.
+ * Expect that this is caught in the third iteration (=2).
+ * @note iterations are numbered from 0.
+ */
+TEST_F(SimulationTest, testTimestepsPerCollisionDetection) {
+  // Let simulation run for N iterations to get the number of collisions after the Nth iteration as we can not run
+  // individual iterations.
+  for (const size_t iterations : {1, 2, 3}) {
+    autopas->deleteAllParticles();
+    auto [csvWriter, accumulator, integrator] = simulation.initIntegrator(*autopas, *configReader);
+    const auto &minAltitude = Physics::R_EARTH + configReader->get<double>("sim/minAltitude");
+    autopas->addParticle(Particle({minAltitude + 100., 20., 0.},
+                                  {0., -10., 0.},
+                                  0,
+                                  "A",
+                                  Particle::ActivityState::passive,
+                                  1.,
+                                  1.,
+                                  Particle::calculateBcInv(0., 1., 1., 2.2)));
+    autopas->addParticle(Particle({minAltitude + 100., -20, 0.},
+                                  {0., 10., 0.},
+                                  1,
+                                  "B",
+                                  Particle::ActivityState::passive,
+                                  1.,
+                                  1.,
+                                  Particle::calculateBcInv(0., 1., 1., 2.2)));
+    ASSERT_EQ(autopas->getNumberOfParticles(), 2) << "Initial particles not found!";
+
+    configReader->setValue("sim/iterations", iterations);
+    configReader->setValue("sim/conjunctionThreshold", 0.003);
+    configReader->setValue("sim/timestepsPerCollisionDetection", 2);
+    // dummy because interface requires it
+    std::vector<Constellation> constellations{};
+    const auto conjunctions = simulation.simulationLoop(*autopas, *integrator, constellations, *configReader);
+    constexpr auto errorString{"Unexpected number of conjunctions in iterations "};
+    switch (iterations) {
+      case 1:
+        EXPECT_EQ(conjunctions, 0) << errorString << iterations;
+        break;
+      case 2:
+        EXPECT_EQ(conjunctions, 0) << errorString << iterations;
+        break;
+      case 3:
+        EXPECT_EQ(conjunctions, 1) << errorString << iterations;
+        break;
+      default:
+        GTEST_FAIL() << "Unexpected iterations: " << iterations;
+    }
+  }
+}
+
+/**
  * Tests whether particles are only inserted, when they are outside a critical range
  * and delayed when within that critical range.
  *
