@@ -100,11 +100,12 @@ class Simulation {
    * @param autopas
    * @param integrator
    * @param config
+   * @return Number of observed collisions.
    */
-  void simulationLoop(AutoPas_t &autopas,
-                      Integrator<AutoPas_t> &integrator,
-                      std::vector<Constellation> &constellations,
-                      ConfigReader &config);
+  [[maybe_unused]] size_t simulationLoop(AutoPas_t &autopas,
+                                         Integrator<AutoPas_t> &integrator,
+                                         std::vector<Constellation> &constellations,
+                                         ConfigReader &config);
 
   /**
    * Inserts particles into autopas if they have a safe distance to existing particles.

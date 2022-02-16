@@ -24,7 +24,8 @@ class SimulationTest : public testing::TestWithParam<ParameterTuple> {
     logger.get()->set_level(Logger::Level::off);
 
     // initialize a minimal default configuration
-    config["autopas"]["cutoff"] = 0.02;
+    config["autopas"]["cutoff"] = 80.;
+    config["sim"]["breakup"]["enabled"] = false;
     config["sim"]["deltaT"] = 1.0;
     config["sim"]["maxAltitude"] = 85000.;
     config["sim"]["prop"]["coefficientOfDrag"] = 2.2;

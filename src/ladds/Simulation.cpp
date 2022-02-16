@@ -160,10 +160,10 @@ std::tuple<CollisionFunctor::CollisionCollectionT, bool> Simulation::collisionDe
   return {collisionFunctor.getCollisions(), stillTuning};
 }
 
-void Simulation::simulationLoop(AutoPas_t &autopas,
-                                Integrator<AutoPas_t> &integrator,
-                                std::vector<Constellation> &constellations,
-                                ConfigReader &config) {
+size_t Simulation::simulationLoop(AutoPas_t &autopas,
+                                  Integrator<AutoPas_t> &integrator,
+                                  std::vector<Constellation> &constellations,
+                                  ConfigReader &config) {
   const auto tuningMode = config.get<bool>("autopas/tuningMode", false);
   const auto iterations = config.get<size_t>("sim/iterations");
   const auto constellationInsertionFrequency = config.get<int>("io/constellationFrequency", 1);
@@ -171,6 +171,11 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
   const auto progressOutputFrequency = config.get<int>("io/progressOutputFrequency", 50);
   const auto deltaT = config.get<double>("sim/deltaT");
   const auto collisionDistanceFactor = config.get<double>("sim/collisionDistanceFactor", 1.);
+  const auto timestepsPerCollisionDetection = config.get<size_t>("sim/timestepsPerCollisionDetection", 1);
+  if (timestepsPerCollisionDetection < 1) {
+    SPDLOG_LOGGER_CRITICAL(
+        logger.get(), "sim/timestepsPerCollisionDetection is {} but must not be <1!", timestepsPerCollisionDetection);
+  }
   const auto minDetectionRadius = config.get<double>("sim/minDetectionRadius", 0.1);
   const auto minAltitude = config.get<double>("sim/minAltitude", 150.);
   std::vector<Particle> delayedInsertion;
@@ -230,31 +235,39 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
       SPDLOG_LOGGER_ERROR(logger.get(), "Particles are escaping! \n{}", escapedParticles);
     }
 
-    timers.collisionDetection.start();
-    auto [collisions, stillTuning] = collisionDetection(autopas, deltaT, collisionDistanceFactor, minDetectionRadius);
-    timers.collisionDetection.stop();
+    if (i % timestepsPerCollisionDetection == 0) {
+      timers.collisionDetection.start();
+      auto [collisions, stillTuning] = collisionDetection(autopas,
+                                                          deltaT * static_cast<double>(timestepsPerCollisionDetection),
+                                                          collisionDistanceFactor,
+                                                          minDetectionRadius);
+      timers.collisionDetection.stop();
 
-    if (tuningMode and not stillTuning) {
-      dumpCalibratedConfig(config, autopas);
-      return;
-    }
+      if (tuningMode and not stillTuning) {
+        dumpCalibratedConfig(config, autopas);
+        return totalConjunctions;
+      }
 
-    timers.collisionWriting.start();
-    totalConjunctions += collisions.size();
-    conjuctionWriter->writeConjunctions(i, collisions);
-    if (i % progressOutputFrequency == 0) {
-      SPDLOG_LOGGER_INFO(
-          logger.get(), "It {} - Encounters:{} Total conjunctions:{}", i, collisions.size(), totalConjunctions);
-    }
-    timers.collisionWriting.stop();
+      timers.collisionWriting.start();
+      totalConjunctions += collisions.size();
+      conjuctionWriter->writeConjunctions(i, collisions);
+      timers.collisionWriting.stop();
 
-    if (breakupWrapper and not collisions.empty()) {
-      timers.collisionSimulation.start();
-      breakupWrapper->simulateBreakup(collisions);
-      timers.collisionSimulation.stop();
+      if (breakupWrapper and not collisions.empty()) {
+        timers.collisionSimulation.start();
+        breakupWrapper->simulateBreakup(collisions);
+        timers.collisionSimulation.stop();
+      }
     }
 
     timers.output.start();
+    if (i % progressOutputFrequency == 0) {
+      SPDLOG_LOGGER_INFO(logger.get(),
+                         "It {} | Total particles: {} | Total conjunctions: {}",
+                         i,
+                         autopas.getNumberOfParticles(),
+                         totalConjunctions);
+    }
     // Visualization:
     if (vtkWriteFrequency and i % vtkWriteFrequency == 0) {
       VTUWriter::writeVTU(i, autopas);
@@ -265,6 +278,7 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     timers.output.stop();
   }
   SPDLOG_LOGGER_INFO(logger.get(), "Total conjunctions: {}", totalConjunctions);
+  return totalConjunctions;
 }
 
 std::vector<Particle> Simulation::checkedInsert(autopas::AutoPas<Particle> &autopas,
