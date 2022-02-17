@@ -209,20 +209,6 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
   // in tuning mode ignore the iteration counter
   for (size_t i = 0ul; i < iterations or tuningMode; ++i) {
-    // check if we hit the timeout and abort the loop if necessary
-    if (timeout != 0) {
-      // quickly interrupt timers.total to update its internal total time.
-      timers.total.stop();
-      timers.total.start();
-      // convert timer value from ns to s
-      const size_t secondsSinceStart = timers.total.getTotalTime() / static_cast<size_t>(1e9);
-      if (secondsSinceStart > timeout) {
-        // set the config to the number of completed iterations (hence no +/-1) for the timer calculations.
-        config.setValue("sim/iterations", i);
-        break;
-      }
-    }
-
     // update positions
     timers.integrator.start();
     integrator.integrate(false);
@@ -276,8 +262,23 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       }
     }
 
+    // check if we hit the timeout and abort the loop if necessary
+    if (timeout != 0) {
+      // quickly interrupt timers.total to update its internal total time.
+      timers.total.stop();
+      timers.total.start();
+      // convert timer value from ns to s
+      const size_t secondsSinceStart = timers.total.getTotalTime() / static_cast<size_t>(1e9);
+      if (secondsSinceStart > timeout) {
+        // set the config to the number of completed iterations (hence no +/-1) for the timer calculations.
+        config.setValue("sim/iterations", i);
+        // abort the loop by increasing i. This also leads to triggering the visualization
+        i = iterations;
+      }
+    }
+
     timers.output.start();
-    if (i % progressOutputFrequency == 0) {
+    if (i % progressOutputFrequency == 0 or i == (iterations - 1)) {
       SPDLOG_LOGGER_INFO(logger.get(),
                          "It {} | Total particles: {} | Total conjunctions: {}",
                          i,
@@ -285,10 +286,10 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                          totalConjunctions);
     }
     // Visualization:
-    if (vtkWriteFrequency and i % vtkWriteFrequency == 0) {
+    if (vtkWriteFrequency and (i % vtkWriteFrequency == 0 or i == (iterations - 1))) {
       VTUWriter::writeVTU(i, autopas);
     }
-    if (hdf5WriteFrequency and i % hdf5WriteFrequency == 0) {
+    if (hdf5WriteFrequency and (i % hdf5WriteFrequency == 0 or i == (iterations - 1))) {
       hdf5Writer->writeParticles(i, autopas);
     }
     timers.output.stop();
