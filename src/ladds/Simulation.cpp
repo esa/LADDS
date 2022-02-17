@@ -107,7 +107,7 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config) {
 
 std::tuple<std::unique_ptr<FileOutput<AutoPas_t>>,
            std::unique_ptr<Acceleration::AccelerationAccumulator<AutoPas_t>>,
-           std::unique_ptr<Integrator<AutoPas_t>>>
+           std::unique_ptr<YoshidaIntegrator<AutoPas_t>>>
 Simulation::initIntegrator(AutoPas_t &autopas, ConfigReader &config) {
   // initialization of the integrator
   std::array<bool, 8> selectedPropagatorComponents{};
@@ -128,7 +128,7 @@ Simulation::initIntegrator(AutoPas_t &autopas, ConfigReader &config) {
   auto accumulator = std::make_unique<Acceleration::AccelerationAccumulator<AutoPas_t>>(
       selectedPropagatorComponents, autopas, 0.0, csvWriter.get());
   auto deltaT = config.get<double>("sim/deltaT");
-  auto integrator = std::make_unique<Integrator<AutoPas_t>>(autopas, *accumulator, deltaT);
+  auto integrator = std::make_unique<YoshidaIntegrator<AutoPas_t>>(autopas, *accumulator, deltaT);
 
   return std::make_tuple<>(std::move(csvWriter), std::move(accumulator), std::move(integrator));
 }
@@ -161,7 +161,7 @@ std::tuple<CollisionFunctor::CollisionCollectionT, bool> Simulation::collisionDe
 }
 
 size_t Simulation::simulationLoop(AutoPas_t &autopas,
-                                  Integrator<AutoPas_t> &integrator,
+                                  YoshidaIntegrator<AutoPas_t> &integrator,
                                   std::vector<Constellation> &constellations,
                                   ConfigReader &config) {
   const auto tuningMode = config.get<bool>("autopas/tuningMode", false);

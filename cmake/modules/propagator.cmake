@@ -18,8 +18,8 @@ set(DebrisSim_Simulation OFF CACHE INTERNAL "")
 FetchContent_Declare(
         Propagatorfetch
         GIT_REPOSITORY ${PropagatorRepoPath}
-        # branch: main; latest feature: atmospheric density via table
-        GIT_TAG a5e8df943819ad780fad494ed8a0f6937d41ad0d
+        # branch: yoshi; latest feature: yoshida integrator
+        GIT_TAG 15b5e8087b0a18e497847d574242263efa9acf55
 )
 
 # Get Propagator source and binary directories from CMake project
