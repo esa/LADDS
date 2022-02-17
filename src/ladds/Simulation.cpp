@@ -389,5 +389,5 @@ size_t Simulation::computeTimeout(ConfigReader &config) {
   const auto days = static_cast<size_t>(config.get<double>("sim/timeout/days", 0., suppressWarnings) * 24. * 60 * 60.);
   const auto sum = seconds + minutes + hours + days;
   // if everything resolved to 0 return the error value
-  return sum == 0 ? std::numeric_limits<size_t>::max() : static_cast<size_t>(sum);
+  return sum;
 }
