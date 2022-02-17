@@ -127,6 +127,13 @@ class Simulation {
   void deleteBurnUps(autopas::AutoPas<Particle> &autopas, double burnUpAltitude) const;
 
   /**
+   * Computes a timeout value in seconds from the information given in the config.
+   * If nothing is given or everything is 0 return std::numeric_limits<size_t>::max();
+   * @param config
+   * @return timeout in seconds.
+   */
+  size_t computeTimeout(ConfigReader &config);
+  /**
    * One logger to log them all.
    */
   Logger &logger;
