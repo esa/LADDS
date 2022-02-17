@@ -15,7 +15,7 @@ CollisionFunctor::CollisionFunctor(double cutoff, double dt, double collisionDis
     : Functor(cutoff),
       _cutoffSquare(cutoff * cutoff),
       _dt(dt),
-      _collisionDistanceFactor(collisionDistanceFactor / 1000.),   // also imply conversion from m to km
+      _collisionDistanceFactor(collisionDistanceFactor / 1000.),  // also imply conversion from m to km
       _minDetectionRadius(minDetectionRadius) {
   _threadData.resize(autopas::autopas_get_max_threads());
 }
