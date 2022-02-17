@@ -15,7 +15,7 @@ CollisionFunctor::CollisionFunctor(double cutoff, double dt, double collisionDis
     : Functor(cutoff),
       _cutoffSquare(cutoff * cutoff),
       _dt(dt),
-      _collisionDistanceFactor(collisionDistanceFactor),
+      _collisionDistanceFactor(collisionDistanceFactor / 1000.),   // also imply conversion from m to km
       _minDetectionRadius(minDetectionRadius) {
   _threadData.resize(autopas::autopas_get_max_threads());
 }
@@ -96,6 +96,7 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
 
   const auto dr_lines = sub(p1, p2);
   const auto distanceSquare_lines = dot(dr_lines, dr_lines);
+  // _collisionDistanceFactor also converts this to km
   const auto scaledObjectSeparation = (iRadius + jRadius) * _collisionDistanceFactor;
 
   // return if particles are far enough away (i.e. further than sum of their scaled sizes)
