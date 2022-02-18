@@ -16,22 +16,23 @@
  * The functor is expected to identify a collision between each particle and its direct neighbors.
  */
 TEST(CollisionFunctorTest, ThreeParticles) {
-  constexpr double cutoff{1.5};
+  constexpr double cutoff{1};
   constexpr bool newton3{false};
   constexpr size_t numDebris{3};
 
   std::vector<Particle> debris;
   debris.reserve(numDebris);
 
-  // Add three particles in a row on the X axis separated by 1
+  // Add three particles with radius .6m in a row on the X axis separated by 1 m
+  // => direct neighbors overlap
   for (size_t i = 0; i < numDebris; ++i) {
-    debris.emplace_back(std::array<double, 3>{static_cast<double>(i), 0., 0.},
+    debris.emplace_back(std::array<double, 3>{static_cast<double>(i) / 1000., 0., 0.},
                         std::array<double, 3>{0., static_cast<double>(i), 0.},
                         i,
                         "dummy",
                         Particle::ActivityState::passive,
                         1.,
-                        1.,
+                        .6,
                         Particle::calculateBcInv(0., 1., 1., 2.2));
   }
 
@@ -49,8 +50,8 @@ TEST(CollisionFunctorTest, ThreeParticles) {
   auto collisions = collisionFunctor.getCollisions();
 
   decltype(collisions) expected{
-      {&debris[0], &debris[1], 1.0},
-      {&debris[1], &debris[2], 1.0},
+      {&debris[0], &debris[1], 1.0 / (1000 * 1000)},  // convert distance to km^2
+      {&debris[1], &debris[2], 1.0 / (1000 * 1000)},  // convert distance to km^2
   };
 
   EXPECT_THAT(collisionFunctor.getCollisions(), ::testing::UnorderedElementsAreArray(expected));
@@ -199,7 +200,7 @@ TEST(CollisionFunctorTest, MixActivityStates) {
 }
 
 /**
- * Two particles each with radius 1 are placed at a distance of 3.
+ * Two particles each with radius 1 are placed at a distance of 3 m.
  * Using collisionDistanceFactor 1 they should not be considered colliding, using 2 they should.
  */
 TEST(CollisionFunctorTest, CollisionDistanceFactorTest) {
@@ -217,7 +218,7 @@ TEST(CollisionFunctorTest, CollisionDistanceFactorTest) {
                                 particleMass,
                                 particleRadius,
                                 Particle::calculateBcInv(0., particleMass, particleRadius, 2.2)},
-                               {{3., 0., 0.},
+                               {{3. / 1000, 0., 0.},
                                 {-1., 0., 0.},
                                 2,
                                 "B",
@@ -233,10 +234,12 @@ TEST(CollisionFunctorTest, CollisionDistanceFactorTest) {
     collisionFunctor.endTraversal(newton3);
     if (collisionDistanceFactor == 1.) {
       // distance too far -> no collisions
-      EXPECT_EQ(collisionFunctor.getCollisions().size(), 0);
+      EXPECT_EQ(collisionFunctor.getCollisions().size(), 0)
+          << "For collisionDistanceFactor: " << collisionDistanceFactor;
     } else if (collisionDistanceFactor == 2.) {
       // over approximation should now include particles -> collision
-      EXPECT_EQ(collisionFunctor.getCollisions().size(), 1);
+      EXPECT_EQ(collisionFunctor.getCollisions().size(), 1)
+          << "For collisionDistanceFactor: " << collisionDistanceFactor;
     } else {
       GTEST_FAIL() << "Unexpected collisionDistanceFactor: " << collisionDistanceFactor;
     }
@@ -247,11 +250,11 @@ TEST_P(CollisionFunctorTest, LinearInterpolationTest) {
   constexpr double cutoff{80.0};
   constexpr bool newton3{false};
   constexpr size_t numDebris{2};
-  constexpr double particleRadius{1.};
+  constexpr double particleRadius{1000.};
 
   const auto &[x1, x2, v1, v2, dt, expected_dist] = GetParam();
 
-  CollisionFunctor collisionFunctor(cutoff, dt, 10., 0.1);
+  CollisionFunctor collisionFunctor(cutoff, dt, 1., 0.1);
 
   std::vector<Particle> debris;
   debris.reserve(numDebris);
@@ -293,6 +296,7 @@ TEST_P(CollisionFunctorTest, LinearInterpolationTest) {
 // Generate tests for all configuration combinations
 INSTANTIATE_TEST_SUITE_P(Generated,
                          CollisionFunctorTest,
+                         // x1 [km], x2 [km], v1 [km/s], v2 [km/2], dt [s], squared expected_dist [km^2]
                          testing::ValuesIn({std::make_tuple(std::array<double, 3>{0., 1., 2.},
                                                             std::array<double, 3>{2., 4., 6.},
                                                             std::array<double, 3>{0., 0., 0.},
