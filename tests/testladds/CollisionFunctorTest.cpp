@@ -254,7 +254,8 @@ TEST_P(CollisionFunctorTest, LinearInterpolationTest) {
 
   const auto &[x1, x2, v1, v2, dt, squaredExpectedDist] = GetParam();
 
-  CollisionFunctor collisionFunctor(cutoff, dt, 1., 0.1);
+  // collisionDistanceFactor > 1 to actually cover all conjunctions
+  CollisionFunctor collisionFunctor(cutoff, dt, 10., 0.1);
 
   std::vector<Particle> debris;
   debris.reserve(numDebris);
