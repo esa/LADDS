@@ -252,7 +252,7 @@ TEST_P(CollisionFunctorTest, LinearInterpolationTest) {
   constexpr size_t numDebris{2};
   constexpr double particleRadius{1000.};
 
-  const auto &[x1, x2, v1, v2, dt, expected_dist] = GetParam();
+  const auto &[x1, x2, v1, v2, dt, squaredExpectedDist] = GetParam();
 
   CollisionFunctor collisionFunctor(cutoff, dt, 1., 0.1);
 
@@ -276,7 +276,7 @@ TEST_P(CollisionFunctorTest, LinearInterpolationTest) {
 
   auto collisions = collisionFunctor.getCollisions();
 
-  decltype(collisions) expected{{&debris[0], &debris[1], expected_dist}};
+  decltype(collisions) expected{{&debris[0], &debris[1], squaredExpectedDist}};
 
   // helper function for debugging output
   auto getIDsStringFromPointers = [](const auto &collisions) {
