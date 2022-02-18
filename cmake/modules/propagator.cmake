@@ -19,7 +19,7 @@ FetchContent_Declare(
         Propagatorfetch
         GIT_REPOSITORY ${PropagatorRepoPath}
         # branch: yoshi; latest feature: yoshida integrator
-        GIT_TAG 15b5e8087b0a18e497847d574242263efa9acf55
+        GIT_TAG yoshi
 )
 
 # Get Propagator source and binary directories from CMake project
