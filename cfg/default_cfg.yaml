@@ -1,6 +1,11 @@
 sim:
   logLevel: info    # Available levels are off, critical, err, warn, info, debug, trace
   iterations: 32000 # Number of simulation iterations
+  timeout: # timeout for the simulation. The simulation stops when either the specified number of iterations is hit or the timeout reached.
+    seconds: 0  # whole seconds
+    minutes: 0. # as floating points
+    hours: 0.   # as floating points
+    days: 0.    # as floating points
   maxAltitude: 10000 # Maximum satellite altitude above earth core. This number times two is the simulation box length. [km]
   minAltitude: 150 # Everything below this altitude above ground will be considered burning up [km]
   deltaT: 10.0 # [s]

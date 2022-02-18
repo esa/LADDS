@@ -201,6 +201,8 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
   const std::unique_ptr<BreakupWrapper> breakupWrapper =
       config.get<bool>("sim/breakup/enabled") ? std::make_unique<BreakupWrapper>(config, autopas) : nullptr;
 
+  const auto timeout = computeTimeout(config);
+
   size_t totalConjunctions{0ul};
 
   config.printParsedValues();
@@ -260,8 +262,27 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       }
     }
 
+    // check if we hit the timeout and abort the loop if necessary
+    if (timeout != 0) {
+      // quickly interrupt timers.total to update its internal total time.
+      timers.total.stop();
+      timers.total.start();
+      // convert timer value from ns to s
+      const size_t secondsSinceStart = timers.total.getTotalTime() / static_cast<size_t>(1e9);
+      if (secondsSinceStart > timeout) {
+        SPDLOG_LOGGER_INFO(logger.get(),
+                           "Simulation timeout hit! Time since simulation start ({} s) > Timeout ({} s))",
+                           secondsSinceStart,
+                           timeout);
+        // set the config to the number of completed iterations (hence no +/-1) for the timer calculations.
+        config.setValue("sim/iterations", i);
+        // abort the loop by increasing i. This also leads to triggering the visualization
+        i = iterations;
+      }
+    }
+
     timers.output.start();
-    if (i % progressOutputFrequency == 0) {
+    if (i % progressOutputFrequency == 0 or i == (iterations - 1)) {
       SPDLOG_LOGGER_INFO(logger.get(),
                          "It {} | Total particles: {} | Total conjunctions: {}",
                          i,
@@ -269,10 +290,10 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                          totalConjunctions);
     }
     // Visualization:
-    if (vtkWriteFrequency and i % vtkWriteFrequency == 0) {
+    if (vtkWriteFrequency and (i % vtkWriteFrequency == 0 or i == (iterations - 1))) {
       VTUWriter::writeVTU(i, autopas);
     }
-    if (hdf5WriteFrequency and i % hdf5WriteFrequency == 0) {
+    if (hdf5WriteFrequency and (i % hdf5WriteFrequency == 0 or i == (iterations - 1))) {
       hdf5Writer->writeParticles(i, autopas);
     }
     timers.output.stop();
@@ -361,4 +382,16 @@ void Simulation::deleteBurnUps(autopas::AutoPas<Particle> &autopas, double burnU
           logger.get(), "Particle too close to the ground. Considered to be burning up!\n{}", *particleIter);
     }
   }
+}
+
+size_t Simulation::computeTimeout(ConfigReader &config) {
+  // parse and directly convert to seconds
+  constexpr bool suppressWarnings = true;
+  const auto seconds = config.get<size_t>("sim/timeout/seconds", 0, suppressWarnings);
+  const auto minutes = static_cast<size_t>(config.get<double>("sim/timeout/minutes", 0., suppressWarnings) * 60.);
+  const auto hours = static_cast<size_t>(config.get<double>("sim/timeout/hours", 0., suppressWarnings) * 60. * 60.);
+  const auto days = static_cast<size_t>(config.get<double>("sim/timeout/days", 0., suppressWarnings) * 24. * 60 * 60.);
+  const auto sum = seconds + minutes + hours + days;
+  // if everything resolved to 0 return the error value
+  return sum;
 }
