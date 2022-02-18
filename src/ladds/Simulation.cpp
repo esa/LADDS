@@ -270,6 +270,10 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       // convert timer value from ns to s
       const size_t secondsSinceStart = timers.total.getTotalTime() / static_cast<size_t>(1e9);
       if (secondsSinceStart > timeout) {
+        SPDLOG_LOGGER_INFO(logger.get(),
+                           "Simulation timeout hit! Time since simulation start ({} s) > Timeout ({} s))",
+                           secondsSinceStart,
+                           timeout);
         // set the config to the number of completed iterations (hence no +/-1) for the timer calculations.
         config.setValue("sim/iterations", i);
         // abort the loop by increasing i. This also leads to triggering the visualization
