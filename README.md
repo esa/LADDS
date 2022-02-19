@@ -103,7 +103,7 @@ A single `.h5` containing particle and conjunction data from a full simulation r
     │       └── (Dataset) Velocities
     │           x y z
     └─── (Dataset) ConstantProperties
-         id mass radius activityState
+         id cosparId mass radius bcInv activityState
 ```
 
 Collision data is tracked every iteration, particle data only in intervals that are defined in the YAML file.
