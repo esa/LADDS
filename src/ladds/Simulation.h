@@ -10,7 +10,7 @@
 #include <ladds/io/Logger.h>
 #include <satellitePropagator/io/FileOutput.h>
 #include <satellitePropagator/physics/AccelerationAccumulator.h>
-#include <satellitePropagator/physics/Integrator.h>
+#include <satellitePropagator/physics/YoshidaIntegrator.h>
 
 #include <memory>
 
@@ -57,7 +57,7 @@ class Simulation {
    */
   [[nodiscard]] std::tuple<std::unique_ptr<FileOutput<AutoPas_t>>,
                            std::unique_ptr<Acceleration::AccelerationAccumulator<AutoPas_t>>,
-                           std::unique_ptr<Integrator<AutoPas_t>>>
+                           std::unique_ptr<YoshidaIntegrator<AutoPas_t>>>
   initIntegrator(AutoPas_t &autopas, ConfigReader &config);
 
   /**
@@ -103,7 +103,7 @@ class Simulation {
    * @return Number of observed collisions.
    */
   [[maybe_unused]] size_t simulationLoop(AutoPas_t &autopas,
-                                         Integrator<AutoPas_t> &integrator,
+                                         YoshidaIntegrator<AutoPas_t> &integrator,
                                          std::vector<Constellation> &constellations,
                                          ConfigReader &config);
 

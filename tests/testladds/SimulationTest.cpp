@@ -9,7 +9,6 @@
 #include <autopas/AutoPasDecl.h>
 #include <satellitePropagator/io/FileOutput.h>
 #include <satellitePropagator/physics/AccelerationAccumulator.h>
-#include <satellitePropagator/physics/Integrator.h>
 
 #include "ladds/particle/Particle.h"
 
