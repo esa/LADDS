@@ -43,7 +43,7 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestParticleData) {
   // 2. write data
   constexpr auto filename = "WriteReadTestParticleData.h5";
   constexpr size_t iterationNr = 42;
-  HDF5Writer hdf5Writer(filename, 4);
+  HDF5Writer hdf5Writer(filename, true, 4);
   hdf5Writer.writeParticles(iterationNr, autopas);
 
   // 3. read data and check that read data is equal to generated data
@@ -68,7 +68,6 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestParticleData) {
   // 6. read data and check that read data is equal to generated data
   EXPECT_THAT(hdf5Reader.readParticles(iterationNr + 1, 2.2), ::testing::UnorderedElementsAreArray(particles))
       << "Particle data of second iteration is not correct!";
-  ;
 
   // cleanup
   std::remove(filename);
@@ -104,7 +103,7 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestCollisionData) {
   // 2. write data
   constexpr auto filename = "WriteReadTestCollisionData.h5";
   constexpr size_t iterationNr = 42;
-  HDF5Writer hdf5Writer(filename, 4);
+  HDF5Writer hdf5Writer(filename, true, 4);
   hdf5Writer.writeConjunctions(iterationNr, conjunctions);
 
   // 3. read data
@@ -123,11 +122,92 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestCollisionData) {
   // cleanup
   std::remove(filename);
 }
-#else
-TEST(HDF5WriterReaderTest, TestReaderNotCompiledException) {
-  EXPECT_THROW(HDF5Reader("foo"), std::runtime_error);
+
+/**
+ * Write data to a HDF5 file, create a second writer that appends some more data, load and check that everything is
+ * there.
+ */
+TEST_F(HDF5WriterReaderTest, AppendCheckpointTest) {
+  // 1. create some data
+  constexpr size_t numParticles = 4;
+  AutoPas_t autopas;
+  autopas.setBoxMin({0., 0., 0.});
+  autopas.setBoxMax({10., 10., 10.});
+  autopas.init();
+  std::vector<Particle> particles;
+  particles.reserve(numParticles);
+  for (size_t i = 0; i < numParticles; ++i) {
+    particles.emplace_back<Particle>({{0., 0., static_cast<double>(i)},
+                                      {0., 0., 0.},
+                                      i,
+                                      "dummy",
+                                      Particle::ActivityState::passive,
+                                      1.,
+                                      1.,
+                                      Particle::calculateBcInv(0., 1., 1., 2.2)});
+    autopas.addParticle(particles.back());
+  }
+
+  // These conjunctions are just randomly made up and have nothing to do with position data!
+  auto insertConjunction = [&](size_t idA, size_t idB, CollisionFunctor::CollisionCollectionT &conjunctions) {
+    const auto dr = autopas::utils::ArrayMath::sub(particles[idA].getR(), particles[idB].getR());
+    const auto distanceSquare = autopas::utils::ArrayMath::dot(dr, dr);
+    conjunctions.emplace_back(&particles[idA], &particles[idB], distanceSquare);
+  };
+  CollisionFunctor::CollisionCollectionT conjunctionsStepA;
+  insertConjunction(1, 2, conjunctionsStepA);
+  insertConjunction(2, 3, conjunctionsStepA);
+
+  // 2. write data (StepA)
+  constexpr auto filename = "AppendCheckpointTest.h5";
+  constexpr size_t iterationStepA{42};
+  HDF5Writer hdf5WriterReplace(filename, true, 4);
+  hdf5WriterReplace.writeParticles(iterationStepA, autopas);
+  hdf5WriterReplace.writeConjunctions(iterationStepA, conjunctionsStepA);
+
+  // 3. new writer that appends (StepB)
+  constexpr size_t iterationStepB{1337};
+  CollisionFunctor::CollisionCollectionT conjunctionsStepB;
+  insertConjunction(2, 0, conjunctionsStepB);
+  particles.emplace_back<Particle>({{0., 0., static_cast<double>(numParticles)},
+                                    {0., 0., 0.},
+                                    numParticles,
+                                    "dummy",
+                                    Particle::ActivityState::passive,
+                                    1.,
+                                    1.,
+                                    Particle::calculateBcInv(0., 1., 1., 2.2)});
+  autopas.addParticle(particles.back());
+  HDF5Writer hdf5WriterAppend(filename, false, 4);
+  hdf5WriterReplace.writeParticles(iterationStepB, autopas);
+  hdf5WriterAppend.writeConjunctions(iterationStepB, conjunctionsStepB);
+
+  // 4. check that all data is present
+  HDF5Reader hdf5Reader(filename);
+  EXPECT_THAT(hdf5Reader.readParticles(iterationStepB, 2.2), ::testing::UnorderedElementsAreArray(particles))
+      << "Particle data of of StepB is incorrect!";
+
+  auto conjunctionsHDF5StepA = hdf5Reader.readCollisions(iterationStepA);
+  EXPECT_EQ(conjunctionsStepA.size(), conjunctionsHDF5StepA.size());
+  for (const auto &[ptrARef, ptrBRef, distRef] : conjunctionsStepA) {
+    const auto idARef = static_cast<HDF5Definitions::IntType>(ptrARef->getID());
+    const auto idBRef = static_cast<HDF5Definitions::IntType>(ptrBRef->getID());
+
+    HDF5Definitions::CollisionInfo collisionInfo{idARef, idBRef, static_cast<HDF5Definitions::FloatType>(distRef)};
+    EXPECT_THAT(conjunctionsHDF5StepA, ::testing::Contains(collisionInfo));
+  }
+  auto conjunctionsHDF5StepB = hdf5Reader.readCollisions(iterationStepB);
+  EXPECT_EQ(conjunctionsStepB.size(), conjunctionsHDF5StepB.size());
+  for (const auto &[ptrARef, ptrBRef, distRef] : conjunctionsStepB) {
+    const auto idARef = static_cast<HDF5Definitions::IntType>(ptrARef->getID());
+    const auto idBRef = static_cast<HDF5Definitions::IntType>(ptrBRef->getID());
+
+    HDF5Definitions::CollisionInfo collisionInfo{idARef, idBRef, static_cast<HDF5Definitions::FloatType>(distRef)};
+    EXPECT_THAT(conjunctionsHDF5StepB, ::testing::Contains(collisionInfo));
+  }
 }
+#else
 TEST(HDF5WriterReaderTest, TestWriterNotCompiledException) {
-  EXPECT_THROW(HDF5Writer("foo", 0), std::runtime_error);
+  EXPECT_THROW(HDF5Writer("foo", true, 0), std::runtime_error);
 }
 #endif

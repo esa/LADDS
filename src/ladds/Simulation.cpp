@@ -133,6 +133,39 @@ Simulation::initIntegrator(AutoPas_t &autopas, ConfigReader &config) {
   return std::make_tuple<>(std::move(csvWriter), std::move(accumulator), std::move(integrator));
 }
 
+std::tuple<size_t, std::shared_ptr<HDF5Writer>, std::shared_ptr<ConjuctionWriterInterface>> Simulation::initWriter(
+    ConfigReader &config) {
+  if (config.defines("io/hdf5")) {
+    std::shared_ptr<HDF5Writer> hdf5Writer;
+    const auto hdf5WriteFrequency = config.get<unsigned int>("io/hdf5/writeFrequency", 0u);
+    const auto hdf5CompressionLvl = config.get<unsigned int>("io/hdf5/compressionLevel", 0u);
+    // either append to checkpoint ...
+    const auto checkpointFileName = config.get<std::string>("io/hdf5/checkpoint/file", "");
+    if (not checkpointFileName.empty()) {
+      // compression level already set when file already exists
+      hdf5Writer = std::make_shared<HDF5Writer>(checkpointFileName, false, 0);
+    }
+    // ... or write to new HDF5 file ....
+    if (const auto hdf5FileName = config.get<std::string>("io/hdf5/fileName", ""); not hdf5FileName.empty()) {
+      // ... but not both!
+      if (not checkpointFileName.empty()) {
+        throw std::runtime_error(
+            "HDF5Writer already defined!\nProbably both a checkpoint and a HDF5 output file are defined. Please choose "
+            "only one.");
+      }
+      hdf5Writer = std::make_shared<HDF5Writer>(hdf5FileName, true, hdf5CompressionLvl);
+    }
+    // check that at least something set a filename
+    if (not hdf5Writer) {
+      throw std::runtime_error(
+          "Config suggests HDF5 should be used but neither a fileName nor a checkpoint to write to is defined.");
+    }
+    return {hdf5WriteFrequency, hdf5Writer, hdf5Writer};
+  } else {
+    return {0u, nullptr, std::make_shared<ConjunctionLogger>("")};
+  }
+}
+
 void Simulation::updateConstellation(AutoPas_t &autopas,
                                      std::vector<Constellation> &constellations,
                                      std::vector<Particle> &delayedInsertionTotal,
@@ -172,6 +205,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
   const auto deltaT = config.get<double>("sim/deltaT");
   const auto collisionDistanceFactor = config.get<double>("sim/collisionDistanceFactor", 1.);
   const auto timestepsPerCollisionDetection = config.get<size_t>("sim/timestepsPerCollisionDetection", 1);
+  const auto startingIteration = config.get<size_t>("io/checkpoint/iteration", -1, true) + 1;
   if (timestepsPerCollisionDetection < 1) {
     SPDLOG_LOGGER_CRITICAL(
         logger.get(), "sim/timestepsPerCollisionDetection is {} but must not be <1!", timestepsPerCollisionDetection);
@@ -182,20 +216,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
   const auto vtkWriteFrequency = config.get<size_t>("io/vtk/writeFrequency", 0ul);
 
-  auto hdf5WriteFrequency = 0u;
-
-  std::shared_ptr<HDF5Writer> hdf5Writer;
-  std::shared_ptr<ConjuctionWriterInterface> conjuctionWriter;
-  if (config.defines("io/hdf5")) {
-    hdf5WriteFrequency = config.get<unsigned int>("io/hdf5/writeFrequency", 0u);
-    const auto hdf5CompressionLvl = config.get<unsigned int>("io/hdf5/compressionLevel", 0u);
-    const auto hdf5FileName = config.get<std::string>("io/hdf5/fileName", "simulationData.h5");
-
-    hdf5Writer = std::make_shared<HDF5Writer>(hdf5FileName, hdf5CompressionLvl);
-    conjuctionWriter = hdf5Writer;
-  } else {
-    conjuctionWriter = std::make_shared<ConjunctionLogger>("");
-  }
+  const auto [hdf5WriteFrequency, hdf5Writer, conjuctionWriter] = initWriter(config);
 
   // only add the breakup model if enabled via yaml
   const std::unique_ptr<BreakupWrapper> breakupWrapper =
@@ -208,7 +229,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
   config.printParsedValues();
 
   // in tuning mode ignore the iteration counter
-  for (size_t i = 0ul; i < iterations or tuningMode; ++i) {
+  for (size_t iteration = startingIteration; iteration < iterations + startingIteration or tuningMode; ++iteration) {
     // update positions
     timers.integrator.start();
     integrator.integrate(false);
@@ -221,7 +242,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
     timers.constellationInsertion.start();
     // new satellites from constellations inserted over time
-    if (i % constellationInsertionFrequency == 0) {
+    if (iteration % constellationInsertionFrequency == 0) {
       updateConstellation(autopas, constellations, delayedInsertion, constellationCutoff);
     }
     timers.constellationInsertion.stop();
@@ -237,7 +258,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       SPDLOG_LOGGER_ERROR(logger.get(), "Particles are escaping! \n{}", escapedParticles);
     }
 
-    if (i % timestepsPerCollisionDetection == 0) {
+    if (iteration % timestepsPerCollisionDetection == 0) {
       timers.collisionDetection.start();
       auto [collisions, stillTuning] = collisionDetection(autopas,
                                                           deltaT * static_cast<double>(timestepsPerCollisionDetection),
@@ -252,7 +273,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
       timers.collisionWriting.start();
       totalConjunctions += collisions.size();
-      conjuctionWriter->writeConjunctions(i, collisions);
+      conjuctionWriter->writeConjunctions(iteration, collisions);
       timers.collisionWriting.stop();
 
       if (breakupWrapper and not collisions.empty()) {
@@ -275,26 +296,26 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                            secondsSinceStart,
                            timeout);
         // set the config to the number of completed iterations (hence no +/-1) for the timer calculations.
-        config.setValue("sim/iterations", i);
+        config.setValue("sim/iterations", iteration);
         // abort the loop by increasing i. This also leads to triggering the visualization
-        i = iterations;
+        iteration = iterations;
       }
     }
 
     timers.output.start();
-    if (i % progressOutputFrequency == 0 or i == (iterations - 1)) {
+    if (iteration % progressOutputFrequency == 0 or iteration == (iterations - 1)) {
       SPDLOG_LOGGER_INFO(logger.get(),
                          "It {} | Total particles: {} | Total conjunctions: {}",
-                         i,
+                         iteration,
                          autopas.getNumberOfParticles(),
                          totalConjunctions);
     }
     // Visualization:
-    if (vtkWriteFrequency and (i % vtkWriteFrequency == 0 or i == (iterations - 1))) {
-      VTUWriter::writeVTU(i, autopas);
+    if (vtkWriteFrequency and (iteration % vtkWriteFrequency == 0 or iteration == (iterations - 1))) {
+      VTUWriter::writeVTU(iteration, autopas);
     }
-    if (hdf5WriteFrequency and (i % hdf5WriteFrequency == 0 or i == (iterations - 1))) {
-      hdf5Writer->writeParticles(i, autopas);
+    if (hdf5WriteFrequency and (iteration % hdf5WriteFrequency == 0 or iteration == (iterations - 1))) {
+      hdf5Writer->writeParticles(iteration, autopas);
     }
     timers.output.stop();
   }
