@@ -135,7 +135,7 @@ TEST_F(HDF5WriterReaderTest, AppendCheckpointTest) {
   autopas.setBoxMax({10., 10., 10.});
   autopas.init();
   std::vector<Particle> particles;
-  particles.reserve(numParticles);
+  particles.reserve(numParticles + 1);
   for (size_t i = 0; i < numParticles; ++i) {
     particles.emplace_back<Particle>({{0., 0., static_cast<double>(i)},
                                       {0., 0., 0.},
@@ -161,9 +161,11 @@ TEST_F(HDF5WriterReaderTest, AppendCheckpointTest) {
   // 2. write data (StepA)
   constexpr auto filename = "AppendCheckpointTest.h5";
   constexpr size_t iterationStepA{42};
-  HDF5Writer hdf5WriterReplace(filename, true, 4);
-  hdf5WriterReplace.writeParticles(iterationStepA, autopas);
-  hdf5WriterReplace.writeConjunctions(iterationStepA, conjunctionsStepA);
+  {
+    HDF5Writer hdf5WriterReplace(filename, true, 4);
+    hdf5WriterReplace.writeParticles(iterationStepA, autopas);
+    hdf5WriterReplace.writeConjunctions(iterationStepA, conjunctionsStepA);
+  }
 
   // 3. new writer that appends (StepB)
   constexpr size_t iterationStepB{1337};
@@ -178,9 +180,11 @@ TEST_F(HDF5WriterReaderTest, AppendCheckpointTest) {
                                     1.,
                                     Particle::calculateBcInv(0., 1., 1., 2.2)});
   autopas.addParticle(particles.back());
-  HDF5Writer hdf5WriterAppend(filename, false, 4);
-  hdf5WriterReplace.writeParticles(iterationStepB, autopas);
-  hdf5WriterAppend.writeConjunctions(iterationStepB, conjunctionsStepB);
+  {
+    HDF5Writer hdf5WriterAppend(filename, false, 4);
+    hdf5WriterAppend.writeParticles(iterationStepB, autopas);
+    hdf5WriterAppend.writeConjunctions(iterationStepB, conjunctionsStepB);
+  }
 
   // 4. check that all data is present
   HDF5Reader hdf5Reader(filename);
