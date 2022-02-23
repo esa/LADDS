@@ -17,7 +17,7 @@ HDF5Writer::HDF5Writer(const std::string &filename, bool replace, unsigned int c
 {
 #ifdef LADDS_HDF5
   // if the file already exists we don't need to set a compression level
-  if (not replace) {
+  if (replace) {
     _file.setCompressionLevel(compressionLevel);
   }
   // CollisionInfo
