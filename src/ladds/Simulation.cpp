@@ -201,7 +201,6 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                                   std::vector<Constellation> &constellations,
                                   ConfigReader &config) {
   const auto tuningMode = config.get<bool>("autopas/tuningMode", false);
-  const auto iterations = config.get<size_t>("sim/iterations");
   const auto constellationInsertionFrequency = config.get<int>("io/constellationFrequency", 1);
   const auto constellationCutoff = config.get<double>("io/constellationCutoff", 0.1);
   const auto progressOutputFrequency = config.get<int>("io/progressOutputFrequency", 50);
@@ -212,6 +211,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
   // otherwise we start at iteration 0.
   const auto startingIteration =
       config.defines("io/hdf5", true) ? config.get<size_t>("io/hdf5/checkpoint/iteration", -1, true) + 1 : 0;
+  const auto iterations = config.get<size_t>("sim/iterations") + startingIteration;
   if (timestepsPerCollisionDetection < 1) {
     SPDLOG_LOGGER_CRITICAL(
         logger.get(), "sim/timestepsPerCollisionDetection is {} but must not be <1!", timestepsPerCollisionDetection);
@@ -235,7 +235,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
   config.printParsedValues();
 
   // in tuning mode ignore the iteration counter
-  for (size_t iteration = startingIteration; iteration < iterations + startingIteration or tuningMode; ++iteration) {
+  for (size_t iteration = startingIteration; iteration < iterations or tuningMode; ++iteration) {
     // update positions
     timers.integrator.start();
     integrator.integrate(false);
@@ -303,8 +303,8 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                            timeout);
         // set the config to the number of completed iterations (hence no +/-1) for the timer calculations.
         config.setValue("sim/iterations", iteration);
-        // abort the loop by increasing i. This also leads to triggering the visualization
-        iteration = iterations;
+        // abort the loop by increasing the loop counter. This also leads to triggering the visualization
+        iteration = iterations - 1;
       }
     }
 
