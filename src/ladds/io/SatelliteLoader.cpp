@@ -46,7 +46,7 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
 
     HDF5Reader hdfReader(checkpointPath);
     // either load the given iteration or fall back to the last iteration stored in the file
-    auto iteration = config.get<size_t>("io/checkpoint/iteration", hdfReader.readLastIterationNr());
+    auto iteration = config.get<size_t>("io/hdf5/checkpoint/iteration", hdfReader.readLastIterationNr());
     satellites = hdfReader.readParticles(iteration, coefficientOfDrag);
   }
 
