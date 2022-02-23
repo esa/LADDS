@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "Simulation.h"
+#include "ladds/Version.h"
 #include "ladds/io/ConfigReader.h"
 #include "ladds/io/Logger.h"
 
@@ -30,6 +31,7 @@ int main(int argc, char **argv) {
   auto config = ConfigReader(cfgFilePath, logger);
 
   logger.get()->set_level(spdlog::level::from_str(config.get<std::string>("sim/logLevel", "info")));
+  SPDLOG_LOGGER_INFO(logger.get(), "LADDS version: {}", LADDS_VERSION);
   SPDLOG_LOGGER_INFO(logger.get(), "Config loaded.");
 
   Simulation simulation(logger);

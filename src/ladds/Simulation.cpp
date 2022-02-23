@@ -19,6 +19,7 @@
 #include "ladds/io/SatelliteLoader.h"
 #include "ladds/io/VTUWriter.h"
 #include "ladds/io/hdf5/HDF5Writer.h"
+#include "ladds/particle/BreakupWrapper.h"
 #include "ladds/particle/Constellation.h"
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
@@ -106,7 +107,7 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config) {
 
 std::tuple<std::unique_ptr<FileOutput<AutoPas_t>>,
            std::unique_ptr<Acceleration::AccelerationAccumulator<AutoPas_t>>,
-           std::unique_ptr<Integrator<AutoPas_t>>>
+           std::unique_ptr<YoshidaIntegrator<AutoPas_t>>>
 Simulation::initIntegrator(AutoPas_t &autopas, ConfigReader &config) {
   // initialization of the integrator
   std::array<bool, 8> selectedPropagatorComponents{};
@@ -119,14 +120,15 @@ Simulation::initIntegrator(AutoPas_t &autopas, ConfigReader &config) {
                                   config.get<bool>("sim/prop/useSRPComponent", false),
                                   config.get<bool>("sim/prop/useDRAGComponent", false)};
 
-  auto csvWriter = std::make_unique<FileOutput<AutoPas_t>>(autopas,
-                                                           config.get<std::string>("io/output_file", "propagator.csv"),
-                                                           OutputFile::CSV,
-                                                           selectedPropagatorComponents);
+  std::unique_ptr<FileOutput<AutoPas_t>> csvWriter{nullptr};
+  if (const auto csvFilename = config.get<std::string>("io/csv/propagatorOutput", ""); not csvFilename.empty()) {
+    csvWriter =
+        std::make_unique<FileOutput<AutoPas_t>>(autopas, csvFilename, OutputFile::CSV, selectedPropagatorComponents);
+  }
   auto accumulator = std::make_unique<Acceleration::AccelerationAccumulator<AutoPas_t>>(
-      selectedPropagatorComponents, autopas, 0.0, *csvWriter);
+      selectedPropagatorComponents, autopas, 0.0, csvWriter.get());
   auto deltaT = config.get<double>("sim/deltaT");
-  auto integrator = std::make_unique<Integrator<AutoPas_t>>(autopas, *accumulator, deltaT);
+  auto integrator = std::make_unique<YoshidaIntegrator<AutoPas_t>>(autopas, *accumulator, deltaT);
 
   return std::make_tuple<>(std::move(csvWriter), std::move(accumulator), std::move(integrator));
 }
@@ -150,24 +152,32 @@ void Simulation::updateConstellation(AutoPas_t &autopas,
 
 std::tuple<CollisionFunctor::CollisionCollectionT, bool> Simulation::collisionDetection(AutoPas_t &autopas,
                                                                                         double deltaT,
-                                                                                        double conjunctionThreshold) {
+                                                                                        double collisionDistanceFactor,
+                                                                                        double minDetectionRadius) {
   // pairwise interaction
-  CollisionFunctor collisionFunctor(autopas.getCutoff(), deltaT, conjunctionThreshold);
+  CollisionFunctor collisionFunctor(autopas.getCutoff(), deltaT, collisionDistanceFactor, minDetectionRadius);
   bool stillTuning = autopas.iteratePairwise(&collisionFunctor);
   return {collisionFunctor.getCollisions(), stillTuning};
 }
 
-void Simulation::simulationLoop(AutoPas_t &autopas,
-                                Integrator<AutoPas_t> &integrator,
-                                std::vector<Constellation> &constellations,
-                                ConfigReader &config) {
+size_t Simulation::simulationLoop(AutoPas_t &autopas,
+                                  YoshidaIntegrator<AutoPas_t> &integrator,
+                                  std::vector<Constellation> &constellations,
+                                  ConfigReader &config) {
   const auto tuningMode = config.get<bool>("autopas/tuningMode", false);
   const auto iterations = config.get<size_t>("sim/iterations");
   const auto constellationInsertionFrequency = config.get<int>("io/constellationFrequency", 1);
   const auto constellationCutoff = config.get<double>("io/constellationCutoff", 0.1);
   const auto progressOutputFrequency = config.get<int>("io/progressOutputFrequency", 50);
   const auto deltaT = config.get<double>("sim/deltaT");
-  const auto conjunctionThreshold = config.get<double>("sim/conjunctionThreshold");
+  const auto collisionDistanceFactor = config.get<double>("sim/collisionDistanceFactor", 1.);
+  const auto timestepsPerCollisionDetection = config.get<size_t>("sim/timestepsPerCollisionDetection", 1);
+  if (timestepsPerCollisionDetection < 1) {
+    SPDLOG_LOGGER_CRITICAL(
+        logger.get(), "sim/timestepsPerCollisionDetection is {} but must not be <1!", timestepsPerCollisionDetection);
+  }
+  const auto minDetectionRadius = config.get<double>("sim/minDetectionRadius", 0.1);
+  const auto minAltitude = config.get<double>("sim/minAltitude", 150.);
   std::vector<Particle> delayedInsertion;
 
   const auto vtkWriteFrequency = config.get<size_t>("io/vtk/writeFrequency", 0ul);
@@ -187,6 +197,12 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     conjuctionWriter = std::make_shared<ConjunctionLogger>("");
   }
 
+  // only add the breakup model if enabled via yaml
+  const std::unique_ptr<BreakupWrapper> breakupWrapper =
+      config.get<bool>("sim/breakup/enabled") ? std::make_unique<BreakupWrapper>(config, autopas) : nullptr;
+
+  const auto timeout = computeTimeout(config);
+
   size_t totalConjunctions{0ul};
 
   config.printParsedValues();
@@ -197,6 +213,11 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     timers.integrator.start();
     integrator.integrate(false);
     timers.integrator.stop();
+
+    // everything below a threshold now burns up
+    timers.burnUps.start();
+    deleteBurnUps(autopas, minAltitude);
+    timers.burnUps.stop();
 
     timers.constellationInsertion.start();
     // new satellites from constellations inserted over time
@@ -215,39 +236,70 @@ void Simulation::simulationLoop(AutoPas_t &autopas,
     if (not escapedParticles.empty()) {
       SPDLOG_LOGGER_ERROR(logger.get(), "Particles are escaping! \n{}", escapedParticles);
     }
-    // TODO Check for particles that burn up
 
-    timers.collisionDetection.start();
-    auto [collisions, stillTuning] = collisionDetection(autopas, deltaT, conjunctionThreshold);
-    timers.collisionDetection.stop();
+    if (i % timestepsPerCollisionDetection == 0) {
+      timers.collisionDetection.start();
+      auto [collisions, stillTuning] = collisionDetection(autopas,
+                                                          deltaT * static_cast<double>(timestepsPerCollisionDetection),
+                                                          collisionDistanceFactor,
+                                                          minDetectionRadius);
+      timers.collisionDetection.stop();
 
-    if (tuningMode and not stillTuning) {
-      dumpCalibratedConfig(config, autopas);
-      return;
+      if (tuningMode and not stillTuning) {
+        dumpCalibratedConfig(config, autopas);
+        return totalConjunctions;
+      }
+
+      timers.collisionWriting.start();
+      totalConjunctions += collisions.size();
+      conjuctionWriter->writeConjunctions(i, collisions);
+      timers.collisionWriting.stop();
+
+      if (breakupWrapper and not collisions.empty()) {
+        timers.collisionSimulation.start();
+        breakupWrapper->simulateBreakup(collisions);
+        timers.collisionSimulation.stop();
+      }
     }
 
-    timers.collisionWriting.start();
-    totalConjunctions += collisions.size();
-    conjuctionWriter->writeConjunctions(i, collisions);
-    if (i % progressOutputFrequency == 0) {
-      SPDLOG_LOGGER_INFO(
-          logger.get(), "It {} - Encounters:{} Total conjunctions:{}", i, collisions.size(), totalConjunctions);
+    // check if we hit the timeout and abort the loop if necessary
+    if (timeout != 0) {
+      // quickly interrupt timers.total to update its internal total time.
+      timers.total.stop();
+      timers.total.start();
+      // convert timer value from ns to s
+      const size_t secondsSinceStart = timers.total.getTotalTime() / static_cast<size_t>(1e9);
+      if (secondsSinceStart > timeout) {
+        SPDLOG_LOGGER_INFO(logger.get(),
+                           "Simulation timeout hit! Time since simulation start ({} s) > Timeout ({} s))",
+                           secondsSinceStart,
+                           timeout);
+        // set the config to the number of completed iterations (hence no +/-1) for the timer calculations.
+        config.setValue("sim/iterations", i);
+        // abort the loop by increasing i. This also leads to triggering the visualization
+        i = iterations;
+      }
     }
-    timers.collisionWriting.stop();
-
-    // TODO insert breakup model here
 
     timers.output.start();
+    if (i % progressOutputFrequency == 0 or i == (iterations - 1)) {
+      SPDLOG_LOGGER_INFO(logger.get(),
+                         "It {} | Total particles: {} | Total conjunctions: {}",
+                         i,
+                         autopas.getNumberOfParticles(),
+                         totalConjunctions);
+    }
     // Visualization:
-    if (vtkWriteFrequency and i % vtkWriteFrequency == 0) {
+    if (vtkWriteFrequency and (i % vtkWriteFrequency == 0 or i == (iterations - 1))) {
       VTUWriter::writeVTU(i, autopas);
     }
-    if (hdf5WriteFrequency and i % hdf5WriteFrequency == 0) {
+    if (hdf5WriteFrequency and (i % hdf5WriteFrequency == 0 or i == (iterations - 1))) {
       hdf5Writer->writeParticles(i, autopas);
     }
     timers.output.stop();
   }
   SPDLOG_LOGGER_INFO(logger.get(), "Total conjunctions: {}", totalConjunctions);
+  return totalConjunctions;
 }
 
 std::vector<Particle> Simulation::checkedInsert(autopas::AutoPas<Particle> &autopas,
@@ -255,9 +307,8 @@ std::vector<Particle> Simulation::checkedInsert(autopas::AutoPas<Particle> &auto
                                                 double constellationCutoff) {
   std::vector<Particle> delayedInsertion = {};
 
-  const double collisionRadius = constellationCutoff;
-  const double collisionRadiusSquared = collisionRadius * collisionRadius;
-  const std::array<double, 3> boxSpan = {collisionRadius, collisionRadius, collisionRadius};
+  const double collisionRadiusSquared = constellationCutoff * constellationCutoff;
+  const std::array<double, 3> boxSpan = {constellationCutoff, constellationCutoff, constellationCutoff};
   for (const auto &satellite : newSatellites) {
     // only insert satellites, if they have a reasonable distance to other satellites
     bool collisionFree = true;
@@ -312,4 +363,35 @@ void Simulation::dumpCalibratedConfig(ConfigReader &config, const AutoPas_t &aut
   config.setValue("autopas/Traversal", autopasConfig.traversal.to_string());
   config.setValue("autopas/tuningMode", "off");
   config.dumpConfig("calibratedConfig.yaml");
+}
+
+void Simulation::deleteBurnUps(autopas::AutoPas<Particle> &autopas, double burnUpAltitude) const {
+  const auto critAltitude = burnUpAltitude + Physics::R_EARTH;
+  const auto critAltitudeSquared = critAltitude * critAltitude;
+  // TODO: check if it worthwhile to do this in parallel
+  for (auto particleIter = autopas.getRegionIterator({-critAltitude, -critAltitude, -critAltitude},
+                                                     {critAltitude, critAltitude, critAltitude});
+       particleIter != autopas.end();
+       ++particleIter) {
+    // Altitude above earth core
+    const auto &pos = particleIter->getPosition();
+    const auto particleAltitudeSquared = autopas::utils::ArrayMath::dot(pos, pos);
+    if (particleAltitudeSquared < critAltitudeSquared) {
+      autopas.deleteParticle(particleIter);
+      SPDLOG_LOGGER_DEBUG(
+          logger.get(), "Particle too close to the ground. Considered to be burning up!\n{}", *particleIter);
+    }
+  }
+}
+
+size_t Simulation::computeTimeout(ConfigReader &config) {
+  // parse and directly convert to seconds
+  constexpr bool suppressWarnings = true;
+  const auto seconds = config.get<size_t>("sim/timeout/seconds", 0, suppressWarnings);
+  const auto minutes = static_cast<size_t>(config.get<double>("sim/timeout/minutes", 0., suppressWarnings) * 60.);
+  const auto hours = static_cast<size_t>(config.get<double>("sim/timeout/hours", 0., suppressWarnings) * 60. * 60.);
+  const auto days = static_cast<size_t>(config.get<double>("sim/timeout/days", 0., suppressWarnings) * 24. * 60 * 60.);
+  const auto sum = seconds + minutes + hours + days;
+  // if everything resolved to 0 return the error value
+  return sum;
 }

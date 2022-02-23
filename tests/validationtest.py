@@ -7,9 +7,9 @@ import numpy as np
 from vtk import vtkXMLUnstructuredGridReader
 from vtk.util import numpy_support as VN
 
-if len(sys.argv) != 4 :
+if len(sys.argv) != 5 :
     print('Invalid number of arguments!')
-    print('Usage: ' + sys.argv[0] + ' LADDSExe cfg reference.vtu')
+    print('Usage: ' + sys.argv[0] + ' LADDSExe cfg nameOfGenerated.vtu reference.vtu')
     sys.exit(1)
 
 # path to the ladds executable
@@ -24,14 +24,14 @@ exit_code = sim.wait()
 if exit_code != 0 :
     sys.exit('An error occured during the simulation')
 
-output_path='output_99.vtu'
+output_path=sys.argv[3]
 if not os.path.isfile(output_path):
     sys.exit("Output file not found! Expected: " + os.getcwd() + '/' + output_path)
 
 # path to the given reference vtu
-reference_path=sys.argv[3]
+reference_path=sys.argv[4]
 if not os.path.isfile(reference_path):
-    sys.exit("Reference file not found! Expected: " + os.getcwd() + '/' + output_path)
+    sys.exit("Reference file not found! Expected: " + os.getcwd() + '/' + reference_path)
 
 # read all positions and velocities data from output and reference
 reader = vtkXMLUnstructuredGridReader()
@@ -65,3 +65,5 @@ if not np.allclose(r_out, r_ref, atol=4, rtol=0) :
 # communicate test result via exit status
 if not allTestsOk :
     sys.exit(-1)
+else :
+    print('Output matches reference!')

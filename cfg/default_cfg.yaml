@@ -1,9 +1,16 @@
 sim:
   logLevel: info    # Available levels are off, critical, err, warn, info, debug, trace
   iterations: 32000 # Number of simulation iterations
-  maxAltitude: 10000 # Maximum satellite altitude [km]
+  timeout: # timeout for the simulation. The simulation stops when either the specified number of iterations is hit or the timeout reached.
+    seconds: 0  # whole seconds
+    minutes: 0. # as floating points
+    hours: 0.   # as floating points
+    days: 0.    # as floating points
+  maxAltitude: 10000 # Maximum satellite altitude above earth core. This number times two is the simulation box length. [km]
+  minAltitude: 150 # Everything below this altitude above ground will be considered burning up [km]
   deltaT: 10.0 # [s]
-  conjunctionThreshold: 0.5 # [km]
+  collisionDistanceFactor: 1.0 # Factor multiplied with the sum of radii to over approximate collision distances.
+  timestepsPerCollisionDetection: 1
 
   prop: # Which propagation model components should be applied
     useKEPComponent: true # Keplerian propagation
@@ -14,11 +21,17 @@ sim:
     useLUNComponent: false # Lunar gravitational pull
     useSRPComponent: true # Solar radiation pressure
     useDRAGComponent: true # Atmospheric drag
+    coefficientOfDrag: 2.2  # c_D for the drag component used in all objects where no BSTAR is available
+
+  breakup:
+    enabled: false # (de-)activate the breakup mechanic
+    minLc: 0.01 # minimal characteristic length for generated debris [m]
+    enforceMassConservation: true # by default the NASA breakup model does not conserve mass
 
 io:
-  output_file: output.csv # Output file name
-  posFileName: pos.csv # Name of the CSV file with satellite positions [km]
-  velFileName: v.csv # Name of the CSV file with satellite velocities [km/s]
+  csv:
+    # propagatorOutput: propagator.csv # Output file for the propagator. Currently, nothing is written.
+    fileName: initial_population.csv  # CSV file containing all data to initialize the full satellite population
   #progressOutputFrequency : 50 # Frequency of writing iteration number and encounter info to std::out.
   #checkpoint:
   #  file: simulationData.h5

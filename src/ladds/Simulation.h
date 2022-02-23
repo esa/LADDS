@@ -10,7 +10,7 @@
 #include <ladds/io/Logger.h>
 #include <satellitePropagator/io/FileOutput.h>
 #include <satellitePropagator/physics/AccelerationAccumulator.h>
-#include <satellitePropagator/physics/Integrator.h>
+#include <satellitePropagator/physics/YoshidaIntegrator.h>
 
 #include <memory>
 
@@ -57,7 +57,7 @@ class Simulation {
    */
   [[nodiscard]] std::tuple<std::unique_ptr<FileOutput<AutoPas_t>>,
                            std::unique_ptr<Acceleration::AccelerationAccumulator<AutoPas_t>>,
-                           std::unique_ptr<Integrator<AutoPas_t>>>
+                           std::unique_ptr<YoshidaIntegrator<AutoPas_t>>>
   initIntegrator(AutoPas_t &autopas, ConfigReader &config);
 
   /**
@@ -78,11 +78,15 @@ class Simulation {
   /**
    * Check for collisions / conjunctions and write statistics about them.
    * @param autopas
+   * @param deltaT
+   * @param collisionDistanceFactor See CollisionFunctor::_collisionDistanceFactor
+   * @param minDetectionRadius
    * @return Tuple of the collisions and whether AutoPas is currently in tuning mode.
    */
   std::tuple<CollisionFunctor::CollisionCollectionT, bool> collisionDetection(AutoPas_t &autopas,
                                                                               double deltaT,
-                                                                              double conjunctionThreshold);
+                                                                              double collisionDistanceFactor,
+                                                                              double minDetectionRadius);
 
   /**
    * Updates the configuration with the latest AutoPas configuration and writes it to a new YAML file.
@@ -96,11 +100,12 @@ class Simulation {
    * @param autopas
    * @param integrator
    * @param config
+   * @return Number of observed collisions.
    */
-  void simulationLoop(AutoPas_t &autopas,
-                      Integrator<AutoPas_t> &integrator,
-                      std::vector<Constellation> &constellations,
-                      ConfigReader &config);
+  [[maybe_unused]] size_t simulationLoop(AutoPas_t &autopas,
+                                         YoshidaIntegrator<AutoPas_t> &integrator,
+                                         std::vector<Constellation> &constellations,
+                                         ConfigReader &config);
 
   /**
    * Inserts particles into autopas if they have a safe distance to existing particles.
@@ -114,6 +119,21 @@ class Simulation {
                                       const std::vector<Particle> &newSatellites,
                                       double constellationCutoff);
 
+  /**
+   * Remove all particles below a certain altitude from the particle container.
+   * @param autopas
+   * @param burnUpAltitude Height above ground. [km]
+   */
+  void deleteBurnUps(autopas::AutoPas<Particle> &autopas, double burnUpAltitude) const;
+
+  /**
+   * Computes a timeout value in seconds from the information given in the config. If nothing is given in the config
+   * the function returns 0.
+   * @note A timeout of 0 is considered to be no timeout
+   * @param config
+   * @return timeout in seconds.
+   */
+  size_t computeTimeout(ConfigReader &config);
   /**
    * One logger to log them all.
    */

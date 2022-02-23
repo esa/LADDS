@@ -11,8 +11,12 @@
 
 #include <algorithm>
 
-CollisionFunctor::CollisionFunctor(double cutoff, double dt, double minorCutoff)
-    : Functor(cutoff), _cutoffSquare(cutoff * cutoff), _dt(dt), _minorCutoffSquare(minorCutoff * minorCutoff) {
+CollisionFunctor::CollisionFunctor(double cutoff, double dt, double collisionDistanceFactor, double minDetectionRadius)
+    : Functor(cutoff),
+      _cutoffSquare(cutoff * cutoff),
+      _dt(dt),
+      _collisionDistanceFactor(collisionDistanceFactor / 1000.),  // also imply conversion from m to km
+      _minDetectionRadius(minDetectionRadius) {
   _threadData.resize(autopas::autopas_get_max_threads());
 }
 
@@ -26,8 +30,20 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   using autopas::utils::ArrayMath::mulScalar;
   using autopas::utils::ArrayMath::sub;
 
-  // skip interaction with deleted particles
+  // skip if interaction involves:
+  //  - any deleted particles
+  //  - two actively evasive satellites
+  //  - one evasive and one of detectable size
   if (i.isDummy() or j.isDummy()) {
+    return;
+  }
+  const auto &iActivity = i.getActivityState();
+  const auto &jActivity = j.getActivityState();
+  const auto &iRadius = i.getRadius();
+  const auto &jRadius = j.getRadius();
+  if ((iActivity != Particle::ActivityState::passive and jActivity != Particle::ActivityState::passive) or
+      (iActivity != Particle::ActivityState::passive and jRadius >= _minDetectionRadius) or
+      (jActivity != Particle::ActivityState::passive and iRadius >= _minDetectionRadius)) {
     return;
   }
 
@@ -80,8 +96,11 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
 
   const auto dr_lines = sub(p1, p2);
   const auto distanceSquare_lines = dot(dr_lines, dr_lines);
+  // _collisionDistanceFactor also converts this to km
+  const auto scaledObjectSeparation = (iRadius + jRadius) * _collisionDistanceFactor;
 
-  if (distanceSquare_lines > _minorCutoffSquare) return;
+  // return if particles are far enough away (i.e. further than sum of their scaled sizes)
+  if (distanceSquare_lines > (scaledObjectSeparation * scaledObjectSeparation)) return;
 
   // store pointers to colliding pair
   if (i.getID() < j.getID()) {

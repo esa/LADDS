@@ -38,7 +38,8 @@ class ConfigReader {
    * Primary function to retrieve values from the underlying YAML data.
    * @tparam T Type as which the retrieved data shall be read.
    * @param valuePath Path within the YAML file to the data field.
-   * @param fallbackValue Value to use if the field can not be found. If std::nullopt is used an exception is thrown.
+   * @param fallbackValue Value to use if the field can not be found.
+   *    If std::nullopt is used an exception is thrown when no value was found.
    * @param suppressWarning If true no warning is logged when the default value is used.
    * @param fallbackToString If the fallback value is non trivial a function can be passed that provides a string
    * representation.
@@ -68,6 +69,8 @@ class ConfigReader {
                                fallbackValue.value());
           }
           parsedValues.emplace(valuePath, fallbackToString(fallbackValue.value()));
+          // write to value to the datastructure so successive calls will return the same fallback.
+          setValue(valuePath, fallbackValue.value());
           return fallbackValue.value();
         } else {
           throw std::runtime_error("Config option not found: " + valuePath);
@@ -102,12 +105,54 @@ class ConfigReader {
   /**
    * Update or insert a value for a given key / value path.
    * If any Node along the path does not exist it will be created.
+   * @tparam T Type of the value to write. Has to be std::string, bool, or convertible via std::to_string().
    * @param valuePath
    * @param value
    */
-  void setValue(const std::string &valuePath, const std::string &value);
+  template <class T>
+  void setValue(const std::string &valuePath, const T &value) {
+    std::vector<std::string> valuePathVec = autopas::utils::StringUtils::tokenize(valuePath, "/");
+    // try to convert value to a string if it isn't already std::string or string literal
+    if constexpr (std::is_same_v<T, std::string> or std::is_same_v<T, char[std::extent_v<T>]>) {
+      // only set non-empty strings
+      if (not static_cast<std::string>(value).empty()) {
+        setValueAux(config, valuePathVec.begin(), valuePathVec.end(), value);
+      }
+    } else if constexpr (std::is_same_v<T, bool>) {
+      const auto &v = static_cast<bool>(value);
+      setValueAux(config, valuePathVec.begin(), valuePathVec.end(), value ? "true" : "false");
+    } else {
+      setValueAux(config, valuePathVec.begin(), valuePathVec.end(), std::to_string(value));
+    }
+  }
 
  private:
+  /**
+   * Helper function for setValue recursively iterating through the yaml structure,
+   * inserting missing nodes and setting or updating the given value.
+   * @tparam T
+   * @tparam Iter
+   * @param node This is passed by copy as it works similar to a smart pointer.
+   * @param begin Start of the array containing the key path.
+   * @param end End of the array containing the key path.
+   * @param value
+   */
+  template <typename T, typename Iter>
+  void setValueAux(YAML::Node node, Iter begin, Iter end, T value) {
+    if (begin == end) {
+      return;
+    }
+    const auto &tag = *begin;
+    if (std::next(begin) == end) {
+      node[tag] = value;
+      return;
+    }
+    if (!node[tag]) {
+      node[tag] = YAML::Node(YAML::NodeType::Map);
+    }
+    setValueAux(node[tag], std::next(begin), end, value);
+  }
+
   /**
    *  Loads the config file, falls back to default cfg if not found.
    */

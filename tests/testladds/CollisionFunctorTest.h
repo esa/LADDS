@@ -25,13 +25,11 @@ class CollisionFunctorTest : public testing::TestWithParam<ParameterTuple> {
     std::string operator()(const testing::TestParamInfo<ParamType> &info) const {
       const auto &[x1, x2, v1, v2, dt, expected_dist] = static_cast<ParamType>(info.param);
 
-      auto inputTuple = static_cast<ParamType>(info.param);
       std::stringstream ss;
-      ss << "x1_" << autopas::utils::ArrayUtils::to_string(x1, "", {"", ""}) << "x2_"
-         << autopas::utils::ArrayUtils::to_string(x2, "", {"", ""}) << "_"
-         << "v1_" << autopas::utils::ArrayUtils::to_string(v1, "", {"", ""}) << "v2_"
-         << autopas::utils::ArrayUtils::to_string(v2, "", {"", ""}) << "_"
-         << "dt_" << dt << "_"
+      ss << "x1" << autopas::utils::ArrayUtils::to_string(x1, "", {"_", "_"}) << "x2"
+         << autopas::utils::ArrayUtils::to_string(x2, "", {"_", "_"}) << "v1"
+         << autopas::utils::ArrayUtils::to_string(v1, "", {"_", "_"}) << "v2"
+         << autopas::utils::ArrayUtils::to_string(v2, "", {"_", "_"}) << "dt_" << dt << "_"
          << "expected_dist_" << expected_dist;
       auto str = ss.str();
       std::replace(str.begin(), str.end(), '-', '_');

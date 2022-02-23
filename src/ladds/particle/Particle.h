@@ -16,9 +16,64 @@
  */
 class Particle final : public autopas::ParticleFP64 {
  public:
-  explicit Particle(std::array<double, 3> pos, std::array<double, 3> v, size_t debrisId)
-      : autopas::ParticleFP64(pos, v, debrisId) {}
+  /**
+   * calculate the inverse ballistic coefficient from bstar if available,
+   * otherwise fall back to radius and mass.
+   *
+   * @param bstar [1/R_EARTH]
+   * @param radius [m]
+   * @param mass [kg]
+   * @param coefficientOfDrag
+   */
+  static double calculateBcInv(double bstar, double mass, double radius, double coefficientOfDrag);
 
+  /**
+   * Describes how active a particle behaves. This is relevant for the propagator to determine which forces are applied.
+   */
+  enum class ActivityState : int {
+    /**
+     * Simply float around space and is subject to all external influences.
+     */
+    passive,
+
+    /**
+     * Can actively change its trajectory to avoid collisions.
+     */
+    evasive,
+
+    /**
+     * Same as evasive but additionally can actively maneuver to preserve their orbit.
+     * This is modelled only only applying Keplerian forces.
+     */
+    evasivePreserving,
+  };
+
+  /**
+   * Constructor
+   * @param pos
+   * @param v
+   * @param debrisId
+   * @param activityState
+   */
+  Particle(std::array<double, 3> pos,
+           std::array<double, 3> v,
+           size_t debrisId,
+           const std::string &identifier,
+           ActivityState activityState,
+           double mass,
+           double radius,
+           double bcInv)
+      : autopas::ParticleFP64(pos, v, debrisId),
+        aom(M_PI * radius * radius * 1e-6 / mass),  // convert m^2 -> km^2
+        mass(mass),
+        radius(radius),
+        bc_inv(bcInv),
+        activityState(activityState),
+        identifier(identifier) {}
+
+  /**
+   * Destructor.
+   */
   ~Particle() final = default;
 
   /**
@@ -98,116 +153,164 @@ class Particle final : public autopas::ParticleFP64 {
   }
 
   /**
-   * @brief Calculates distance from the origin of the coordinate frame
+   * Calculates distance from the origin of the coordinate frame [km]
    *
    * @return Euclidean norm of the #position vector
    */
   [[nodiscard]] double getHeight() const;
 
   /**
-   * @brief Calculates speed of the debris
+   * Calculates speed of the debris
    *
    * @return Euclidean norm of the #velocity vector
    */
   [[nodiscard]] double getSpeed() const;
 
   /**
-   * @brief Calculates the euclidean norm of the #acc_t0
+   * Calculates the euclidean norm of the #acc_t0
    *
    * @return Calculates the euclidean norm of the #acc_t0
    */
   [[nodiscard]] double getAccT0Norm() const;
 
   /**
-   * @brief Calculates the euclidean norm of the #acc_t1
+   * Calculates the euclidean norm of the #acc_t1
    *
    * @return Calculates the euclidean norm of the #acc_t1
    */
   [[nodiscard]] double getAccT1Norm() const;
 
   /**
-   * @brief Getter function for #position vector
+   * Getter function for #position vector [km]
    *
    * @return 3D vector representation of the debris #position
    */
   [[nodiscard]] const std::array<double, 3> &getPosition() const;
 
   /**
-   * @brief Setter function for #position vector
+   * Setter function for #position vector [km]
    *
    * @param position 3D vector representation of the debris #position
    */
   void setPosition(const std::array<double, 3> &position);
 
   /**
-   * @brief Getter function for #velocity vector
+   * Getter function for #velocity vector [km/s]
    *
    * @return 3D vector representation of the debris #velocity
    */
   [[nodiscard]] const std::array<double, 3> &getVelocity() const;
 
   /**
-   * @brief Setter function for #velocity vector
+   * Setter function for #velocity vector
    *
    * @param velocity 3D vector representation of the debris #velocity
    */
   void setVelocity(const std::array<double, 3> &velocity);
 
   /**
-   * @brief Getter function for #acc_t0 vector
+   * Getter function for #acc_t0 vector
    *
    * @return 3D vector representation of the debris #acc_t0
    */
   [[nodiscard]] const std::array<double, 3> &getAccT0() const;
 
   /**
-   * @brief Setter function for #acc_t0 vector
+   * Setter function for #acc_t0 vector
    *
    * @param accT0 3D vector representation of the debris #acc_t0
    */
   void setAccT0(const std::array<double, 3> &accT0);
 
   /**
-   * @brief Getter function for #acc_t1 vector
+   * Getter function for #acc_t1 vector
    *
    * @return 3D vector representation of the debris #acc_t1
    */
   [[nodiscard]] const std::array<double, 3> &getAccT1() const;
 
   /**
-   * @brief Setter function for #acc_t1 vector
+   * Setter function for #acc_t1 vector
    *
    * @param accT1 3D vector representation of the debris #acc_t1
    */
   void setAccT1(const std::array<double, 3> &accT1);
 
   /**
-   * @brief Getter function for #aom
+   * Getter function for #aom
    *
    * @return value of #aom
    */
   [[nodiscard]] double getAom() const;
 
   /**
-   * @brief Setter function for #aom
+   * Setter function for #aom
    *
    * @param aom New value #aom
    */
   void setAom(double aom);
 
   /**
-   * @brief Getter function for #bc_inv
+   * Getter function for #bc_inv
    *
    * @return Value of #bc_inv
    */
   [[nodiscard]] double getBcInv() const;
 
   /**
-   * @brief Setter function for #bc_inv
+   * Setter function for #bc_inv
    *
    * @param bcInv New value of#bc_inv
    */
   void setBcInv(double bcInv);
+
+  /**
+   * Getter for the activityState.
+   * @return
+   */
+  [[nodiscard]] ActivityState getActivityState() const;
+
+  /**
+   * Setter for the activityState.
+   * @param activityState
+   */
+  void setActivityState(ActivityState activityState);
+
+  /**
+   * Getter for mass.
+   * @return
+   */
+  [[nodiscard]] double getMass() const;
+
+  /**
+   * Setter for mass.
+   * @param mass
+   */
+  void setMass(double mass);
+
+  /**
+   * Getter for radius.
+   * @return
+   */
+  [[nodiscard]] double getRadius() const;
+
+  /**
+   * Setter for radius.
+   * @param radius
+   */
+  void setRadius(double radius);
+
+  /**
+   * Getter for identifier.
+   * @return
+   */
+  [[nodiscard]] const std::string &getIdentifier() const;
+
+  /**
+   * Setter for identifier.
+   * @param
+   */
+  void setIdentifier(const std::string &identifier);
 
   /**
    * Stream operator
@@ -217,22 +320,64 @@ class Particle final : public autopas::ParticleFP64 {
    */
   friend std::ostream &operator<<(std::ostream &os, const Particle &particle);
 
+  /**
+   * Equality operator
+   * @param rhs
+   * @return
+   */
+  bool operator==(const Particle &rhs) const;
+
+  /**
+   * Inequality operator
+   * @param rhs
+   * @return
+   */
+  bool operator!=(const Particle &rhs) const;
+
  private:
   /**
-   *  3D vector representation of the debris acceleration at the last time step.
+   *  3D vector representation of the debris acceleration at the last time step. [km/s^2]
    */
   std::array<double, 3> acc_t0{};
   /**
-   * 3D vector representation of the debris acceleration at the current time step
+   * 3D vector representation of the debris acceleration at the current time step. [km/s^2]
    */
   std::array<double, 3> acc_t1{};
   /**
-   * Area to mass ration.
+   * Area to mass relation [km^2/kg].
+   * @note Used in the Propagator in SRPComponent::apply().
    */
-  double aom{0.};
+  double aom;
   /**
-   * C_cA)/m is the inverse of the ballistic coefficient.
-   * Used for Acceleration::DragComponent::apply().
+   * Mass of the object [kg].
    */
-  double bc_inv{0.};
+  double mass;
+  /**
+   * Radius of the object when approximating it as a ball [m].
+   */
+  double radius;
+  /**
+   * c_D*A/m is the inverse of the ballistic coefficient. [kg m^2]
+   * @note Used in the Propagator in Acceleration::DragComponent::apply().
+   */
+  double bc_inv;
+
+  /**
+   * If a particle can actively influence its orbit. See ActivityState.
+   */
+  ActivityState activityState;
+
+  /**
+   * Unique string identifier to relate objects to catalogue objects
+   */
+  std::string identifier;
 };
+
+/**
+ * Input stream operator for the activity state.
+ * @note Needed for the CSVReader.
+ * @param s
+ * @param state
+ * @return
+ */
+std::istream &operator>>(std::istream &s, Particle::ActivityState &state);

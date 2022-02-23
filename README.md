@@ -14,6 +14,12 @@ Codebase for the ARIADNA Study between TU Munich and ESA's Advanced Concepts Tea
 * Doxygen
 * clang-format-9
 
+## Important Dependencies
+The following codes play an important role in this project. They are downloaded and managed via CMake at configure time:
+* [AutoPas](https://github.com/AutoPas/AutoPas)
+* [NASA Breakup Model](https://github.com/esa/NASA-breakup-model-cpp)
+* [Orbit Propagator](https://github.com/FG-TUM/OrbitPropagator)
+
 ## Building
 ```bash
 mkdir build && cd build
@@ -27,6 +33,25 @@ Testing is done with help of [GoogleTest](https://github.com/google/googletest),
 cmake -DLADDS_BUILD_TESTS=ON .. # Should be enabled by default
 make ladds_tests -j12
 ctest -j12
+```
+
+## Running
+The simulation requires one `yaml` file as argument which specifies the necessary options.
+```bash
+./ladds myInput.yaml
+```
+For an overview of all possible options see [`cfg/default_cfg.yaml`](cfg/default_cfg.yaml). Most parameters have
+a default value which is used when they are left unspecified. The full configuration, including defaulted
+values, is shown in the console output when executing the simulation.
+
+## Simulating Breakups
+The code is capable to simulate fatal collisions between two bodies via the 
+[NASA Breakup Model](https://github.com/esa/NASA-breakup-model-cpp). This feature can be activated in
+the `yaml` file via:
+```yaml
+sim:
+  breakup:
+    enabled: true
 ```
 
 ## Calibrating AutoPas
@@ -56,7 +81,7 @@ Data on current satellites etc. is often found [online](https://www.space-track.
 
 ## Output
 
-LADDS has multiple options for output that can be (de)activated mostly independent of each other via YAML. See `cfg/default_cfg.yaml` for relevant options.
+LADDS has multiple options for output that can be (de)activated mostly independent of each other via YAML. See [`cfg/default_cfg.yaml`](cfg/default_cfg.yaml) for relevant options.
 
 ### VTK
 `.vtu` files in XML/ASCII layout that can be loaded into [Paraview](https://www.paraview.org/) for visualization.
@@ -71,15 +96,20 @@ A single `.h5` containing particle and conjunction data from a full simulation r
 │           idA idB distanceSquared
 └── ParticleData
     └── <IterationNr>
-        └── Particles
-            ├── (Dataset) IDs
-            ├── (Dataset) Positions
-            │   x y z
-            └── (Dataset) Velocities
-                x y z
+    │   └── Particles
+    │       ├── (Dataset) IDs
+    │       ├── (Dataset) Positions
+    │       │   x y z
+    │       └── (Dataset) Velocities
+    │           x y z
+    └─── (Dataset) ConstantProperties
+         id cosparId mass radius bcInv activityState
 ```
 
-Collision data is tracked every iteration, particle data only in intervals that are defined in the YAML file. To keep file size reasonable compression is supported.
+Collision data is tracked every iteration, particle data only in intervals that are defined in the YAML file.
+`ConstantProperties` contains properties of all particles that existed over the course of the simulation. 
+Due to burn ups or breakups the number of particles in any iteration might differ but `id`s are unique! 
+To keep file size reasonable compression is supported.
 
 ### CSV
 If HDF5 output is disabled entirely, collision data is written in a `.csv` file in ASCII layout.

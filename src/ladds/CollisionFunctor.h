@@ -20,7 +20,15 @@
  */
 class CollisionFunctor final : public autopas::Functor<Particle, CollisionFunctor> {
  public:
-  explicit CollisionFunctor(double cutoff, double dt, double minorCutoff);
+  /**
+   * Constructor
+   * @param cutoff Distance for two particles to be considered for sub time step investigation (interpolation).
+   * @param dt time step width
+   * @param collisionDistanceFactor See CollisionFunctor::_collisionDistanceFactor.
+   * @param minDetectionRadius All particles with a larger are assumed to be detectable by radar.
+   *        Thus collisions with particles that are Particle::ActivityState::evasive will not be considered.
+   */
+  CollisionFunctor(double cutoff, double dt, double collisionDistanceFactor, double minDetectionRadius);
 
   [[nodiscard]] bool isRelevantForTuning() final {
     return true;
@@ -90,5 +98,15 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
   CollisionCollectionT _collisions{};
   const double _cutoffSquare;
   const double _dt;
-  const double _minorCutoffSquare;
+
+  /**
+   * Factor multiplied with the sum of radii to over approximate collision distances.
+   * Also converts from meter to km.
+   */
+  const double _collisionDistanceFactor;
+  /**
+   * Minimal object size in meter that is assumed to be detectable.
+   * Objects larger than this can be evaded by evasive particles.
+   */
+  const double _minDetectionRadius;
 };
