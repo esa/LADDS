@@ -128,6 +128,6 @@ INSTANTIATE_TEST_SUITE_P(Generated,
                          CollisionFunctorIntegrationTest,
                          testing::Combine(testing::ValuesIn(autopas::TraversalOption::getAllOptions()),
                                           testing::ValuesIn(autopas::DataLayoutOption::getAllOptions()),
-                                          testing::ValuesIn(autopas::Newton3Option::getAllOptions()),
+                                          testing::Values(autopas::Newton3Option::enabled),
                                           testing::ValuesIn({0.5, 1., 2.5})),
                          CollisionFunctorIntegrationTest::PrintToStringParamName());

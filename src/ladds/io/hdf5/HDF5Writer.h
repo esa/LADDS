@@ -26,9 +26,10 @@ class HDF5Writer final : public ConjuctionWriterInterface {
    * Constructor setting up the file and creating the custom data type.
    * @note Here the actual file is created on disk.
    * @param filename
+   * @param replace if true replace an existing file, else append.
    * @param compressionLevel
    */
-  HDF5Writer(const std::string &filename, unsigned int compressionLevel);
+  HDF5Writer(const std::string &filename, bool replace, unsigned int compressionLevel);
 
   ~HDF5Writer() override = default;
 

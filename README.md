@@ -44,6 +44,33 @@ For an overview of all possible options see [`cfg/default_cfg.yaml`](cfg/default
 a default value which is used when they are left unspecified. The full configuration, including defaulted
 values, is shown in the console output when executing the simulation.
 
+### Checkpoints
+LADDS features a checkpoint mechanic where a simulation can be restarted from an HDF5 file.
+To create a checkpoint the simulation just needs to write an HDF5 file.
+This is done via the following part of the configuration:
+```yaml
+io:
+  csv:
+    fileName: initial_population.csv  # = input
+  hdf5:
+    fileName: checkpointFile.h5       # = output
+    writeFrequency: 100               # how often LADDS writes to HDF5  
+```
+
+The next simulation, which starts from `checkpointFile.h5` then needs to have the following:
+```yaml
+io:
+  hdf5:
+    checkpoint:
+      file: checkpointFile.h5         # = input AND output
+      iteration: 99                   # Iteration where to start from. Will use last if not given.
+    writeFrequency: 100               # how often LADDS writes to HDF5  
+```
+LADDS will append any new data to the checkpoint file. This will load iteration 99 (which is the 100th iteration) 
+from the checkpoint and start the simulation with iteration 100. Note that no `io/csv/fileName` or differing `io/hdf5/fileName` should be provided when loading a checkpoint.
+
+**IMPORTANT**: All file paths are relative to the [`data`](data/) directory!
+
 ## Simulating Breakups
 The code is capable to simulate fatal collisions between two bodies via the 
 [NASA Breakup Model](https://github.com/esa/NASA-breakup-model-cpp). This feature can be activated in

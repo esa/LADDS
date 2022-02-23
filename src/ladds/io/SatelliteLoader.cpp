@@ -17,9 +17,21 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
   // if the value is not set this is the only place that should define the default value as it is the first to access it
   const auto coefficientOfDrag = config.get<double>("sim/prop/coefficientOfDrag", 2.2);
 
+  const auto csvFileName = config.get<std::string>("io/csv/fileName", "", true);
+  // avoid creating io/hdf5 in the config if it doesn't exist
+  const auto checkpointPathCfg =
+      config.defines("io/hdf5", true) ? config.get<std::string>("io/hdf5/checkpoint/file", "", true) : "";
+  // sanity checks
+  if (csvFileName.empty() and checkpointPathCfg.empty()) {
+    throw std::runtime_error("No valid input option found! Exiting...");
+  }
+  if (not csvFileName.empty() and not checkpointPathCfg.empty()) {
+    throw std::runtime_error("Ambiguous input option found! Both CSV and HDF5 checkpoint found. Exiting...");
+  }
+
   // load CSV ...
-  const auto csvFileName = config.get<std::string>("io/csv/fileName", "");
   if (not csvFileName.empty()) {
+    // TODO: Remove DATADIR functionality
     const auto csvFilePath = std::string(DATADIR) + csvFileName;
 
     SPDLOG_LOGGER_INFO(logger.get(), "Loading scenario from CSV: {}", csvFilePath);
@@ -27,21 +39,17 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
     // Read in scenario
     satellites = DatasetReader::readDataset(csvFilePath, coefficientOfDrag);
     SPDLOG_LOGGER_DEBUG(logger.get(), "Parsed {} satellites", satellites.size());
-  } else {
-    // ... or load checkpoint ...
-    const auto checkpointPathCfg = config.get<std::string>("io/checkpoint/file", "");
-    if (not checkpointPathCfg.empty()) {
-      const auto checkpointPath = std::string(DATADIR) + checkpointPathCfg;
-      SPDLOG_LOGGER_INFO(logger.get(), "Loading scenario from HDF5 checkpoint\nFile: {}", checkpointPath);
+  }
+  // ... or load checkpoint ...
+  if (not checkpointPathCfg.empty()) {
+    // TODO: Remove DATADIR functionality
+    const auto checkpointPath = std::string(DATADIR) + checkpointPathCfg;
+    SPDLOG_LOGGER_INFO(logger.get(), "Loading scenario from HDF5 checkpoint\nFile: {}", checkpointPath);
 
-      HDF5Reader hdfReader(checkpointPath);
-      // either load the given iteration or fall back to the last iteration stored in the file
-      auto iteration = config.get<size_t>("io/checkpoint/iteration", hdfReader.readLastIterationNr());
-      satellites = hdfReader.readParticles(iteration, coefficientOfDrag);
-    } else {
-      // ... or fail
-      throw std::runtime_error("No valid input option found! Exiting...");
-    }
+    HDF5Reader hdfReader(checkpointPath);
+    // either load the given iteration or fall back to the last iteration stored in the file
+    auto iteration = config.get<size_t>("io/hdf5/checkpoint/iteration", hdfReader.readLastIterationNr());
+    satellites = hdfReader.readParticles(iteration, coefficientOfDrag);
   }
 
   // load particle vector into autopas while checking that they are within the desired altitude
