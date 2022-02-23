@@ -142,8 +142,10 @@ std::tuple<size_t, std::shared_ptr<HDF5Writer>, std::shared_ptr<ConjuctionWriter
     // either append to checkpoint ...
     const auto checkpointFileName = config.get<std::string>("io/hdf5/checkpoint/file", "");
     if (not checkpointFileName.empty()) {
+      // TODO: Remove DATADIR functionality
+      const auto checkpointPath = std::string(DATADIR) + checkpointFileName;
       // compression level already set when file already exists
-      hdf5Writer = std::make_shared<HDF5Writer>(checkpointFileName, false, 0);
+      hdf5Writer = std::make_shared<HDF5Writer>(checkpointPath, false, 0);
     }
     // ... or write to new HDF5 file ....
     if (const auto hdf5FileName = config.get<std::string>("io/hdf5/fileName", ""); not hdf5FileName.empty()) {
