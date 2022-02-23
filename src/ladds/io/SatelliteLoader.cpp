@@ -17,8 +17,10 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
   // if the value is not set this is the only place that should define the default value as it is the first to access it
   const auto coefficientOfDrag = config.get<double>("sim/prop/coefficientOfDrag", 2.2);
 
-  const auto csvFileName = config.get<std::string>("io/csv/fileName", "");
-  const auto checkpointPathCfg = config.get<std::string>("io/hdf5/checkpoint/file", "");
+  const auto csvFileName = config.get<std::string>("io/csv/fileName", "", true);
+  // avoid creating io/hdf5 in the config if it doesn't exist
+  const auto checkpointPathCfg =
+      config.defines("io/hdf5", true) ? config.get<std::string>("io/hdf5/checkpoint/file", "", true) : "";
   // sanity checks
   if (csvFileName.empty() and checkpointPathCfg.empty()) {
     throw std::runtime_error("No valid input option found! Exiting...");

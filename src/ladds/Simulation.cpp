@@ -160,7 +160,8 @@ std::tuple<size_t, std::shared_ptr<HDF5Writer>, std::shared_ptr<ConjuctionWriter
     // check that at least something set a filename
     if (not hdf5Writer) {
       throw std::runtime_error(
-          "Config suggests HDF5 should be used but neither a fileName nor a checkpoint to write to is defined.");
+          "Config suggests HDF5 should be used (found io/hdf5) but neither a fileName nor a checkpoint to write to is "
+          "defined.");
     }
     return {hdf5WriteFrequency, hdf5Writer, hdf5Writer};
   } else {
@@ -207,7 +208,10 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
   const auto deltaT = config.get<double>("sim/deltaT");
   const auto collisionDistanceFactor = config.get<double>("sim/collisionDistanceFactor", 1.);
   const auto timestepsPerCollisionDetection = config.get<size_t>("sim/timestepsPerCollisionDetection", 1);
-  const auto startingIteration = config.get<size_t>("io/hdf5/checkpoint/iteration", -1, true) + 1;
+  // if we start from a checkpoint we want to start at the checkpoint iteration +1
+  // otherwise we start at iteration 0.
+  const auto startingIteration =
+      config.defines("io/hdf5", true) ? config.get<size_t>("io/hdf5/checkpoint/iteration", -1, true) + 1 : 0;
   if (timestepsPerCollisionDetection < 1) {
     SPDLOG_LOGGER_CRITICAL(
         logger.get(), "sim/timestepsPerCollisionDetection is {} but must not be <1!", timestepsPerCollisionDetection);
