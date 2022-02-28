@@ -17,7 +17,7 @@
 /**
  * The Constellation class contains a collection of Particles that inserts these particles into
  * the simulation over time based on .csv files and a .yaml file as created by the
- * ConstellationGeneration notebook +
+ * ConstellationGeneration notebook
  */
 class Constellation {
  public:
@@ -33,7 +33,7 @@ class Constellation {
    * altitudes. Equals the standard deviation of a normal distribution
    * @param coefficientOfDrag c_D used to initialize all satellites.
    */
-  Constellation(const std::string &constellation_data_str,
+  Constellation(const YAML::Node &constellationConfig,
                 size_t interval,
                 double altitudeDeviation,
                 double coefficientOfDrag);
