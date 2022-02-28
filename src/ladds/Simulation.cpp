@@ -261,7 +261,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
     // sanity check
     if (not escapedParticles.empty()) {
-      SPDLOG_LOGGER_ERROR(logger.get(), "Particles are escaping! \n{}", escapedParticles);
+      SPDLOG_LOGGER_ERROR(logger.get(), "It {} Particles are escaping! \n{}", iteration, escapedParticles);
     }
 
     if (iteration % timestepsPerCollisionDetection == 0) {
@@ -288,7 +288,6 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
         timers.collisionSimulation.stop();
       }
     }
-
     // check if we hit the timeout and abort the loop if necessary
     if (timeout != 0) {
       // quickly interrupt timers.total to update its internal total time.
