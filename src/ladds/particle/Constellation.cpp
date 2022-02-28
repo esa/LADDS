@@ -14,16 +14,17 @@
 
 std::mt19937 Constellation::generator{42};
 
-Constellation::Constellation(const YAML::Node &constellationConfig, size_t interval, double altitudeDeviation)
-    : interval(interval), altitudeDeviation(altitudeDeviation) {
+Constellation::Constellation(const YAML::Node &constellationConfig, size_t interval,
+                             double altitudeDeviation,
+                             double coefficientOfDrag)
+    : interval(interval), altitudeDeviation(altitudeDeviation), distribution(0., altitudeDeviation) {
   auto constellationName = constellationConfig["constellation"]["name"].as<std::string>();
 
-  // set variables using 3 args
   std::vector<Particle> sats =
       readDatasetConstellation(std::string(DATADIR) + constellationName + "/pos_" + constellationName + ".csv",
-                               std::string(DATADIR) + constellationName + "/v_" + constellationName + ".csv");
+                               std::string(DATADIR) + constellationName + "/v_" + constellationName + ".csv",
+                              coefficientOfDrag);
 
-  distribution = std::normal_distribution<double>(0, this->altitudeDeviation);
   // convert vector to deque
   constellationSize = sats.size();
   for (size_t i = 0ul; i < constellationSize; ++i) {
@@ -47,7 +48,7 @@ Constellation::Constellation(const YAML::Node &constellationConfig, size_t inter
   double timestamp = 0;
   timestamps.push_back(0);
   for (auto [alt, i, planes, nSats] : shells) {
-    timestamp += (planes * nSats / static_cast<double>(constellationSize)) * duration;
+    timestamp += (planes * nSats / static_cast<double>(constellationSize)) * static_cast<double>(duration);
     timestamps.push_back(timestamp);
   }
 
@@ -106,7 +107,8 @@ size_t Constellation::getConstellationSize() const {
 }
 
 std::vector<Particle> Constellation::readDatasetConstellation(const std::string &position_filepath,
-                                                              const std::string &velocity_filepath) {
+                                                              const std::string &velocity_filepath,
+                                                              double coefficientOfDrag) {
   CSVReader<double, double, double> pos_csvReader{position_filepath, false};
   CSVReader<double, double, double> vel_csvReader{velocity_filepath, false};
   std::vector<Particle> particleCollection;
@@ -132,7 +134,17 @@ std::vector<Particle> Constellation::readDatasetConstellation(const std::string 
 
                    const std::array<double, 3> posArray = {x, y, z};
                    const std::array<double, 3> velArray = {vx, vy, vz};
-                   return Particle(posArray, velArray, particleId++);
+                   const double mass{1.};
+                   const double radius{1.};
+                   // TODO: get proper constellation name
+                   return Particle(posArray,
+                                   velArray,
+                                   particleId++,
+                                   "Constellation",
+                                   Particle::ActivityState::evasivePreserving,
+                                   mass,
+                                   radius,
+                                   Particle::calculateBcInv(0., mass, radius, coefficientOfDrag));
                  });
   return particleCollection;
 }

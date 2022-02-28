@@ -6,7 +6,7 @@
 
 #include "CollisionFunctorIntegrationTest.h"
 
-#include <autopas/AutoPas.h>
+#include <autopas/AutoPasDecl.h>
 #include <autopasTools/generators/RandomGenerator.h>
 #include <gmock/gmock-matchers.h>
 #include <gmock/gmock-more-matchers.h>
@@ -28,7 +28,12 @@ void CollisionFunctorIntegrationTest::SetUpTestSuite() {
                                0.,
                                0.,
                            },
-                           0};
+                           0,
+                           "dummy",
+                           Particle::ActivityState::passive,
+                           1.,
+                           1.,
+                           Particle::calculateBcInv(0., 1., 1., 2.2)};
   _debris.reserve(numDebris);
 
   // fix seed for randomPosition()
@@ -76,7 +81,11 @@ TEST_P(CollisionFunctorIntegrationTest, testAutoPasAlgorithm) {
     GTEST_SKIP_("SoAFunctor currently not implemented!");
   }
 
-  CollisionFunctor functor(_cutoff, 10.0, 0.1 * _cutoff);
+  CollisionFunctor functor(_cutoff, 10.0, 1., 0.1);
+
+  if (not functor.allowsNonNewton3() and newton3 == autopas::Newton3Option::disabled) {
+    GTEST_SKIP_("Functor does not support Newton3==disabled!");
+  }
 
   // configure the AutoPas container
   autopas::AutoPas<Particle> autopas;
@@ -107,8 +116,7 @@ TEST_P(CollisionFunctorIntegrationTest, testAutoPasAlgorithm) {
   auto collisionPtrs = functor.getCollisions();
   std::vector<std::pair<size_t, size_t>> collisionIDs;
   collisionIDs.reserve(collisionPtrs.size());
-  for (const auto &[pi, pjAndDist] : collisionPtrs) {
-    const auto &[pj, dist] = pjAndDist;
+  for (const auto &[pi, pj, dist] : collisionPtrs) {
     collisionIDs.emplace_back(pi->getID(), pj->getID());
   }
 
@@ -120,6 +128,6 @@ INSTANTIATE_TEST_SUITE_P(Generated,
                          CollisionFunctorIntegrationTest,
                          testing::Combine(testing::ValuesIn(autopas::TraversalOption::getAllOptions()),
                                           testing::ValuesIn(autopas::DataLayoutOption::getAllOptions()),
-                                          testing::ValuesIn(autopas::Newton3Option::getAllOptions()),
+                                          testing::Values(autopas::Newton3Option::enabled),
                                           testing::ValuesIn({0.5, 1., 2.5})),
                          CollisionFunctorIntegrationTest::PrintToStringParamName());

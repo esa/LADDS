@@ -8,8 +8,10 @@
 
 #include <iostream>
 
-void Timers::printTimers(const YAML::Node &config) const {
-  const auto iterations = config["sim"]["iterations"].as<size_t>();
+#include "ConfigReader.h"
+
+void Timers::printTimers(ConfigReader &config) const {
+  const auto iterations = config.get<size_t>("sim/iterations");
   const auto timeTotal = total.getTotalTime();
   const auto timeSim = simulation.getTotalTime();
   const auto maximumNumberOfDigits = static_cast<int>(std::to_string(timeTotal).length());
@@ -24,6 +26,8 @@ void Timers::printTimers(const YAML::Node &config) const {
       "    Collision detection     ", collisionDetection.getTotalTime(), maximumNumberOfDigits, timeSim);
   std::cout << timerToString(
       "    Collision writer        ", collisionWriting.getTotalTime(), maximumNumberOfDigits, timeSim);
+  std::cout << timerToString(
+      "    Collision simulation    ", collisionSimulation.getTotalTime(), maximumNumberOfDigits, timeSim);
   std::cout << timerToString(
       "    Container update        ", containerUpdate.getTotalTime(), maximumNumberOfDigits, timeSim);
   std::cout << timerToString("    Output                  ", output.getTotalTime(), maximumNumberOfDigits, timeTotal);

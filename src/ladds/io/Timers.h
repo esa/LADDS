@@ -9,14 +9,18 @@
 #include <autopas/utils/Timer.h>
 #include <yaml-cpp/yaml.h>
 
+#include "ConfigReader.h"
+
 class Timers {
  public:
   autopas::utils::Timer total{};
   autopas::utils::Timer initialization{};
   autopas::utils::Timer simulation{};
   autopas::utils::Timer integrator{};
+  autopas::utils::Timer burnUps{};
   autopas::utils::Timer constellationInsertion{};
   autopas::utils::Timer collisionDetection{};
+  autopas::utils::Timer collisionSimulation{};
   autopas::utils::Timer collisionWriting{};
   autopas::utils::Timer containerUpdate{};
   autopas::utils::Timer output{};
@@ -25,7 +29,7 @@ class Timers {
    * Print timer information to stdout.
    * @param config
    */
-  void printTimers(const YAML::Node &config) const;
+  void printTimers(ConfigReader &config) const;
 
  private:
   /**

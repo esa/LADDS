@@ -25,6 +25,8 @@ list(FILTER TEST_SRC EXCLUDE REGEX "main.cpp")
 
 add_executable(${TEST_EXECUTABLE_NAME} ${TEST_SRC})
 
+target_compile_features(${TEST_EXECUTABLE_NAME} PUBLIC cxx_std_17)
+
 target_link_libraries(
     ${TEST_EXECUTABLE_NAME}
     gmock_main
@@ -47,9 +49,17 @@ target_compile_definitions(${TEST_EXECUTABLE_NAME}
     DATADIR=\"${PROJECT_SOURCE_DIR}/data/\"
     CFGDIR=\"${PROJECT_SOURCE_DIR}/cfg/\"
     CFGDIRTEST=\"${PROJECT_SOURCE_DIR}/cfg/\"
+    $<$<BOOL:${LADDS_HDF5}>:LADDS_HDF5=1>
 )
 
-gtest_discover_tests(${TEST_EXECUTABLE_NAME})
+set(TSAN_OPTIONS_STR "TSAN_OPTIONS=suppressions=${LADDS_SOURCE_DIR}/.tsanIgnoreList.txt ignore_noninstrumented_modules=1")
+set(LSAN_OPTIONS_STR "LSAN_OPTIONS=suppressions=${LADDS_SOURCE_DIR}/.lsanIgnoreList.txt ignore_noninstrumented_modules=1")
+
+gtest_discover_tests(${TEST_EXECUTABLE_NAME}
+    PROPERTIES
+        ENVIRONMENT "${TSAN_OPTIONS_STR}"
+        ENVIRONMENT "${LSAN_OPTIONS_STR}"
+)
 
 add_test(
         NAME validationtest.testValidation.yaml
@@ -57,6 +67,11 @@ add_test(
         ${PROJECT_SOURCE_DIR}/tests/validationtest.py
         ${CMAKE_BINARY_DIR}/src/ladds/ladds
         ${PROJECT_SOURCE_DIR}/cfg/testValidation.yaml
-        ${PROJECT_SOURCE_DIR}/tests/data/reference_10.vtu
+        output_209.vtu
+        ${PROJECT_SOURCE_DIR}/tests/data/reference_validationTest.vtu
         CONFIGURATIONS validation
+)
+set_tests_properties(validationtest.testValidation.yaml
+        PROPERTIES
+        ENVIRONMENT "${TSAN_OPTIONS_STR};${LSAN_OPTIONS_STR}"
 )

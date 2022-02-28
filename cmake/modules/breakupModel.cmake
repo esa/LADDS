@@ -5,9 +5,9 @@ message(STATUS "Adding Breakup Model.")
 include(FetchContent)
 
 # Select https (default) or ssh path.
-set(BreakupModelRepoPath https://github.com/schuhmaj/nasa-breakup-model-cpp.git)
+set(BreakupModelRepoPath https://github.com/esa/NASA-breakup-model-cpp.git)
 if (GIT_SUBMODULES_SSH)
-    set(BreakupModelRepoPath git@github.com:schuhmaj/nasa-breakup-model-cpp.git)
+    set(BreakupModelRepoPath git@github.com:esa/NASA-breakup-model-cpp.git)
 endif ()
 
 # disable breakup stuff we do not need
@@ -17,8 +17,8 @@ set(BUILD_BREAKUP_MODEL_SIM OFF CACHE INTERNAL "")
 FetchContent_Declare(
         BreakupModelfetch
         GIT_REPOSITORY ${BreakupModelRepoPath}
-        # branch master after BA was finished (19.10.21)
-        GIT_TAG 5d30cf761c12827915c9ed56df0b0a2691bca6bc
+        # initial commit after moving repo to ESA da4da134c1fb32799869b7eb15d323cd39c13da9 (9.12.21)
+        GIT_TAG da4da134c1fb32799869b7eb15d323cd39c13da9
 )
 
 # Get Breakup Model source and binary directories from CMake project

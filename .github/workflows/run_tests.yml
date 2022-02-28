@@ -18,12 +18,12 @@ jobs:
   tests_default_release:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
     - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install \
             git \
+            git-lfs \
             clang \
             cmake \
             libhdf5-dev \
@@ -33,6 +33,9 @@ jobs:
             graphviz \
             python3-numpy \
             python3-vtk7
+    - uses: actions/checkout@v2
+      with:
+        lfs: true
     - name: Build project
       run: |
         mkdir build
@@ -47,15 +50,13 @@ jobs:
 
   test_ASAN:
     runs-on: ubuntu-latest
-    env:
-      TSAN_OPTIONS: ignore_noninstrumented_modules=1
     steps:
-      - uses: actions/checkout@v2
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install \
               git \
+              git-lfs \
               clang \
               cmake \
               libhdf5-dev \
@@ -63,6 +64,9 @@ jobs:
               libtbb-dev \
               python3-numpy \
               python3-vtk7
+      - uses: actions/checkout@v2
+        with:
+          lfs: true
       - name: Build project
         run: |
           mkdir build
@@ -83,18 +87,19 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: autopas/autopas-build-archer
-    env:
-      TSAN_OPTIONS: ignore_noninstrumented_modules=1
     steps:
-      - uses: actions/checkout@v2
       - name: Install dependencies
         run: |
           apt-get update
           apt-get install -y \
+              git-lfs \
               libhdf5-dev \
               libtbb-dev \
               python3-numpy \
               python3-vtk7
+      - uses: actions/checkout@v2
+        with:
+          lfs: true
       - name: Build project
         run: |
           mkdir build

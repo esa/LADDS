@@ -11,12 +11,16 @@
 
 #include <algorithm>
 
-CollisionFunctor::CollisionFunctor(double cutoff, double dt, double minorCutoff)
-    : Functor(cutoff), _cutoffSquare(cutoff * cutoff), _dt(dt), _minorCutoffSquare(minorCutoff * minorCutoff) {
+CollisionFunctor::CollisionFunctor(double cutoff, double dt, double collisionDistanceFactor, double minDetectionRadius)
+    : Functor(cutoff),
+      _cutoffSquare(cutoff * cutoff),
+      _dt(dt),
+      _collisionDistanceFactor(collisionDistanceFactor / 1000.),  // also imply conversion from m to km
+      _minDetectionRadius(minDetectionRadius) {
   _threadData.resize(autopas::autopas_get_max_threads());
 }
 
-const std::unordered_map<Particle *, std::tuple<Particle *, double>> &CollisionFunctor::getCollisions() const {
+const CollisionFunctor::CollisionCollectionT &CollisionFunctor::getCollisions() const {
   return _collisions;
 }
 
@@ -26,8 +30,20 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   using autopas::utils::ArrayMath::mulScalar;
   using autopas::utils::ArrayMath::sub;
 
-  // skip interaction with deleted particles
+  // skip if interaction involves:
+  //  - any deleted particles
+  //  - two actively evasive satellites
+  //  - one evasive and one of detectable size
   if (i.isDummy() or j.isDummy()) {
+    return;
+  }
+  const auto &iActivity = i.getActivityState();
+  const auto &jActivity = j.getActivityState();
+  const auto &iRadius = i.getRadius();
+  const auto &jRadius = j.getRadius();
+  if ((iActivity != Particle::ActivityState::passive and jActivity != Particle::ActivityState::passive) or
+      (iActivity != Particle::ActivityState::passive and jRadius >= _minDetectionRadius) or
+      (jActivity != Particle::ActivityState::passive and iRadius >= _minDetectionRadius)) {
     return;
   }
 
@@ -80,16 +96,19 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
 
   const auto dr_lines = sub(p1, p2);
   const auto distanceSquare_lines = dot(dr_lines, dr_lines);
+  // _collisionDistanceFactor also converts this to km
+  const auto scaledObjectSeparation = (iRadius + jRadius) * _collisionDistanceFactor;
 
-  if (distanceSquare_lines > _minorCutoffSquare) return;
+  // return if particles are far enough away (i.e. further than sum of their scaled sizes)
+  if (distanceSquare_lines > (scaledObjectSeparation * scaledObjectSeparation)) return;
 
   // store pointers to colliding pair
   if (i.getID() < j.getID()) {
-    _threadData[autopas::autopas_get_thread_num()].collisions[i.get<Particle::AttributeNames::ptr>()] = {
-        j.get<Particle::AttributeNames::ptr>(), distanceSquare_lines};
+    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(
+        i.get<Particle::AttributeNames::ptr>(), j.get<Particle::AttributeNames::ptr>(), distanceSquare_lines);
   } else {
-    _threadData[autopas::autopas_get_thread_num()].collisions[j.get<Particle::AttributeNames::ptr>()] = {
-        i.get<Particle::AttributeNames::ptr>(), distanceSquare_lines};
+    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(
+        j.get<Particle::AttributeNames::ptr>(), i.get<Particle::AttributeNames::ptr>(), distanceSquare_lines);
   }
 }
 
@@ -113,11 +132,12 @@ void CollisionFunctor::SoAFunctorPair(autopas::SoAView<SoAArraysType> soa1,
     }
 
     // inner loop over SoA2
-    // custom reduction for unordered maps
-#pragma omp declare reduction(mapMerge : std::unordered_map<Particle *, std::tuple<Particle *,double>> : omp_out.insert(omp_in.begin(), omp_in.end()))
+    // custom reduction for collision collections (vector)
+#pragma omp declare reduction(vecMerge:CollisionCollectionT \
+                              : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
     // alias because OpenMP needs it
     auto &thisCollisions = _threadData[autopas::autopas_get_thread_num()].collisions;
-#pragma omp simd reduction(mapMerge : thisCollisions)
+#pragma omp simd reduction(vecMerge : thisCollisions)
     for (size_t j = 0; j < soa2.getNumParticles(); ++j) {
       SoAKernel(i, j, soa1, soa2, newton3);
     }
@@ -183,9 +203,9 @@ void CollisionFunctor::SoAKernel(
 
   // store pointers to colliding pair
   if (id1ptr[i] < id2ptr[j]) {
-    _threadData[autopas::autopas_get_thread_num()].collisions[ptr1ptr[i]] = {ptr2ptr[j], dr2};
+    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(ptr1ptr[i], ptr2ptr[j], dr2);
   } else {
-    _threadData[autopas::autopas_get_thread_num()].collisions[ptr2ptr[j]] = {ptr1ptr[i], dr2};
+    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(ptr2ptr[j], ptr1ptr[i], dr2);
   }
 }
 void CollisionFunctor::initTraversal() {
@@ -194,7 +214,7 @@ void CollisionFunctor::initTraversal() {
 
 void CollisionFunctor::endTraversal(bool newton3) {
   for (auto &data : _threadData) {
-    _collisions.insert(data.collisions.begin(), data.collisions.end());
+    _collisions.insert(_collisions.end(), data.collisions.begin(), data.collisions.end());
     data.collisions.clear();
   }
 }
