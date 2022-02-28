@@ -119,7 +119,6 @@ class ConfigReader {
         setValueAux(config, valuePathVec.begin(), valuePathVec.end(), value);
       }
     } else if constexpr (std::is_same_v<T, bool>) {
-      const auto &v = static_cast<bool>(value);
       setValueAux(config, valuePathVec.begin(), valuePathVec.end(), value ? "true" : "false");
     } else {
       setValueAux(config, valuePathVec.begin(), valuePathVec.end(), std::to_string(value));
