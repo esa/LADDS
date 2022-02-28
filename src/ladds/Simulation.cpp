@@ -394,7 +394,7 @@ void Simulation::dumpCalibratedConfig(ConfigReader &config, const AutoPas_t &aut
 void Simulation::deleteBurnUps(autopas::AutoPas<Particle> &autopas, double burnUpAltitude) const {
   const auto critAltitude = burnUpAltitude + Physics::R_EARTH;
   const auto critAltitudeSquared = critAltitude * critAltitude;
-  // TODO: check if it worthwhile to do this in parallel
+#pragma omp parallel
   for (auto particleIter = autopas.getRegionIterator({-critAltitude, -critAltitude, -critAltitude},
                                                      {critAltitude, critAltitude, critAltitude});
        particleIter != autopas.end();
