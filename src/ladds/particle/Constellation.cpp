@@ -14,7 +14,8 @@
 
 std::mt19937 Constellation::generator{42};
 
-Constellation::Constellation(const YAML::Node &constellationConfig, size_t interval,
+Constellation::Constellation(const YAML::Node &constellationConfig,
+                             size_t interval,
                              double altitudeDeviation,
                              double coefficientOfDrag)
     : interval(interval), altitudeDeviation(altitudeDeviation), distribution(0., altitudeDeviation) {
@@ -23,7 +24,7 @@ Constellation::Constellation(const YAML::Node &constellationConfig, size_t inter
   std::vector<Particle> sats =
       readDatasetConstellation(std::string(DATADIR) + constellationName + "/pos_" + constellationName + ".csv",
                                std::string(DATADIR) + constellationName + "/v_" + constellationName + ".csv",
-                              coefficientOfDrag);
+                               coefficientOfDrag);
 
   // convert vector to deque
   constellationSize = sats.size();

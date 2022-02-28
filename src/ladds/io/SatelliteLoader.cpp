@@ -116,7 +116,8 @@ std::vector<Constellation> SatelliteLoader::loadConstellations(ConfigReader &con
         exit(1);
       }
 
-      constellations.emplace_back(Constellation(constellationConfig, insertionFrequency, altitudeDeviation, coefficientOfDrag));
+      constellations.emplace_back(
+          Constellation(constellationConfig, insertionFrequency, altitudeDeviation, coefficientOfDrag));
       if (i != nConstellations - 1) {
         constellationDataStr.erase(0, offset + 1);
       }
