@@ -17,7 +17,7 @@
 /**
  * The Constellation class contains a collection of Particles that inserts these particles into
  * the simulation over time based on .csv files and a .yaml file as created by the
- * ConstellationGeneration notebook
+ * ConstellationGeneration notebook +
  */
 class Constellation {
  public:
