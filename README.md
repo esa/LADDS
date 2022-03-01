@@ -113,7 +113,7 @@ planes`, and `number of satellites` per plane. We provide a notebook
 `notebooks/ConstellationGeneration/ConstellationGeneration.ipynb` that can be used 
 to generate constellation data from orbital shell parameters.
 
-### Generating constellation:
+### Generating a constellation (quick guide):
 * Initialize the constellation by executing the first cell and providing metadata in the second cell (1)
 * Create a shell by providing the 4 shell arguments, and further parameters (extra params) if necessary (2.1).
 Store the temporary shell data by executing the cell (2.2)
@@ -127,28 +127,18 @@ A more detailed guide is included in the notebook.
 * In the configuration file for the simulation, include the constellation(s) by
 defining `constellationList` and assigning the constellation name(s); Syntax: 
 {name;}name ; e.g. Astra;Starlink;OneWeb
-* Assign values for `constellationFrequency`, `constellationCutoff` and
-`altitudeSpread` (more information below)
+* `constellationFrequency` (=interval for constellation insertion)
+* `constellationCutoff` (satellites are inserted with a delay, if there is an object within this range)
+* `altitudeSpread` ([km] ~99.74% of satellites with normally distributed altitude deviate
+by less than this value from the mean altitude [altitudeSpread = 3*sigma])
 
 ### How constellation satellites are inserted to the simulation
 
-When starting the simulation with satellite constellations every
-`constellationFrequency` iterations, satellites that are due to be added
-are inserted to the simulation. They are only inserted if there is no other
-object within the range `constellationCutoff` of the position of the new 
-Satellite. If there are objects close enough to the new satellite, the insertion 
-is postponed to the next time satellites are added. 
-
 The insertion of a constellation takes as long as specified by the `duration` 
-parameter in the respective .yaml file and happens shell by shell. The time it 
-takes to insert one shell of a constellation depends on the percentage of 
-satellites the shell contributes to. Satellites of each orbital 
-shell are inserted plane by plane and linearly over time.
-
-Satellites are inserted with varying altitude based on a random variable that is
-normally distributed. `AltitudeSpread` determines within what range most satellites 
-(99.74%) deviate from `altitude`. The parameter equals 3 times the standard deviation
-of the normal distribution.
+parameter in the respective .yaml file. The time it takes to insert one shell of 
+a constellation depends on the percentage of satellites the shell contributes to 
+the constellation. Satellites of each orbital shell are inserted plane by plane 
+and linearly over time.
 
 
 
