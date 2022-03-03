@@ -261,7 +261,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
     // sanity check
     if (not escapedParticles.empty()) {
-      SPDLOG_LOGGER_ERROR(logger.get(), "Particles are escaping! \n{}", escapedParticles);
+      SPDLOG_LOGGER_ERROR(logger.get(), "It {} Particles are escaping! \n{}", iteration, escapedParticles);
     }
 
     if (iteration % timestepsPerCollisionDetection == 0) {
@@ -288,7 +288,6 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
         timers.collisionSimulation.stop();
       }
     }
-
     // check if we hit the timeout and abort the loop if necessary
     if (timeout != 0) {
       // quickly interrupt timers.total to update its internal total time.
@@ -395,7 +394,7 @@ void Simulation::dumpCalibratedConfig(ConfigReader &config, const AutoPas_t &aut
 void Simulation::deleteBurnUps(autopas::AutoPas<Particle> &autopas, double burnUpAltitude) const {
   const auto critAltitude = burnUpAltitude + Physics::R_EARTH;
   const auto critAltitudeSquared = critAltitude * critAltitude;
-  // TODO: check if it worthwhile to do this in parallel
+#pragma omp parallel
   for (auto particleIter = autopas.getRegionIterator({-critAltitude, -critAltitude, -critAltitude},
                                                      {critAltitude, critAltitude, critAltitude});
        particleIter != autopas.end();
