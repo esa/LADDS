@@ -12,6 +12,7 @@
 #include <iostream>
 #include <random>
 
+#include "ladds/io/ConfigReader.h"
 #include "ladds/particle/Particle.h"
 
 /**
@@ -23,8 +24,7 @@ class Constellation {
  public:
   /**
    * Constructs a constellation object
-
-   * @param constellationConfig : YAML::Node object with the constellation data. Valid
+   * @param constellationConfig : ConfigReader object with the constellation data. Valid
    * constellation data can be created using the ConstellationGeneration notebook
    * and must be in the projects data folder
    * @param interval : the interval of satellites being added to the simulation is
@@ -33,10 +33,7 @@ class Constellation {
    * altitudes. Equals the standard deviation of a normal distribution
    * @param coefficientOfDrag c_D used to initialize all satellites.
    */
-  Constellation(const YAML::Node &constellationConfig,
-                size_t interval,
-                double altitudeDeviation,
-                double coefficientOfDrag);
+  Constellation(ConfigReader &constellationConfig, size_t interval, double altitudeDeviation, double coefficientOfDrag);
   /**
    * determines which satellites are being added to the simulation by adding each shell
    * within a time span proportional to the shells size. shells are added plane by plane

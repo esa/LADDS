@@ -14,12 +14,12 @@
 
 std::mt19937 Constellation::generator{42};
 
-Constellation::Constellation(const YAML::Node &constellationConfig,
+Constellation::Constellation(ConfigReader &constellationConfig,
                              size_t interval,
                              double altitudeDeviation,
                              double coefficientOfDrag)
     : interval(interval), altitudeDeviation(altitudeDeviation), distribution(0., altitudeDeviation) {
-  auto constellationName = constellationConfig["constellation"]["name"].as<std::string>();
+  auto constellationName = constellationConfig.get<std::string>("constellation/name");
 
   std::vector<Particle> sats =
       readDatasetConstellation(std::string(DATADIR) + constellationName + "/pos_" + constellationName + ".csv",
@@ -33,16 +33,16 @@ Constellation::Constellation(const YAML::Node &constellationConfig,
     satellites.push_back(sats[i]);
   }
 
-  startTime = constellationConfig["constellation"]["startTime"].as<int>();
-  duration = constellationConfig["constellation"]["duration"].as<int>();
+  startTime = constellationConfig.get<int>("constellation/startTime");
+  duration = constellationConfig.get<int>("constellation/duration");
 
-  int nShells = constellationConfig["constellation"]["nShells"].as<int>();
+  int nShells = constellationConfig.get<int>("constellation/nShells");
   for (int i = 1; i <= nShells; i++) {
     std::string attribute = "shell" + std::to_string(i);
-    shells.emplace_back<std::array<double, 4>>({constellationConfig[attribute]["altitude"].as<double>(),
-                                                constellationConfig[attribute]["inclination"].as<double>(),
-                                                constellationConfig[attribute]["nPlanes"].as<double>(),
-                                                constellationConfig[attribute]["nSats"].as<double>()});
+    shells.emplace_back<std::array<double, 4>>({constellationConfig.get<double>(attribute + "/altitude"),
+                                                constellationConfig.get<double>(attribute + "/inclination"),
+                                                constellationConfig.get<double>(attribute + "/nPlanes"),
+                                                constellationConfig.get<double>(attribute + "/nSats")});
   }
 
   // determine times when each shell has its deployment started
