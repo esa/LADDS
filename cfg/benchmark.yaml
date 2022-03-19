@@ -1,0 +1,64 @@
+sim:
+  logLevel: info    # Available levels are off, critical, err, warn, info, debug, trace
+  iterations: 1000 # Number of simulation iterations
+  timeout: # timeout for the simulation. The simulation stops when either the specified number of iterations is hit or the timeout reached.
+    seconds: 0  # whole seconds
+    minutes: 0. # as floating points
+    hours: 0.   # as floating points
+    days: 0.    # as floating points
+  maxAltitude: 10000 # Maximum satellite altitude above earth core. This number times two is the simulation box length. [km]
+  minAltitude: 150 # Everything below this altitude above ground will be considered burning up [km]
+  deltaT: 10.0 # [s]
+  collisionDistanceFactor: 1.0 # Factor multiplied with the sum of radii to over approximate collision distances.
+  timestepsPerCollisionDetection: 1
+
+  prop: # Which propagation model components should be applied
+    useKEPComponent: true # Keplerian propagation
+    useJ2Component: true # J2 spherical harmonic approximation
+    useC22Component: true # C22 spherical harmonic approximation
+    useS22Component: true # S22 spherical harmonic approximation
+    useSOLComponent: false # Solar gravitational pull
+    useLUNComponent: false # Lunar gravitational pull
+    useSRPComponent: true # Solar radiation pressure
+    useDRAGComponent: true # Atmospheric drag
+    coefficientOfDrag: 2.2  # c_D for the drag component used in all objects where no BSTAR is available
+
+  breakup:
+    enabled: false # (de-)activate the breakup mechanic
+    minLc: 0.01 # minimal characteristic length for generated debris [m]
+    enforceMassConservation: true # by default the NASA breakup model does not conserve mass
+
+io:
+  csv:
+    # propagatorOutput: propagator.csv # Output file for the propagator. Currently, nothing is written.
+    fileName: initial_population.csv  # CSV file containing all data to initialize the full satellite population
+  #progressOutputFrequency : 50 # Frequency of writing iteration number and encounter info to std::out.
+  # vtk:
+  #   writeFrequency: 0 # Frequency of writing vtk files [iterations]
+  # hdf5:
+#    checkpoint:
+#      file: hdf5ReloadTestCheckpoint.h5
+#      iteration: 0 # Iteration to be loaded. If omitted, the last iteration in the file will be loaded.
+    # fileName: simulationData.h5
+    # writeFrequency: 1 # Frequency of writing to the hdf5 file [iterations]
+    # compressionLevel: 4 # Valid Levels: 0 (no compression) - 9 (max compression)
+
+  #constellationList: AstraPhase2,100,7200 # ';'-seperated constellations consisting of path (to constellation directory), start time, duration
+  constellationFrequency: 10 # Frequency of adding satellites to simulation [iterations]
+  constellationCutoff: 0.1 # satellites of constellations are only inserted when there is no object within constellationCutoff range
+  altitudeSpread: 1.0 # [km] normal distributed altitude deviations are usually smaller than this value (~99.74% chance)
+
+autopas:
+  logLevel: info
+  cutoff: 80.0 # Cutoff for autopas force interaction
+  # For the following parameters sensible defaults are chosen by LADDS. Only set them here if you know what you are doing!
+  rebuildFrequency: 1 # Number of iterations before internal data structure is rebuilt. Increases collision search radius!
+#  desiredCellsPerDimension: 25 # Desired number of cells per dimension
+  tuningMode: false # can be used to obtain good values for  the following four parameters
+  Newton3: "enabled"
+  DataLayout: "AoS"
+  # to test only reasonable configs comment out the following lines
+  # these parameters can also be used to only test specific parameters
+  Container: "all"
+  Traversal: "all"
+  LoadEstimatorOption: "all"
