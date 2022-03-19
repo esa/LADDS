@@ -78,12 +78,14 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config) {
   std::set<autopas::DataLayoutOption> optimalDataLayoutOpt{autopas::DataLayoutOption::aos};
   std::set<autopas::ContainerOption> optimalContainerOpt{autopas::ContainerOption::linkedCells};
   std::set<autopas::TraversalOption> optimalTraversalOpt{autopas::TraversalOption::lc_c04_HCP};
+  std::set<autopas::LoadEstimatorOption> optimalEstimatorOpt{autopas::LoadEstimatorOption::none};
   // if tuning mode is enabled use full range of AutoPas defaults
   if (config.get<bool>("autopas/tuningMode", false)) {
     optimalNewton3Opt = autopas->getAllowedNewton3Options();
     optimalDataLayoutOpt = autopas->getAllowedDataLayouts();
     optimalContainerOpt = autopas->getAllowedContainers();
     optimalTraversalOpt = autopas->getAllowedTraversals();
+    optimalEstimatorOpt = autopas->getAllowedLoadEstimators();
   }
   // however, always allow setting config options via yaml
   setAutoPasOption<autopas::Newton3Option>(
@@ -94,6 +96,8 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config) {
       config, "autopas/Container", [&](const auto &op) { autopas->setAllowedContainers(op); }, optimalContainerOpt);
   setAutoPasOption<autopas::TraversalOption>(
       config, "autopas/Traversal", [&](const auto &op) { autopas->setAllowedTraversals(op); }, optimalTraversalOpt);
+  setAutoPasOption<autopas::LoadEstimatorOption>(
+      config, "autopas/LoadEstimatorOption", [&](const auto &op) { autopas->setAllowedLoadEstimators(op); }, optimalEstimatorOpt);
   // arbitrary number. Can be changed to whatever makes sense.
   autopas->setTuningInterval(std::numeric_limits<unsigned int>::max());
   autopas->setSelectorStrategy(autopas::SelectorStrategyOption::fastestMean);
