@@ -1,5 +1,9 @@
 # LADDS - Large-scale Deterministic Debris Simulation
 
+<p align="center">
+<img src="docs/LADDS_Logo.png" alt="LADDS_LOGO" width="300"/>
+</p>
+
 Codebase for the ARIADNA Study between TU Munich and ESA's Advanced Concepts Team. A more detailed project description can be found on the [Advanced Concept Team's webpage](https://www.esa.int/gsp/ACT/projects/debris_hpc/).
 
 ## Requirements
