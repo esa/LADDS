@@ -216,4 +216,9 @@ class Constellation {
    * altitude. uses altitudeDeviation as parameter
    */
   std::normal_distribution<double> distribution;
+
+  /**
+   * variable used to give every satellite that is part of a constellation an id
+   */
+  static size_t idBase;
 };
