@@ -84,20 +84,12 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
 
 std::vector<Constellation> SatelliteLoader::loadConstellations(ConfigReader &config, const Logger &logger) {
   std::vector<Constellation> constellations;
-  auto coefficientOfDrag = config.get<double>("sim/prop/coefficientOfDrag");
   auto constellationList = config.get<std::string>("io/constellationList", "", true);
-  // altitudeSpread = 3 * sigma , altitudeDeviation = sigma (= standardDeviation)
-  auto altitudeDeviation = config.get<double>("io/altitudeSpread", 0.0) / 3.0;
   if (not constellationList.empty()) {
     const auto insertionFrequency = config.get<int>("io/constellationFrequency", 1);
     auto constellationDataStr = config.get<std::string>("io/constellationList");
     // count constellation by counting ';'
-    int nConstellations = 1;
-    for (char con : constellationDataStr) {
-      if (con == ';') {
-        nConstellations++;
-      }
-    }
+    int nConstellations = std::count(constellationDataStr.begin(),constellationDataStr.end(),';') + 1;
 
     // parse constellation info
     constellations.reserve(nConstellations);
@@ -110,7 +102,7 @@ std::vector<Constellation> SatelliteLoader::loadConstellations(ConfigReader &con
           ConfigReader(std::string(DATADIR) + constellationDir + "/shells_" + constellationDir + ".yaml", logger);
 
       constellations.emplace_back(
-          Constellation(constellationConfig, insertionFrequency, altitudeDeviation, coefficientOfDrag));
+          Constellation(constellationConfig, config));
       if (i != nConstellations - 1) {
         constellationDataStr.erase(0, offset + 1);
       }
@@ -125,6 +117,15 @@ std::vector<Constellation> SatelliteLoader::loadConstellations(ConfigReader &con
                        "{} more particles will be added from {} constellations",
                        constellationTotalNumSatellites,
                        nConstellations);
+
+    for(auto & c : constellations){
+      SPDLOG_LOGGER_INFO(logger.get(),
+                         "{}: insertion starts at iteration: {}, is fully deployed within {} iterations, inserts {} satellites",
+                         c.getConstellationName(),
+                         c.getStartTime(),
+                         c.getDuration(),
+                         c.getConstellationSize());
+    }
   }
   return constellations;
 }
