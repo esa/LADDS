@@ -89,7 +89,7 @@ std::vector<Constellation> SatelliteLoader::loadConstellations(ConfigReader &con
     const auto insertionFrequency = config.get<int>("io/constellationFrequency", 1);
     auto constellationDataStr = config.get<std::string>("io/constellationList");
     // count constellation by counting ';'
-    int nConstellations = std::count(constellationDataStr.begin(),constellationDataStr.end(),';') + 1;
+    int nConstellations = std::count(constellationDataStr.begin(), constellationDataStr.end(), ';') + 1;
 
     // parse constellation info
     constellations.reserve(nConstellations);
@@ -101,8 +101,7 @@ std::vector<Constellation> SatelliteLoader::loadConstellations(ConfigReader &con
       ConfigReader constellationConfig =
           ConfigReader(std::string(DATADIR) + constellationDir + "/shells_" + constellationDir + ".yaml", logger);
 
-      constellations.emplace_back(
-          Constellation(constellationConfig, config));
+      constellations.emplace_back(Constellation(constellationConfig, config));
       if (i != nConstellations - 1) {
         constellationDataStr.erase(0, offset + 1);
       }
@@ -118,13 +117,14 @@ std::vector<Constellation> SatelliteLoader::loadConstellations(ConfigReader &con
                        constellationTotalNumSatellites,
                        nConstellations);
 
-    for(auto & c : constellations){
-      SPDLOG_LOGGER_INFO(logger.get(),
-                         "{}: insertion starts at iteration: {}, is fully deployed within {} iterations, inserts {} satellites",
-                         c.getConstellationName(),
-                         c.getStartTime(),
-                         c.getDuration(),
-                         c.getConstellationSize());
+    for (auto &c : constellations) {
+      SPDLOG_LOGGER_INFO(
+          logger.get(),
+          "{}: insertion starts at iteration: {}, is fully deployed within {} iterations, inserts {} satellites",
+          c.getConstellationName(),
+          c.getStartTime(),
+          c.getDuration(),
+          c.getConstellationSize());
     }
   }
   return constellations;

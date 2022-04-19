@@ -16,19 +16,17 @@ size_t Constellation::idBase = 1000000;
 
 std::mt19937 Constellation::generator{42};
 
-Constellation::Constellation(ConfigReader &constellationConfig,ConfigReader &config):
-      constellationName(constellationConfig.get<std::string>("constellation/name")),
-      interval(config.get<size_t>("io/constellationFrequency",1)),
+Constellation::Constellation(ConfigReader &constellationConfig, ConfigReader &config)
+    : constellationName(constellationConfig.get<std::string>("constellation/name")),
+      interval(config.get<size_t>("io/constellationFrequency", 1)),
       deltaT(config.get<double>("sim/deltaT")),
       /* altitudeSpread = 3 * sigma */
-      distribution(std::normal_distribution<double>(0,config.get<double>("io/altitudeSpread", 0.0) / 3.0))
-{
-
+      distribution(std::normal_distribution<double>(0, config.get<double>("io/altitudeSpread", 0.0) / 3.0)) {
   auto coefficientOfDrag = config.get<double>("sim/prop/coefficientOfDrag");
 
-  //set constellations insertion start and duration
+  // set constellations insertion start and duration
   setStartTime(constellationConfig.get<std::string>("constellation/startTime"),
-               config.get<std::string>("sim/referenceTime","2022/01/01"));
+               config.get<std::string>("sim/referenceTime", "2022/01/01"));
   setDuration(constellationConfig.get<std::string>("constellation/duration"));
 
   std::vector<Particle> sats =
@@ -54,7 +52,7 @@ Constellation::Constellation(ConfigReader &constellationConfig,ConfigReader &con
   // determine times when each shell has its deployment started
   double timestamp = 0;
   std::vector<double> timestamps;
-  timestamps.reserve(nShells+1);
+  timestamps.reserve(nShells + 1);
   timestamps.push_back(0);
 
   for (auto [alt, i, planes, nSats] : shells) {
@@ -63,14 +61,14 @@ Constellation::Constellation(ConfigReader &constellationConfig,ConfigReader &con
   }
   std::cout << "schedule for " << constellationName << ":" << std::endl;
   schedule.resize(nShells);
-  for(int i = 0ul; i < timestamps.size() - 1;++i){
+  for (int i = 0ul; i < timestamps.size() - 1; ++i) {
     int nPlanes = static_cast<int>(shells[i][2]);
     double timeStepSize = (timestamps[i + 1] - timestamps[i]) / nPlanes;
 
     schedule[i].reserve(nPlanes);
-    for(int j = 0ul;j < nPlanes;j++){
-      schedule[i].push_back(timestamps[i]+j*timeStepSize);
-      std::cout << timestamps[i]+j*timeStepSize << " ";
+    for (int j = 0ul; j < nPlanes; j++) {
+      schedule[i].push_back(timestamps[i] + j * timeStepSize);
+      std::cout << timestamps[i] + j * timeStepSize << " ";
     }
     std::cout << std::endl;
   }
@@ -79,27 +77,27 @@ Constellation::Constellation(ConfigReader &constellationConfig,ConfigReader &con
 }
 
 void Constellation::setStartTime(const std::string &startTime_str, const std::string &refTime_str) {
-    //date string
-    if(startTime_str.find('/') != std::string::npos) {
-        std::array<int,3> dateArrayStart = parseDatestring(startTime_str);
-        std::array<int,3> dateArrayRef = parseDatestring(refTime_str);
-        struct tm stm = {0,0,0,dateArrayStart[2],dateArrayStart[1] - 1,dateArrayStart[0]};
-        struct tm t0 = {0,0,0,dateArrayRef[2],dateArrayRef[1] - 1,dateArrayRef[0]};
+  // date string
+  if (startTime_str.find('/') != std::string::npos) {
+    std::array<int, 3> dateArrayStart = parseDatestring(startTime_str);
+    std::array<int, 3> dateArrayRef = parseDatestring(refTime_str);
+    struct tm stm = {0, 0, 0, dateArrayStart[2], dateArrayStart[1] - 1, dateArrayStart[0]};
+    struct tm t0 = {0, 0, 0, dateArrayRef[2], dateArrayRef[1] - 1, dateArrayRef[0]};
 
-        time_t stime = std::mktime(&stm) - std::mktime(&t0);
-        startTime = static_cast<long>(static_cast<double>(stime) / deltaT);
-        return;
-    }
-    //iteration
-    startTime = std::stoi(startTime_str);
+    time_t stime = std::mktime(&stm) - std::mktime(&t0);
+    startTime = static_cast<long>(static_cast<double>(stime) / deltaT);
+    return;
+  }
+  // iteration
+  startTime = std::stoi(startTime_str);
 }
 
 void Constellation::setDuration(const std::string &duration_str) {
-    if(duration_str[duration_str.size()-1] == 'd') {
-        duration = static_cast<size_t>(24*60*60*std::stoi(duration_str.substr(0,duration_str.size()-1)) / deltaT);
-    } else {
-        duration = std::stoi(duration_str);
-    }
+  if (duration_str[duration_str.size() - 1] == 'd') {
+    duration = static_cast<size_t>(24 * 60 * 60 * std::stoi(duration_str.substr(0, duration_str.size() - 1)) / deltaT);
+  } else {
+    duration = std::stoi(duration_str);
+  }
 }
 
 std::vector<Particle> Constellation::tick() {
@@ -122,7 +120,7 @@ std::vector<Particle> Constellation::tick() {
       while (static_cast<double>(timeActive) >= schedule[currentShellIndex][planesDeployed]) {
         std::cout << "insertion  " << constellationName << ": " << timeActive << std::endl;
         auto planeSize = static_cast<size_t>(shells[currentShellIndex][3]);
-        particles.reserve(particles.capacity()+planeSize);
+        particles.reserve(particles.capacity() + planeSize);
         for (int i = 0; i < planeSize; i++) {
           particles.push_back(satellites[0]);
           satellites.pop_front();
@@ -218,16 +216,16 @@ std::array<double, 3> Constellation::randomDisplacement(const std::array<double,
   return autopas::utils::ArrayMath::add(pos, autopas::utils::ArrayMath::mulScalar(unitVector, offset));
 }
 
-std::array<int,3> Constellation::parseDatestring(const std::string &date_str) {
-    std::array<int,3> dateArray{};
-    std::string current_str = date_str;
-    size_t current_idx = current_str.find('/');
-    for(int i = 0;i<3;i++) {
-        dateArray[i] = std::stoi(current_str.substr(0,current_idx));
-        if(i != 2) {
-            current_str = current_str.erase(0,current_idx + 1);
-            current_idx = current_str.find('/');
-        }
+std::array<int, 3> Constellation::parseDatestring(const std::string &date_str) {
+  std::array<int, 3> dateArray{};
+  std::string current_str = date_str;
+  size_t current_idx = current_str.find('/');
+  for (int i = 0; i < 3; i++) {
+    dateArray[i] = std::stoi(current_str.substr(0, current_idx));
+    if (i != 2) {
+      current_str = current_str.erase(0, current_idx + 1);
+      current_idx = current_str.find('/');
     }
-    return dateArray;
+  }
+  return dateArray;
 }

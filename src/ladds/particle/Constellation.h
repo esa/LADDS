@@ -35,24 +35,24 @@ class Constellation {
    */
   Constellation(ConfigReader &constellationConfig, ConfigReader &config);
 
-    /**
-    * sets internal attribute startTime according to the passed date string
-    * startTime_str
-    * @param startTime a point in time either in iterations or as a date string. if
-    * the string represents a natural number, it is considered as an iteration
-    * and the string is converted to a number, if it is a date string it is converted
-    * to an iteration timestamp before startTime is set to that value
-    */
-    void setStartTime(const std::string &startTime_str, const std::string &refTime_str);
+  /**
+   * sets internal attribute startTime according to the passed date string
+   * startTime_str
+   * @param startTime a point in time either in iterations or as a date string. if
+   * the string represents a natural number, it is considered as an iteration
+   * and the string is converted to a number, if it is a date string it is converted
+   * to an iteration timestamp before startTime is set to that value
+   */
+  void setStartTime(const std::string &startTime_str, const std::string &refTime_str);
 
-    /**
-     * sets internal attribute duration according to the passed string parameter
-     * duration_str
-     * @param duration_str represents the duration of deployment in either iterations
-     * or days. the parameter is considered as a count of days when its last character
-     * equals 'd' and an iteration count otherwise
-     */
-    void setDuration(const std::string &duration_str);
+  /**
+   * sets internal attribute duration according to the passed string parameter
+   * duration_str
+   * @param duration_str represents the duration of deployment in either iterations
+   * or days. the parameter is considered as a count of days when its last character
+   * equals 'd' and an iteration count otherwise
+   */
+  void setDuration(const std::string &duration_str);
 
   /**
    * determines which satellites are being added to the simulation by adding each shell
@@ -121,7 +121,7 @@ class Constellation {
    * @param datestr datestring
    * @return integer array with year, month, and day
    */
-   static std::array<int,3> parseDatestring(const std::string &date_str);
+  static std::array<int, 3> parseDatestring(const std::string &date_str);
 
   /**
    * iteration from which constellation starts being added to the simulation
