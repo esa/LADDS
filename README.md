@@ -110,6 +110,44 @@ For this set the CMake variables:  `AUTOPAS_LOG_TUNINGDATA=ON` and `AUTOPAS_LOG_
 ## Processing TLE Input 
 Data on current satellites etc. is often found [online](https://www.space-track.org/) in the [TLE format](https://en.wikipedia.org/wiki/Two-line_element_set). We include a Jupyter notebook which can be used to process TLE data with pykep to create and analyze suitable datasets. Detailed instructions can be found in the notebook in `notebooks/Data Processing.ipynb`.
 
+## Generating and including Constellations
+Satellite constellations (e.g. Starlink, OneWeb) are usually described by a list of orbital shells.
+An orbital shell is described by a 4-tuple with information about `altitude`, `inclination`, `number of
+planes`, and `number of satellites` per plane. We provide a notebook 
+`notebooks/ConstellationGeneration/ConstellationGeneration.ipynb` that can be used 
+to generate constellation data from orbital shell parameters.
+
+### Generating a constellation (quick guide):
+* Initialize the constellation by executing the first cell and providing metadata in the second cell (1)
+* Create a shell by providing the 4 shell arguments, and further parameters (extra params) if necessary (2.1).
+Store the temporary shell data by executing the cell (2.2)
+* Turn satellites into position and velocity vectors by executing cell (3)
+* Write the files by executing cell (4) and save them by executing cell (5)
+
+A more detailed guide is included in the notebook.
+
+### Including the constellation data in simulation (`io` section):
+
+* In the configuration file for the simulation, include the constellation(s) by
+defining `constellationList` and assigning the constellation name(s); Syntax: 
+{name;}name ; e.g. Astra;Starlink;OneWeb
+* `constellationFrequency` (=interval for constellation insertion)
+* `constellationCutoff` (satellites are inserted with a delay, if there is an object within this range)
+* `altitudeSpread` ([km] ~99.74% of satellites with normally distributed altitude deviate
+by less than this value from the mean altitude [altitudeSpread = 3*sigma])
+
+### How constellation satellites are inserted to the simulation
+
+The insertion of a constellation takes as long as specified by the `duration` 
+parameter in the respective .yaml file. The time it takes to insert one shell of 
+a constellation depends on the percentage of satellites the shell contributes to 
+the constellation. Satellites of each orbital shell are inserted plane by plane 
+and linearly over time.
+
+
+
+
+
 ## Output
 
 LADDS has multiple options for output that can be (de)activated mostly independent of each other via YAML. See [`cfg/default_cfg.yaml`](cfg/default_cfg.yaml) for relevant options.
@@ -144,4 +182,5 @@ To keep file size reasonable compression is supported.
 
 ### CSV
 If HDF5 output is disabled entirely, collision data is written in a `.csv` file in ASCII layout.
+
 
