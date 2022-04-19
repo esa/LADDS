@@ -185,15 +185,10 @@ class Constellation {
   std::vector<std::array<double, 4>> shells{};
 
   /**
-   * contains the time shell i begins its deployment at vector index i
+   * a vector containing each shells' schedule. if the entry at currentShellIndex and
+   * planesDeployed is smaller than timeActive the corresponding plane is added
    */
-  std::vector<double> timestamps{};
-
-  /**
-   * contains the time steps of shell i to enable adding each plane of
-   * shell i linearly over time at vector index i
-   */
-  std::vector<double> timeSteps{};
+  std::vector<std::vector<double>> schedule{};
 
   /**
    * keeps track of which shell will be added next

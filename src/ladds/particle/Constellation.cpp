@@ -53,15 +53,26 @@ Constellation::Constellation(ConfigReader &constellationConfig,ConfigReader &con
 
   // determine times when each shell has its deployment started
   double timestamp = 0;
+  std::vector<double> timestamps;
+  timestamps.reserve(nShells+1);
   timestamps.push_back(0);
+
   for (auto [alt, i, planes, nSats] : shells) {
     timestamp += (planes * nSats / static_cast<double>(constellationSize)) * static_cast<double>(duration);
     timestamps.push_back(timestamp);
   }
+  std::cout << "schedule for " << constellationName << ":" << std::endl;
+  schedule.resize(nShells);
+  for(int i = 0ul; i < timestamps.size() - 1;++i){
+    int nPlanes = static_cast<int>(shells[i][2]);
+    double timeStepSize = (timestamps[i + 1] - timestamps[i]) / nPlanes;
 
-  // for each shell determine the interval a new plane is added, each shell has its own timestep
-  for (size_t i = 0ul; i < timestamps.size() - 1; ++i) {
-    timeSteps.push_back((timestamps[i + 1] - timestamps[i]) / shells[i][2]);  // = duration_i / nPlanes_i
+    schedule[i].reserve(nPlanes);
+    for(int j = 0ul;j < nPlanes;j++){
+      schedule[i].push_back(timestamps[i]+j*timeStepSize);
+      std::cout << timestamps[i]+j*timeStepSize << " ";
+    }
+    std::cout << std::endl;
   }
 
   idBase += 1000000;
@@ -99,17 +110,19 @@ std::vector<Particle> Constellation::tick() {
       break;
     case Status::inactive:
       // check time and activate if startTime is reached
-      if (simulationTime >= startTime) {
+      if (static_cast<long>(simulationTime) >= startTime) {
         status = Status::active;
+        timeActive = simulationTime - startTime;
+        std::cout << "timeActive for " << constellationName << ": " << timeActive << std::endl;
       } else {
         break;
       }
     case Status::active:
 
-      while (static_cast<double>(timeActive) >=
-             timestamps[currentShellIndex] + planesDeployed * timeSteps[currentShellIndex]) {
+      while (static_cast<double>(timeActive) >= schedule[currentShellIndex][planesDeployed]) {
+        std::cout << "insertion  " << constellationName << ": " << timeActive << std::endl;
         auto planeSize = static_cast<size_t>(shells[currentShellIndex][3]);
-        particles.reserve(planeSize);
+        particles.reserve(particles.capacity()+planeSize);
         for (int i = 0; i < planeSize; i++) {
           particles.push_back(satellites[0]);
           satellites.pop_front();
