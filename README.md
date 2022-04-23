@@ -109,40 +109,27 @@ Data on current satellites etc. is often found [online](https://www.space-track.
 ## Generating and including Constellations
 Satellite constellations (e.g. Starlink, OneWeb) are usually described by a list of orbital shells.
 An orbital shell is described by a 4-tuple with information about `altitude`, `inclination`, `number of
-planes`, and `number of satellites` per plane. We provide a notebook 
-`notebooks/ConstellationGeneration/ConstellationGeneration.ipynb` that can be used 
-to generate constellation data from orbital shell parameters.
+planes`, and `number of satellites` per plane. We provide a notebook
+[`notebooks/ConstellationGeneration/ConstellationGeneration.ipynb`](notebooks/ConstellationGeneration/ConstellationGeneration.ipynb) that can be used
 
-### Generating a constellation (quick guide):
-* Initialize the constellation by executing the first cell and providing metadata in the second cell (1)
-* Create a shell by providing the 4 shell arguments, and further parameters (extra params) if necessary (2.1).
-Store the temporary shell data by executing the cell (2.2)
-* Turn satellites into position and velocity vectors by executing cell (3)
-* Write the files by executing cell (4) and save them by executing cell (5)
+### How constellation satellites are inserted into the simulation
 
-A more detailed guide is included in the notebook.
+The insertion of a constellation takes as long as specified by the `duration`
+parameter in the respective .yaml file. The time it takes to insert one shell of
+a constellation depends on the percentage of satellites the shell contributes to
+the constellation. Satellites of each orbital shell are inserted plane by plane
+and linearly over time.
 
 ### Including the constellation data in simulation (`io` section):
 
-* In the configuration file for the simulation, include the constellation(s) by
-defining `constellationList` and assigning the constellation name(s); Syntax: 
-{name;}name ; e.g. Astra;Starlink;OneWeb
-* `constellationFrequency` (=interval for constellation insertion)
-* `constellationCutoff` (satellites are inserted with a delay, if there is an object within this range)
-* `altitudeSpread` ([km] ~99.74% of satellites with normally distributed altitude deviate
-by less than this value from the mean altitude [altitudeSpread = 3*sigma])
-
-### How constellation satellites are inserted to the simulation
-
-The insertion of a constellation takes as long as specified by the `duration` 
-parameter in the respective .yaml file. The time it takes to insert one shell of 
-a constellation depends on the percentage of satellites the shell contributes to 
-the constellation. Satellites of each orbital shell are inserted plane by plane 
-and linearly over time.
-
-
-
-
+In the configuration file for the simulation, include the constellation(s) by
+defining the following fields:
+*  `constellationList`: Semicolon (`;`) separated list of constellation names. E.g. `Astra;Starlink;OneWeb`
+* `constellationFrequency`: Number of timesteps between constellation insertions.
+* `constellationCutoff`: Satellites are inserted with a delay, if there is an object within this range.
+* `altitudeSpread`: `[km]` Three times the standard deviation of the normal distribution describing
+  the imprecision of orbital insertion. ~99.74% of satellites deviate by less than this value from the
+  mean altitude.
 
 ## Output
 
@@ -178,5 +165,3 @@ To keep file size reasonable compression is supported.
 
 ### CSV
 If HDF5 output is disabled entirely, collision data is written in a `.csv` file in ASCII layout.
-
-

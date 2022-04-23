@@ -117,7 +117,7 @@ std::vector<Constellation> SatelliteLoader::loadConstellations(ConfigReader &con
                        constellationTotalNumSatellites,
                        nConstellations);
 
-    for (auto &c : constellations) {
+    for (const auto &c : constellations) {
       SPDLOG_LOGGER_INFO(
           logger.get(),
           "{}: insertion starts at iteration: {}, is fully deployed within {} iterations, inserts {} satellites",
