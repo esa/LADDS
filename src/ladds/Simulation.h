@@ -133,7 +133,7 @@ class Simulation {
    * @param constellations
    * @return size_t maxExistingParticleId
    */
-  size_t setConstellationIDs(autopas::AutoPas<Particle> &autopas,std::vector<Constellation> &constellations);
+  size_t setConstellationIDs(autopas::AutoPas<Particle> &autopas, std::vector<Constellation> &constellations);
 
   /**
    * Remove all particles below a certain altitude from the particle container.

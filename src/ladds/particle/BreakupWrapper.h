@@ -38,7 +38,7 @@ class BreakupWrapper {
         enforceMassConservation{config.get<bool>("sim/breakup/enforceMassConservation", true)},
         coefficientOfDrag{config.get<double>("sim/prop/coefficientOfDrag")},
         maxExistingParticleId{maxExistingParticleId},
-        autopas{autopas}{};
+        autopas{autopas} {};
 
   void simulateBreakup(const CollisionFunctor::CollisionCollectionT &collisions);
 

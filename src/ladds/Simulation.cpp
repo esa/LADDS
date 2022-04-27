@@ -224,12 +224,12 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
   const auto [hdf5WriteFrequency, hdf5Writer, conjuctionWriter] = initWriter(config);
 
-  //set constellation particle IDs and fetch maxExistingParticleId
-  const size_t maxExistingParticleId = setConstellationIDs(autopas,constellations);
+  // set constellation particle IDs and fetch maxExistingParticleId
+  const size_t maxExistingParticleId = setConstellationIDs(autopas, constellations);
   // only add the breakup model if enabled via yaml
   const std::unique_ptr<BreakupWrapper> breakupWrapper =
-      config.get<bool>("sim/breakup/enabled") ? std::make_unique<BreakupWrapper>(config, autopas, maxExistingParticleId) : nullptr;
-
+      config.get<bool>("sim/breakup/enabled") ? std::make_unique<BreakupWrapper>(config, autopas, maxExistingParticleId)
+                                              : nullptr;
 
   const auto timeout = computeTimeout(config);
 
@@ -366,7 +366,8 @@ std::vector<Particle> Simulation::checkedInsert(autopas::AutoPas<Particle> &auto
   return delayedInsertion;
 }
 
-size_t Simulation::setConstellationIDs(autopas::AutoPas<Particle> &autopas, std::vector<Constellation> &constellations) {
+size_t Simulation::setConstellationIDs(autopas::AutoPas<Particle> &autopas,
+                                       std::vector<Constellation> &constellations) {
   size_t nextBaseId = 0;
   // 1. find highest existing particle id
   // Particles are not sorted by id and might neither be starting by 0 nor be consecutive (e.g. due to burn-ups)
@@ -376,14 +377,12 @@ size_t Simulation::setConstellationIDs(autopas::AutoPas<Particle> &autopas, std:
   }
   nextBaseId += 1;
   // 2. distribute globally unique ids for constellation satellites
-  for(auto &constellation : constellations){
+  for (auto &constellation : constellations) {
     constellation.moveConstellationIds(nextBaseId);
     nextBaseId += constellation.getConstellationSize();
   }
-  //3. return new maxExistingParticleId
+  // 3. return new maxExistingParticleId
   return nextBaseId - 1;
-
-
 }
 
 void Simulation::run(ConfigReader &config) {
