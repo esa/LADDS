@@ -378,7 +378,7 @@ size_t Simulation::setConstellationIDs(autopas::AutoPas<Particle> &autopas,
   nextBaseId += 1;
   // 2. distribute globally unique ids for constellation satellites
   for (auto &constellation : constellations) {
-    constellation.moveConstellationIds(nextBaseId);
+    constellation.moveConstellationIDs(nextBaseId);
     nextBaseId += constellation.getConstellationSize();
   }
   // 3. return new maxExistingParticleId

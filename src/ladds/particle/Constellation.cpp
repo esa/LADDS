@@ -139,7 +139,7 @@ std::vector<Particle> Constellation::tick() {
   return particles;
 }
 
-void Constellation::moveConstellationIds(const size_t baseId) {
+void Constellation::moveConstellationIDs(const size_t baseId) {
   for (auto &satellite : satellites) {
     satellite.setID(baseId + satellite.getID());
   }

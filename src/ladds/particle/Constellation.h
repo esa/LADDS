@@ -45,7 +45,7 @@ class Constellation {
    * (globalId = localId + baseId)
    * @param baseId
    */
-  void moveConstellationIds(const size_t baseId);
+  void moveConstellationIDs(const size_t baseId);
 
   /**
    * Getter for constellationSize = number of satellites in constellation.
