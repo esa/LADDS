@@ -33,6 +33,13 @@ class BreakupWrapper {
     }
   };
 
+  BreakupWrapper(ConfigReader &config, AutoPas_t &autopas, size_t maxExistingParticleId)
+      : minLc{config.get<double>("sim/breakup/minLc", 0.01)},
+        enforceMassConservation{config.get<bool>("sim/breakup/enforceMassConservation", true)},
+        coefficientOfDrag{config.get<double>("sim/prop/coefficientOfDrag")},
+        maxExistingParticleId{maxExistingParticleId},
+        autopas{autopas}{};
+
   void simulateBreakup(const CollisionFunctor::CollisionCollectionT &collisions);
 
  private:

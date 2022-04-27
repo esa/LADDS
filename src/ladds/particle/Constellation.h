@@ -33,31 +33,19 @@ class Constellation {
   Constellation(ConfigReader &constellationConfig, ConfigReader &config);
 
   /**
-   * Sets internal attribute startTime according to the passed date string
-   * startTimeStr.
-   * @param startTime a point in time either in iterations or as a date string. if
-   * the string represents a natural number, it is considered as an iteration
-   * and the string is converted to a number, if it is a date string it is converted
-   * to an iteration timestamp before startTime is set to that value.
-   */
-  void setStartTime(const std::string &startTimeStr, const std::string &refTimeStr);
-
-  /**
-   * Sets internal attribute duration according to the passed string parameter
-   * durationStr.
-   * @param durationStr represents the duration of deployment in either iterations
-   * or days. the parameter is considered as a count of days when its last character
-   * equals 'd' and an iteration count otherwise.
-   */
-  void setDuration(const std::string &durationStr);
-
-  /**
    * Determines which satellites are being added to the simulation by adding each shell
    * within a time span proportional to the shells size. shells are added plane by plane
    * and linearly over time.
    * @return std::vector<Particle> : satellites to be added to the simulation.
    */
   std::vector<Particle> tick();
+
+  /**
+   * Offsets all local constellation IDs by the parameter baseId to create global IDs.
+   * (globalId = localId + baseId)
+   * @param baseId
+   */
+  void moveConstellationIds(const size_t baseId);
 
   /**
    * Getter for constellationSize = number of satellites in constellation.
@@ -104,6 +92,25 @@ class Constellation {
   static std::vector<Particle> readDatasetConstellation(const std::string &positionFilepath,
                                                         const std::string &velocityFilepath,
                                                         double coefficientOfDrag);
+
+  /**
+   * Sets internal attribute startTime according to the passed date string
+   * startTimeStr.
+   * @param startTime a point in time either in iterations or as a date string. if
+   * the string represents a natural number, it is considered as an iteration
+   * and the string is converted to a number, if it is a date string it is converted
+   * to an iteration timestamp before startTime is set to that value.
+   */
+  void setStartTime(const std::string &startTimeStr, const std::string &refTimeStr);
+
+  /**
+   * Sets internal attribute duration according to the passed string parameter
+   * durationStr.
+   * @param durationStr represents the duration of deployment in either iterations
+   * or days. the parameter is considered as a count of days when its last character
+   * equals 'd' and an iteration count otherwise.
+   */
+  void setDuration(const std::string &durationStr);
 
   /**
    * Changes the pos vector by adding a random, normal distributed offset to the altitude
@@ -208,9 +215,4 @@ class Constellation {
    * altitude. uses altitudeDeviation as parameter.
    */
   std::normal_distribution<double> distribution;
-
-  /**
-   * Variable used to give every satellite that is part of a constellation an id.
-   */
-  static size_t idBase;
 };

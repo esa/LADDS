@@ -12,8 +12,6 @@
 #include <iostream>
 #include <string>
 
-size_t Constellation::idBase = 1000000;
-
 std::mt19937 Constellation::generator{42};
 
 Constellation::Constellation(ConfigReader &constellationConfig, ConfigReader &config)
@@ -71,8 +69,6 @@ Constellation::Constellation(ConfigReader &constellationConfig, ConfigReader &co
       schedule[i].push_back(timestamps[i] + j * timeStepSize);
     }
   }
-
-  idBase += 1000000;
 }
 
 void Constellation::setStartTime(const std::string &startTimeStr, const std::string &refTimeStr) {
@@ -143,6 +139,12 @@ std::vector<Particle> Constellation::tick() {
   return particles;
 }
 
+void Constellation::moveConstellationIds(const size_t baseId) {
+  for(auto &satellite : satellites) {
+    satellite.setID(baseId + satellite.getID());
+  }
+}
+
 size_t Constellation::getConstellationSize() const {
   return constellationSize;
 }
@@ -162,7 +164,7 @@ size_t Constellation::getDuration() const {
 std::vector<Particle> Constellation::readDatasetConstellation(const std::string &position_filepath,
                                                               const std::string &velocity_filepath,
                                                               double coefficientOfDrag) {
-  size_t particleId = idBase;
+  size_t particleId = 0;
 
   CSVReader<double, double, double> pos_csvReader{position_filepath, false};
   CSVReader<double, double, double> vel_csvReader{velocity_filepath, false};
