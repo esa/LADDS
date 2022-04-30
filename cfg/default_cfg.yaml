@@ -6,6 +6,7 @@ sim:
     minutes: 0. # as floating points
     hours: 0.   # as floating points
     days: 0.    # as floating points
+  referenceTime: 2022-01-01 # calendar day associated with simulation start at iteration 0 (yyyy/mm/dd)
   maxAltitude: 10000 # Maximum satellite altitude above earth core. This number times two is the simulation box length. [km]
   minAltitude: 150 # Everything below this altitude above ground will be considered burning up [km]
   deltaT: 10.0 # [s]
@@ -43,7 +44,7 @@ io:
     writeFrequency: 1000 # Frequency of writing to the hdf5 file [iterations]
     compressionLevel: 4 # Valid Levels: 0 (no compression) - 9 (max compression)
 
-  #constellationList: AstraPhase2 # ';'-seperated constellations consisting of path (to constellation directory), start time, duration
+  #constellationList: AstraPhase2 # ';'-separated constellations consisting of path (to constellation directory)
   constellationFrequency: 10 # Frequency of adding satellites to simulation [iterations]
   constellationCutoff: 0.1 # satellites of constellations are only inserted when there is no object within constellationCutoff range
   altitudeSpread: 1.0 # [km] normal distributed altitude deviations are usually smaller than this value (~99.74% chance)
