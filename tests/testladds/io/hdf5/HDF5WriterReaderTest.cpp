@@ -43,7 +43,7 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestParticleData) {
   // 2. write data
   constexpr auto filename = "WriteReadTestParticleData.h5";
   constexpr size_t iterationNr = 42;
-  HDF5Writer hdf5Writer(filename, true, 4,{});
+  HDF5Writer hdf5Writer(filename, true, 4, {});
   hdf5Writer.writeParticles(iterationNr, autopas);
 
   // 3. read data and check that read data is equal to generated data
@@ -103,7 +103,7 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestCollisionData) {
   // 2. write data
   constexpr auto filename = "WriteReadTestCollisionData.h5";
   constexpr size_t iterationNr = 42;
-  HDF5Writer hdf5Writer(filename, true, 4,{});
+  HDF5Writer hdf5Writer(filename, true, 4, {});
   hdf5Writer.writeConjunctions(iterationNr, conjunctions);
 
   // 3. read data
@@ -162,7 +162,7 @@ TEST_F(HDF5WriterReaderTest, AppendCheckpointTest) {
   constexpr auto filename = "AppendCheckpointTest.h5";
   constexpr size_t iterationStepA{42};
   {
-    HDF5Writer hdf5WriterReplace(filename, true, 4,{});
+    HDF5Writer hdf5WriterReplace(filename, true, 4, {});
     hdf5WriterReplace.writeParticles(iterationStepA, autopas);
     hdf5WriterReplace.writeConjunctions(iterationStepA, conjunctionsStepA);
   }
@@ -181,7 +181,7 @@ TEST_F(HDF5WriterReaderTest, AppendCheckpointTest) {
                                     Particle::calculateBcInv(0., 1., 1., 2.2)});
   autopas.addParticle(particles.back());
   {
-    HDF5Writer hdf5WriterAppend(filename, false, 4,{});
+    HDF5Writer hdf5WriterAppend(filename, false, 4, {});
     hdf5WriterAppend.writeParticles(iterationStepB, autopas);
     hdf5WriterAppend.writeConjunctions(iterationStepB, conjunctionsStepB);
   }
