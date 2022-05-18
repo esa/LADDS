@@ -29,7 +29,10 @@ class HDF5Writer final : public ConjuctionWriterInterface {
    * @param replace if true replace an existing file, else append.
    * @param compressionLevel
    */
-  HDF5Writer(const std::string &filename, bool replace, unsigned int compressionLevel);
+  HDF5Writer(const std::string &filename,
+             bool replace,
+             unsigned int compressionLevel,
+             const std::set<size_t> &alreadyExistingIds);
 
   ~HDF5Writer() override = default;
 
@@ -49,10 +52,10 @@ class HDF5Writer final : public ConjuctionWriterInterface {
 
  private:
   /**
-   * Highest partilce ID that was written in any previous iteration.
-   * For anything below this ID constant particle properties are already written.
+   * Contains particle IDs in order to add a particles constantProperties only once.
    */
-  HDF5Definitions::IntType maxWrittenParticleID{0};
+  std::set<HDF5Definitions::IntType> addedConstantPropertiesIds{};
+
 #ifdef LADDS_HDF5
   /**
    * Actual file that will be created. All of the data this writer gets ends up in this one file.

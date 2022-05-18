@@ -69,6 +69,11 @@ Constellation::Constellation(ConfigReader &constellationConfig, ConfigReader &co
       schedule[i].push_back(timestamps[i] + j * timeStepSize);
     }
   }
+
+  // if checkpoint is loaded, throw away already inserted satellites
+  if (config.defines("io/hdf5/checkpoint/file")) {
+    tick(config.get<size_t>("io/hdf5/checkpoint/iteration", -1, true));
+  }
 }
 
 void Constellation::setStartTime(const std::string &startTimeStr, const std::string &refTimeStr) {
@@ -95,7 +100,7 @@ void Constellation::setDuration(const std::string &durationStr) {
   }
 }
 
-std::vector<Particle> Constellation::tick() {
+std::vector<Particle> Constellation::tick(size_t simulationTime) {
   std::vector<Particle> particles{};
   switch (status) {
     case Status::deployed:
@@ -135,7 +140,6 @@ std::vector<Particle> Constellation::tick() {
       timeActive += interval;
       break;
   }
-  simulationTime += interval;
   return particles;
 }
 

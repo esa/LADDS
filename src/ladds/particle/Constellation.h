@@ -38,7 +38,7 @@ class Constellation {
    * and linearly over time.
    * @return std::vector<Particle> : satellites to be added to the simulation.
    */
-  std::vector<Particle> tick();
+  std::vector<Particle> tick(size_t simulationTime);
 
   /**
    * Offsets all local constellation IDs by the parameter baseId to create global IDs.

@@ -6,7 +6,7 @@ sim:
     minutes: 0. # as floating points
     hours: 0.   # as floating points
     days: 0.    # as floating points
-  referenceTime: 2022-01-01 # calendar day associated with simulation start at iteration 0 (yyyy/mm/dd)
+  referenceTime: 2022-01-01 # calendar day associated with simulation start at iteration 0 (yyyy-mm-dd)
   maxAltitude: 10000 # Maximum satellite altitude above earth core. This number times two is the simulation box length. [km]
   minAltitude: 150 # Everything below this altitude above ground will be considered burning up [km]
   deltaT: 10.0 # [s]

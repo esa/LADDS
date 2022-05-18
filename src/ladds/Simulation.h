@@ -63,10 +63,11 @@ class Simulation {
   /**
    * Depending on config initialize readers.
    * @param config
+   * @param alreadyExistingIds a list of IDs of already existing particles. Empty if no checkpoint is loaded.
    * @return tuple<hdf5WriteFrequency, hdf5Writer, conjuctionWriter>
    */
   [[nodiscard]] std::tuple<size_t, std::shared_ptr<HDF5Writer>, std::shared_ptr<ConjuctionWriterInterface>> initWriter(
-      ConfigReader &config);
+      ConfigReader &config, std::set<size_t> &alreadyExistingIds);
 
   /**
    * Tick constellation state machines and if applicable insert new satellites as well as delayed ones from previous
@@ -77,11 +78,13 @@ class Simulation {
    * parameter!
    * @param constellationCutoff range parameter for checked insertion: if the insertion would be within a distance
    * of constellationCutoff to any other object the insertion is delayed instead
+   * @param simulationTime the current iteration
    */
   void updateConstellation(AutoPas_t &autopas,
                            std::vector<Constellation> &constellations,
                            std::vector<Particle> &delayedInsertion,
-                           double constellationCutoff);
+                           double constellationCutoff,
+                           size_t simulationTime);
 
   /**
    * Check for collisions / conjunctions and write statistics about them.

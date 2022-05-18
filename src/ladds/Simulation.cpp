@@ -134,7 +134,7 @@ Simulation::initIntegrator(AutoPas_t &autopas, ConfigReader &config) {
 }
 
 std::tuple<size_t, std::shared_ptr<HDF5Writer>, std::shared_ptr<ConjuctionWriterInterface>> Simulation::initWriter(
-    ConfigReader &config) {
+    ConfigReader &config, std::set<size_t> &alreadyExistingIds) {
   if (config.defines("io/hdf5")) {
     std::shared_ptr<HDF5Writer> hdf5Writer;
     const auto hdf5WriteFrequency = config.get<unsigned int>("io/hdf5/writeFrequency", 0u);
@@ -145,7 +145,7 @@ std::tuple<size_t, std::shared_ptr<HDF5Writer>, std::shared_ptr<ConjuctionWriter
       // TODO: Remove DATADIR functionality
       const auto checkpointPath = std::string(DATADIR) + checkpointFileName;
       // compression level already set when file already exists
-      hdf5Writer = std::make_shared<HDF5Writer>(checkpointPath, false, 0);
+      hdf5Writer = std::make_shared<HDF5Writer>(checkpointPath, false, 0, alreadyExistingIds);
     }
     // ... or write to new HDF5 file ....
     if (const auto hdf5FileName = config.get<std::string>("io/hdf5/fileName", ""); not hdf5FileName.empty()) {
@@ -155,7 +155,7 @@ std::tuple<size_t, std::shared_ptr<HDF5Writer>, std::shared_ptr<ConjuctionWriter
             "HDF5Writer already defined!\nProbably both a checkpoint and a HDF5 output file are defined. Please choose "
             "only one.");
       }
-      hdf5Writer = std::make_shared<HDF5Writer>(hdf5FileName, true, hdf5CompressionLvl);
+      hdf5Writer = std::make_shared<HDF5Writer>(hdf5FileName, true, hdf5CompressionLvl, alreadyExistingIds);
     }
     // check that at least something set a filename
     if (not hdf5Writer) {
@@ -172,7 +172,8 @@ std::tuple<size_t, std::shared_ptr<HDF5Writer>, std::shared_ptr<ConjuctionWriter
 void Simulation::updateConstellation(AutoPas_t &autopas,
                                      std::vector<Constellation> &constellations,
                                      std::vector<Particle> &delayedInsertionTotal,
-                                     double constellationCutoff) {
+                                     double constellationCutoff,
+                                     size_t simulationTime) {
   // first insert delayed particles from previous insertion and collect the repeatedly delayed
   delayedInsertionTotal = checkedInsert(autopas, delayedInsertionTotal, constellationCutoff);
   // container collecting delayed particles from one constellation at a time in order to append them to
@@ -180,7 +181,7 @@ void Simulation::updateConstellation(AutoPas_t &autopas,
   std::vector<Particle> delayedInsertion;
   for (auto &constellation : constellations) {
     // new satellites are gradually added to the simulation according to their starting time and operation duration
-    auto newSatellites = constellation.tick();
+    auto newSatellites = constellation.tick(simulationTime);
     delayedInsertion = checkedInsert(autopas, newSatellites, constellationCutoff);
     delayedInsertionTotal.insert(delayedInsertionTotal.end(), delayedInsertion.begin(), delayedInsertion.end());
   }
@@ -222,7 +223,14 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
   const auto vtkWriteFrequency = config.get<size_t>("io/vtk/writeFrequency", 0ul);
 
-  const auto [hdf5WriteFrequency, hdf5Writer, conjuctionWriter] = initWriter(config);
+  // collects particle ids of potential checkpoint. They need to be passed to the HDF5Writer to avoid redundant output.
+  std::set<size_t> alreadyExistingIds{};
+  if (config.defines("io/hdf5/checkpoint/file")) {
+    for (auto &particle : autopas) {
+      alreadyExistingIds.insert(particle.getID());
+    }
+  }
+  const auto [hdf5WriteFrequency, hdf5Writer, conjuctionWriter] = initWriter(config, alreadyExistingIds);
 
   // set constellation particle IDs and fetch maxExistingParticleId
   const size_t maxExistingParticleId = setConstellationIDs(autopas, constellations);
@@ -252,7 +260,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     timers.constellationInsertion.start();
     // new satellites from constellations inserted over time
     if (iteration % constellationInsertionFrequency == 0) {
-      updateConstellation(autopas, constellations, delayedInsertion, constellationCutoff);
+      updateConstellation(autopas, constellations, delayedInsertion, constellationCutoff, iteration);
     }
     timers.constellationInsertion.stop();
 

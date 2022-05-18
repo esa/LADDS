@@ -8,7 +8,10 @@
 
 #include "HDF5Definitions.h"
 
-HDF5Writer::HDF5Writer(const std::string &filename, bool replace, unsigned int compressionLevel)
+HDF5Writer::HDF5Writer(const std::string &filename,
+                       bool replace,
+                       unsigned int compressionLevel,
+                       const std::set<size_t> &alreadyExistingIds)
 #ifdef LADDS_HDF5
     : _file(filename, replace ? h5pp::FilePermission::REPLACE : h5pp::FilePermission::READWRITE),
       collisionInfoH5Type(H5Tcreate(H5T_COMPOUND, sizeof(HDF5Definitions::CollisionInfo))),
@@ -20,6 +23,13 @@ HDF5Writer::HDF5Writer(const std::string &filename, bool replace, unsigned int c
   if (replace) {
     _file.setCompressionLevel(compressionLevel);
   }
+
+  // add ids of previous checkpoint to list of existing particle ids in order to avoid adding duplicate
+  // constantProperties
+  for (auto &id : alreadyExistingIds) {
+    addedConstantPropertiesIds.insert(static_cast<HDF5Definitions::IntType>(id));
+  }
+
   // CollisionInfo
   H5Tinsert(collisionInfoH5Type,
             "idA",
@@ -75,7 +85,6 @@ void HDF5Writer::writeParticles(size_t iteration, const AutoPas_t &autopas) {
   std::vector<HDF5Definitions::Vec3<HDF5Definitions::FloatType>> vecPos;
   std::vector<HDF5Definitions::Vec3<HDF5Definitions::FloatType>> vecVel;
   std::vector<HDF5Definitions::IntType> vecId;
-  HDF5Definitions::IntType maxParticleId{0};
   std::vector<HDF5Definitions::ParticleConstantProperties> newConstantProperties;
 
   vecPos.reserve(autopas.getNumberOfParticles());
@@ -96,11 +105,10 @@ void HDF5Writer::writeParticles(size_t iteration, const AutoPas_t &autopas) {
          static_cast<HDF5Definitions::FloatType>(vel[1]),
          static_cast<HDF5Definitions::FloatType>(vel[2])});
     vecId.emplace_back(id);
-    // track the highest particle id that was written to the file
-    // All particles that have a higher id than the highest id from the last time something was written are new
-    // and their static properties need to be recorded.
-    maxParticleId = std::max(maxParticleId, id);
-    if (maxWrittenParticleID == 0 or id > maxWrittenParticleID) {
+
+    // only add properties not yet added
+    if (addedConstantPropertiesIds.find(id) == addedConstantPropertiesIds.end()) {
+      addedConstantPropertiesIds.insert(id);
       newConstantProperties.emplace_back(
           HDF5Definitions::ParticleConstantProperties{id,
                                                       particle.getIdentifier().c_str(),
@@ -127,7 +135,6 @@ void HDF5Writer::writeParticles(size_t iteration, const AutoPas_t &autopas) {
     _file.appendTableRecords(newConstantProperties, particleConstantPropertiesFullPath);
   }
 
-  maxWrittenParticleID = maxParticleId;
 #endif
 }
 
