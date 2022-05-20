@@ -10,6 +10,7 @@
 #include "ladds/Version.h"
 #include "ladds/io/ConfigReader.h"
 #include "ladds/io/Logger.h"
+#include "autopas/utils/WrapMPI.h"
 
 /**
  * The entrypoint of the program.
@@ -19,6 +20,8 @@
  */
 int main(int argc, char **argv) {
   Logger logger;
+
+  autopas::AutoPas_MPI_Init(&argc, &argv);
 
   // Default config path
   if (argc != 2) {
@@ -38,5 +41,6 @@ int main(int argc, char **argv) {
 
   simulation.run(config);
 
+  autopas::AutoPas_MPI_Finalize();
   return 0;
 }

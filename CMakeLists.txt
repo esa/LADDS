@@ -33,6 +33,7 @@ include(version)
 include(ladds_sanitizers)
 include(ladds_clang-format)
 include(ladds_doxygen)
+include(ladds_mpi)
 
 include(autopas)
 include(propagator)
