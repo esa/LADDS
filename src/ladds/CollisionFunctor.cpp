@@ -119,13 +119,13 @@ void CollisionFunctor::SoAFunctorSingle(autopas::SoAView<SoAArraysType> soa, boo
 void CollisionFunctor::SoAFunctorPair(autopas::SoAView<SoAArraysType> soa1,
                                       autopas::SoAView<SoAArraysType> soa2,
                                       bool newton3) {
-  if (soa1.getNumParticles() == 0 or soa2.getNumParticles() == 0) return;
+  if (soa1.getNumberOfParticles() == 0 or soa2.getNumberOfParticles() == 0) return;
 
   // get pointers to the SoA
   const auto *const __restrict ownedStatePtr1 = soa1.template begin<Particle::AttributeNames::ownershipState>();
 
   // outer loop over SoA1
-  for (size_t i = 0; i < soa1.getNumParticles(); ++i) {
+  for (size_t i = 0; i < soa1.getNumberOfParticles(); ++i) {
     if (ownedStatePtr1[i] == autopas::OwnershipState::dummy) {
       // If the i-th particle is a dummy, skip this loop iteration.
       continue;
@@ -138,7 +138,7 @@ void CollisionFunctor::SoAFunctorPair(autopas::SoAView<SoAArraysType> soa1,
     // alias because OpenMP needs it
     auto &thisCollisions = _threadData[autopas::autopas_get_thread_num()].collisions;
 #pragma omp simd reduction(vecMerge : thisCollisions)
-    for (size_t j = 0; j < soa2.getNumParticles(); ++j) {
+    for (size_t j = 0; j < soa2.getNumberOfParticles(); ++j) {
       SoAKernel(i, j, soa1, soa2, newton3);
     }
   }
