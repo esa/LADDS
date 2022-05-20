@@ -4,7 +4,7 @@
 
 #include "ladds/particle/Particle.h"
 
-namespace DatasetReader {
+namespace LADDS::DatasetReader {
 
 /**
  * Reads the passed position and velocity csv files. Returns a vector of particles.
@@ -13,4 +13,4 @@ namespace DatasetReader {
  * @return
  */
 std::vector<Particle> readDataset(const std::string &csvFilepath, double coefficientOfDrag);
-}  // namespace DatasetReader
+}  // namespace LADDS::DatasetReader

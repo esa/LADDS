@@ -9,6 +9,8 @@
 #include <satellitePropagator/physics/Constants.h>
 #include <satellitePropagator/utils/MathUtils.h>
 
+namespace LADDS {
+
 double Particle::calculateBcInv(double bstar, double mass, double radius, double coefficientOfDrag) {
   if (std::isnan(bstar) or bstar == 0.) {
     // either via c_D
@@ -162,3 +164,5 @@ double Particle::getRadius() const {
 void Particle::setRadius(double radius) {
   Particle::radius = radius;
 }
+
+}  // namespace LADDS

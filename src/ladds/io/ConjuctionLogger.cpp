@@ -8,6 +8,7 @@
 #include <spdlog/async.h>
 
 #include "ConjunctionLogger.h"
+namespace LADDS {
 
 ConjunctionLogger::ConjunctionLogger(const std::string &outputSuffix) {
   const auto outputFileName("conjunctions_" + outputSuffix + autopas::utils::Timer::getDateStamp() + ".csv");
@@ -35,3 +36,5 @@ void ConjunctionLogger::writeConjunctions(size_t iteration, const CollisionFunct
     log(iteration, *p1, *p2, distanceSquare);
   }
 }
+
+}  // namespace LADDS

@@ -8,7 +8,7 @@
 
 #include <string>
 
-namespace HDF5Definitions {
+namespace LADDS::HDF5Definitions {
 constexpr auto groupParticleData = "ParticleData/";
 constexpr auto datasetParticlePositions = "/Particles/Positions";
 constexpr auto datasetParticleVelocities = "/Particles/Velocities";
@@ -57,4 +57,4 @@ struct ParticleConstantProperties {
   FloatType mass{}, radius{}, bcInv{};
   int activityState{};
 };
-}  // namespace HDF5Definitions
+}  // namespace LADDS::HDF5Definitions

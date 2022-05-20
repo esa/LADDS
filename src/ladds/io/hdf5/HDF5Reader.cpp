@@ -8,6 +8,8 @@
 
 #include "HDF5Definitions.h"
 
+namespace LADDS {
+
 HDF5Reader::HDF5Reader(const std::string &filename)
 #ifdef LADDS_HDF5
     : file(filename, h5pp::FilePermission::READONLY)
@@ -86,3 +88,4 @@ size_t HDF5Reader::readLastIterationNr() {
 #endif
   return allIterations.back();
 }
+}  // namespace LADDS

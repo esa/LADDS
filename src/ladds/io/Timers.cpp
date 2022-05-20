@@ -10,6 +10,8 @@
 
 #include "ConfigReader.h"
 
+namespace LADDS {
+
 void Timers::printTimers(ConfigReader &config) const {
   const auto iterations = config.get<size_t>("sim/iterations");
   const auto timeTotal = total.getTotalTime();
@@ -63,3 +65,5 @@ std::string Timers::timerToString(const std::string &name, long timeNS, int numb
   ss << std::endl;
   return ss.str();
 }
+
+}  // namespace LADDS

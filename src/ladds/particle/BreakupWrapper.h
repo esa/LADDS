@@ -14,6 +14,8 @@
 #include "ladds/io/ConfigReader.h"
 #include "ladds/particle/SatelliteToParticleConverter.h"
 
+namespace LADDS {
+
 /**
  * Wrapper class for the NASA Breakup Model.
  * See https://github.com/esa/NASA-breakup-model-cpp
@@ -49,3 +51,5 @@ class BreakupWrapper {
   size_t maxExistingParticleId{0ul};
   AutoPas_t &autopas;
 };
+
+}  // namespace LADDS

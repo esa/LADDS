@@ -11,6 +11,8 @@
 #include "ConjunctionWriterInterface.h"
 #include "ladds/CollisionFunctor.h"
 #include "ladds/particle/Particle.h"
+
+namespace LADDS {
 /**
  * Helper to log data for individual conjunctions to a csv file for easier analysis.
  *
@@ -41,3 +43,5 @@ class ConjunctionLogger final : public ConjuctionWriterInterface {
 
   std::string _loggerName{"conjunctionLogger"};
 };
+
+}  // namespace LADDS

@@ -15,6 +15,8 @@
 #include "HDF5Definitions.h"
 #include "ladds/particle/Particle.h"
 
+namespace LADDS {
+
 class HDF5Reader {
  public:
   explicit HDF5Reader(const std::string &filename);
@@ -43,3 +45,4 @@ class HDF5Reader {
   h5pp::File file;
 #endif
 };
+}  // namespace LADDS

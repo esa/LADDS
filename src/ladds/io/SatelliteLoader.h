@@ -12,7 +12,7 @@
 #include "ladds/particle/Constellation.h"
 #include "yaml-cpp/yaml.h"
 
-namespace SatelliteLoader {
+namespace LADDS::SatelliteLoader {
 /**
  * Load the particles from the input csv files in the config as particles into AutoPas.
  *
@@ -30,4 +30,4 @@ void loadSatellites(AutoPas_t &autopas, ConfigReader &config, const Logger &logg
  */
 std::vector<Constellation> loadConstellations(ConfigReader &config, const Logger &logger);
 
-}  // namespace SatelliteLoader
+}  // namespace LADDS::SatelliteLoader

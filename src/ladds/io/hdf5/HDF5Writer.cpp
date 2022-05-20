@@ -8,6 +8,8 @@
 
 #include "HDF5Definitions.h"
 
+namespace LADDS {
+
 HDF5Writer::HDF5Writer(const std::string &filename, bool replace, unsigned int compressionLevel)
 #ifdef LADDS_HDF5
     : _file(filename, replace ? h5pp::FilePermission::REPLACE : h5pp::FilePermission::READWRITE),
@@ -149,3 +151,5 @@ void HDF5Writer::writeConjunctions(size_t iteration, const CollisionFunctor::Col
   _file.writeDataset(data, group + HDF5Definitions::datasetCollisions, collisionInfoH5Type);
 #endif
 }
+
+}  // namespace LADDS

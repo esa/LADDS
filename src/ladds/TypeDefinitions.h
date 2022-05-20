@@ -10,4 +10,4 @@
 
 #include "ladds/particle/Particle.h"
 
-using AutoPas_t = autopas::AutoPas<Particle>;
+using AutoPas_t = autopas::AutoPas<LADDS::Particle>;

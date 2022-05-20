@@ -8,6 +8,8 @@
 
 #include <satellitePropagator/physics/AccelerationComponents/DragComponent.h>
 
+namespace LADDS {
+
 std::vector<Particle> DatasetReader::readDataset(const std::string &csvFilepath, double coefficientOfDrag) {
   CSVReader<size_t,                   // id
             std::string,              // cosparId
@@ -43,3 +45,4 @@ std::vector<Particle> DatasetReader::readDataset(const std::string &csvFilepath,
 
   return particleCollection;
 }
+}  // namespace LADDS
