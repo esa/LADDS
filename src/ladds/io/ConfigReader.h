@@ -14,6 +14,7 @@
 
 #pragma once
 
+namespace LADDS {
 /**
  * Class that wraps the YAML file, tracks all access into it and can print what was accessed.
  */
@@ -178,3 +179,4 @@ class ConfigReader {
    */
   std::map<std::string, std::string> parsedValues{};
 };
+};  // namespace LADDS

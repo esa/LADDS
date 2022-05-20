@@ -23,6 +23,8 @@
 #include "ladds/particle/Constellation.h"
 #include "ladds/particle/Particle.h"
 
+namespace LADDS {
+
 /**
  * The main simulation class responsible for all high-level logic.
  */
@@ -160,3 +162,5 @@ class Simulation {
    */
   Timers timers{};
 };
+
+}  // namespace LADDS

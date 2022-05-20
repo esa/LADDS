@@ -9,6 +9,8 @@
 #include <fstream>
 #include <iomanip>
 
+namespace LADDS {
+
 YAML::Node ConfigReader::loadConfig(const std::string &cfgFilePath, const Logger &logger) {
   YAML::Node file;
   try {
@@ -59,3 +61,5 @@ void ConfigReader::dumpConfig(const std::string &filename) const {
   file << config << std::endl;
   file.close();
 }
+
+}  // namespace LADDS

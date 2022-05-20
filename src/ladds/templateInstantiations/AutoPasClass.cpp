@@ -11,4 +11,4 @@
 #include "autopas/AutoPasImpl.h"
 #include "ladds/particle/Particle.h"
 
-template class autopas::AutoPas<Particle>;
+template class autopas::AutoPas<LADDS::Particle>;

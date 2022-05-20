@@ -10,6 +10,8 @@
 
 #include "ladds/particle/SatelliteToParticleConverter.h"
 
+namespace LADDS {
+
 template <class T>
 void swapEndianess(T &var) {
   char *varArray = reinterpret_cast<char *>(&var);
@@ -78,3 +80,5 @@ void VTUWriter::writeVTU(size_t iteration, const AutoPas_t &autopas) {
       allParticles.begin(), allParticles.end(), [](const auto &p1, const auto &p2) { return p1.getId() < p2.getId(); });
   vtkWriter.printResult(allParticles);
 }
+
+}  // namespace LADDS

@@ -6,6 +6,8 @@
 
 #include "BreakupWrapper.h"
 
+namespace LADDS {
+
 void BreakupWrapper::simulateBreakup(const CollisionFunctor::CollisionCollectionT &collisions) {
   for (const auto &[p1, p2, dist] : collisions) {
     // convert particles to satellites for breakup code
@@ -31,3 +33,5 @@ void BreakupWrapper::simulateBreakup(const CollisionFunctor::CollisionCollection
     }
   }
 }
+
+}  // namespace LADDS

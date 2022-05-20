@@ -16,6 +16,8 @@
 #include "ladds/TypeDefinitions.h"
 #include "ladds/io/ConjunctionWriterInterface.h"
 
+namespace LADDS {
+
 /**
  * Wrapper for the whole logic of writing the HDF5 file.
  * All data is written in 32 bit precision.
@@ -68,3 +70,4 @@ class HDF5Writer final : public ConjuctionWriterInterface {
   h5pp::hid::h5t particleConstantPropertiesH5Type;
 #endif
 };
+}  // namespace LADDS

@@ -11,6 +11,8 @@
 
 #include "ConfigReader.h"
 
+namespace LADDS {
+
 class Timers {
  public:
   autopas::utils::Timer total{};
@@ -47,3 +49,5 @@ class Timers {
    */
   static constexpr int floatStringPrecision = 3;
 };
+
+}  // namespace LADDS

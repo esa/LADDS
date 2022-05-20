@@ -11,6 +11,7 @@
 
 #include <algorithm>
 
+namespace LADDS {
 CollisionFunctor::CollisionFunctor(double cutoff, double dt, double collisionDistanceFactor, double minDetectionRadius)
     : Functor(cutoff),
       _cutoffSquare(cutoff * cutoff),
@@ -218,3 +219,4 @@ void CollisionFunctor::endTraversal(bool newton3) {
     data.collisions.clear();
   }
 }
+}  // namespace LADDS

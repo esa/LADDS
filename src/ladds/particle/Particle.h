@@ -10,6 +10,9 @@
 
 #include <array>
 #include <ostream>
+
+namespace LADDS {
+
 /**
  * Class describing an arbitrary debris object used for the n-body simulation.
  * Based on the Particle class of AutoPas which used 64bit precision.
@@ -381,3 +384,5 @@ class Particle final : public autopas::ParticleFP64 {
  * @return
  */
 std::istream &operator>>(std::istream &s, Particle::ActivityState &state);
+
+}  // namespace LADDS

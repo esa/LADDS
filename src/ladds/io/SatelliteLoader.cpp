@@ -11,6 +11,8 @@
 #include "Logger.h"
 #include "ladds/io/hdf5/HDF5Reader.h"
 
+namespace LADDS {
+
 void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, const Logger &logger) {
   std::vector<Particle> satellites;
 
@@ -129,3 +131,5 @@ std::vector<Constellation> SatelliteLoader::loadConstellations(ConfigReader &con
   }
   return constellations;
 }
+
+}  // namespace LADDS
