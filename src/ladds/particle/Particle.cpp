@@ -3,11 +3,10 @@
  * @author F. Gratl
  * @date 28.06.21
  */
+#include "Particle.h"
 
 #include <satellitePropagator/physics/Constants.h>
 #include <satellitePropagator/utils/MathUtils.h>
-
-#include "Particle.h"
 
 double Particle::calculateBcInv(double bstar, double mass, double radius, double coefficientOfDrag) {
   if (std::isnan(bstar) or bstar == 0.) {
