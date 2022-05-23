@@ -18,8 +18,9 @@ double Particle::calculateBcInv(double bstar, double mass, double radius, double
     // or via bstar
     // @note see https://en.wikipedia.org/wiki/BSTAR
     // B* == p_0 * c_D * A / (2 m) == bc_inv * p_0 / 2
-    constexpr double p0Inv = 1. / (2.461 * 1e-5 * Physics::R_EARTH);  // 1/(kg/(m^2 * R_EARTH)) == R_EARTH * m^2/kg
-    return bstar * 2. * p0Inv;                                        // m^2/kg
+    // constexpr double p0Inv = 1. / (2.461 * 1e-5 * Physics::R_EARTH);  // 1/(kg/(m^2 * R_EARTH)) == R_EARTH * m^2/kg
+    // return bstar * 2. * p0Inv;                                        // m^2/kg
+    return 2.0 * bstar / (0.1570 / Physics::R_EARTH);
   }
 }
 
@@ -107,6 +108,8 @@ std::ostream &operator<<(std::ostream &os, const Particle &particle) {
   // clang-format off
   os << particle.toString()
      << "\nIdentifier    : " << particle.getIdentifier()
+     << "\nPos          : " << particle.getPosition()[0] << "," << particle.getPosition()[1] << "," <<  particle.getPosition()[2]
+     << "\nVel          : " << particle.getVelocity()[0] << "," << particle.getVelocity()[1] << "," <<  particle.getVelocity()[2]
      << "\nMass          : " << particle.getMass()
      << "\nRadius        : " << particle.getRadius()
      << "\nBcInv         : " << particle.getBcInv()

@@ -237,6 +237,9 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
   config.printParsedValues();
 
+  // for (auto p : autopas)
+  //   std::cout<<std::setprecision(24)<<p<<std::endl;
+
   // in tuning mode ignore the iteration counter
   for (size_t iteration = startingIteration; iteration < iterations or tuningMode; ++iteration) {
     // update positions
@@ -291,6 +294,10 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
         timers.collisionSimulation.stop();
       }
     }
+
+    // for (auto p : autopas)
+    //   std::cout<<std::setprecision(24)<<p<<std::endl;
+
     // check if we hit the timeout and abort the loop if necessary
     if (timeout != 0) {
       // quickly interrupt timers.total to update its internal total time.
