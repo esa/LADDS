@@ -107,8 +107,6 @@ std::ostream &operator<<(std::ostream &os, const Particle &particle) {
   // clang-format off
   os << particle.toString()
      << "\nIdentifier    : " << particle.getIdentifier()
-     << "\nPos          : " << particle.getPosition()[0] << "," << particle.getPosition()[1] << "," <<  particle.getPosition()[2]
-     << "\nVel          : " << particle.getVelocity()[0] << "," << particle.getVelocity()[1] << "," <<  particle.getVelocity()[2]
      << "\nMass          : " << particle.getMass()
      << "\nRadius        : " << particle.getRadius()
      << "\nBcInv         : " << particle.getBcInv()
