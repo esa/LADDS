@@ -1,5 +1,9 @@
 # LADDS - Large-scale Deterministic Debris Simulation
 
+<p align="center">
+<img src="docs/LADDS_Logo.png" alt="LADDS_LOGO" width="300"/>
+</p>
+
 Codebase for the ARIADNA Study between TU Munich and ESA's Advanced Concepts Team. A more detailed project description can be found on the [Advanced Concept Team's webpage](https://www.esa.int/gsp/ACT/projects/debris_hpc/).
 
 ## Requirements
@@ -44,6 +48,33 @@ For an overview of all possible options see [`cfg/default_cfg.yaml`](cfg/default
 a default value which is used when they are left unspecified. The full configuration, including defaulted
 values, is shown in the console output when executing the simulation.
 
+### Checkpoints
+LADDS features a checkpoint mechanic where a simulation can be restarted from an HDF5 file.
+To create a checkpoint the simulation just needs to write an HDF5 file.
+This is done via the following part of the configuration:
+```yaml
+io:
+  csv:
+    fileName: initial_population.csv  # = input
+  hdf5:
+    fileName: checkpointFile.h5       # = output
+    writeFrequency: 100               # how often LADDS writes to HDF5  
+```
+
+The next simulation, which starts from `checkpointFile.h5` then needs to have the following:
+```yaml
+io:
+  hdf5:
+    checkpoint:
+      file: checkpointFile.h5         # = input AND output
+      iteration: 99                   # Iteration where to start from. Will use last if not given.
+    writeFrequency: 100               # how often LADDS writes to HDF5  
+```
+LADDS will append any new data to the checkpoint file. This will load iteration 99 (which is the 100th iteration) 
+from the checkpoint and start the simulation with iteration 100. Note that no `io/csv/fileName` or differing `io/hdf5/fileName` should be provided when loading a checkpoint.
+
+**IMPORTANT**: All file paths are relative to the [`data`](data/) directory!
+
 ## Simulating Breakups
 The code is capable to simulate fatal collisions between two bodies via the 
 [NASA Breakup Model](https://github.com/esa/NASA-breakup-model-cpp). This feature can be activated in
@@ -79,6 +110,31 @@ For this set the CMake variables:  `AUTOPAS_LOG_TUNINGDATA=ON` and `AUTOPAS_LOG_
 ## Processing TLE Input 
 Data on current satellites etc. is often found [online](https://www.space-track.org/) in the [TLE format](https://en.wikipedia.org/wiki/Two-line_element_set). We include a Jupyter notebook which can be used to process TLE data with pykep to create and analyze suitable datasets. Detailed instructions can be found in the notebook in `notebooks/Data Processing.ipynb`.
 
+## Generating and including Constellations
+Satellite constellations (e.g. Starlink, OneWeb) are usually described by a list of orbital shells.
+An orbital shell is described by a 4-tuple with information about `altitude`, `inclination`, `number of
+planes`, and `number of satellites` per plane. We provide a notebook
+[`notebooks/ConstellationGeneration/ConstellationGeneration.ipynb`](notebooks/ConstellationGeneration/ConstellationGeneration.ipynb) that can be used
+
+### How constellation satellites are inserted into the simulation
+
+The insertion of a constellation takes as long as specified by the `duration`
+parameter in the respective .yaml file. The time it takes to insert one shell of
+a constellation depends on the percentage of satellites the shell contributes to
+the constellation. Satellites of each orbital shell are inserted plane by plane
+and linearly over time.
+
+### Including the constellation data in simulation (`io` section):
+
+In the configuration file for the simulation, include the constellation(s) by
+defining the following fields:
+*  `constellationList`: Semicolon (`;`) separated list of constellation names. E.g. `Astra;Starlink;OneWeb`
+* `constellationFrequency`: Number of timesteps between constellation insertions.
+* `constellationCutoff`: Satellites are inserted with a delay, if there is an object within this range.
+* `altitudeSpread`: `[km]` Three times the standard deviation of the normal distribution describing
+  the imprecision of orbital insertion. ~99.74% of satellites deviate by less than this value from the
+  mean altitude.
+
 ## Output
 
 LADDS has multiple options for output that can be (de)activated mostly independent of each other via YAML. See [`cfg/default_cfg.yaml`](cfg/default_cfg.yaml) for relevant options.
@@ -113,4 +169,3 @@ To keep file size reasonable compression is supported.
 
 ### CSV
 If HDF5 output is disabled entirely, collision data is written in a `.csv` file in ASCII layout.
-

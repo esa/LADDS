@@ -61,6 +61,14 @@ class Simulation {
   initIntegrator(AutoPas_t &autopas, ConfigReader &config);
 
   /**
+   * Depending on config initialize readers.
+   * @param config
+   * @return tuple<hdf5WriteFrequency, hdf5Writer, conjuctionWriter>
+   */
+  [[nodiscard]] std::tuple<size_t, std::shared_ptr<HDF5Writer>, std::shared_ptr<ConjuctionWriterInterface>> initWriter(
+      ConfigReader &config);
+
+  /**
    * Tick constellation state machines and if applicable insert new satellites as well as delayed ones from previous
    * launch phase.
    * @param autopas
@@ -118,6 +126,14 @@ class Simulation {
   std::vector<Particle> checkedInsert(autopas::AutoPas<Particle> &autopas,
                                       const std::vector<Particle> &newSatellites,
                                       double constellationCutoff);
+
+  /**
+   * Distributes global IDs for all constellation particles and returns the resulting maxExistingParticleId.
+   * @param autopas
+   * @param constellations
+   * @return size_t maxExistingParticleId
+   */
+  size_t setConstellationIDs(autopas::AutoPas<Particle> &autopas, std::vector<Constellation> &constellations);
 
   /**
    * Remove all particles below a certain altitude from the particle container.

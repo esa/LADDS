@@ -133,6 +133,42 @@ Simulation::initIntegrator(AutoPas_t &autopas, ConfigReader &config) {
   return std::make_tuple<>(std::move(csvWriter), std::move(accumulator), std::move(integrator));
 }
 
+std::tuple<size_t, std::shared_ptr<HDF5Writer>, std::shared_ptr<ConjuctionWriterInterface>> Simulation::initWriter(
+    ConfigReader &config) {
+  if (config.defines("io/hdf5")) {
+    std::shared_ptr<HDF5Writer> hdf5Writer;
+    const auto hdf5WriteFrequency = config.get<unsigned int>("io/hdf5/writeFrequency", 0u);
+    const auto hdf5CompressionLvl = config.get<unsigned int>("io/hdf5/compressionLevel", 0u);
+    // either append to checkpoint ...
+    const auto checkpointFileName = config.get<std::string>("io/hdf5/checkpoint/file", "");
+    if (not checkpointFileName.empty()) {
+      // TODO: Remove DATADIR functionality
+      const auto checkpointPath = std::string(DATADIR) + checkpointFileName;
+      // compression level already set when file already exists
+      hdf5Writer = std::make_shared<HDF5Writer>(checkpointPath, false, 0);
+    }
+    // ... or write to new HDF5 file ....
+    if (const auto hdf5FileName = config.get<std::string>("io/hdf5/fileName", ""); not hdf5FileName.empty()) {
+      // ... but not both!
+      if (not checkpointFileName.empty()) {
+        throw std::runtime_error(
+            "HDF5Writer already defined!\nProbably both a checkpoint and a HDF5 output file are defined. Please choose "
+            "only one.");
+      }
+      hdf5Writer = std::make_shared<HDF5Writer>(hdf5FileName, true, hdf5CompressionLvl);
+    }
+    // check that at least something set a filename
+    if (not hdf5Writer) {
+      throw std::runtime_error(
+          "Config suggests HDF5 should be used (found io/hdf5) but neither a fileName nor a checkpoint to write to is "
+          "defined.");
+    }
+    return {hdf5WriteFrequency, hdf5Writer, hdf5Writer};
+  } else {
+    return {0u, nullptr, std::make_shared<ConjunctionLogger>("")};
+  }
+}
+
 void Simulation::updateConstellation(AutoPas_t &autopas,
                                      std::vector<Constellation> &constellations,
                                      std::vector<Particle> &delayedInsertionTotal,
@@ -165,13 +201,17 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                                   std::vector<Constellation> &constellations,
                                   ConfigReader &config) {
   const auto tuningMode = config.get<bool>("autopas/tuningMode", false);
-  const auto iterations = config.get<size_t>("sim/iterations");
   const auto constellationInsertionFrequency = config.get<int>("io/constellationFrequency", 1);
   const auto constellationCutoff = config.get<double>("io/constellationCutoff", 0.1);
   const auto progressOutputFrequency = config.get<int>("io/progressOutputFrequency", 50);
   const auto deltaT = config.get<double>("sim/deltaT");
   const auto collisionDistanceFactor = config.get<double>("sim/collisionDistanceFactor", 1.);
   const auto timestepsPerCollisionDetection = config.get<size_t>("sim/timestepsPerCollisionDetection", 1);
+  // if we start from a checkpoint we want to start at the checkpoint iteration +1
+  // otherwise we start at iteration 0.
+  const auto startingIteration =
+      config.defines("io/hdf5", true) ? config.get<size_t>("io/hdf5/checkpoint/iteration", -1, true) + 1 : 0;
+  const auto iterations = config.get<size_t>("sim/iterations") + startingIteration;
   if (timestepsPerCollisionDetection < 1) {
     SPDLOG_LOGGER_CRITICAL(
         logger.get(), "sim/timestepsPerCollisionDetection is {} but must not be <1!", timestepsPerCollisionDetection);
@@ -182,24 +222,14 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
   const auto vtkWriteFrequency = config.get<size_t>("io/vtk/writeFrequency", 0ul);
 
-  auto hdf5WriteFrequency = 0u;
+  const auto [hdf5WriteFrequency, hdf5Writer, conjuctionWriter] = initWriter(config);
 
-  std::shared_ptr<HDF5Writer> hdf5Writer;
-  std::shared_ptr<ConjuctionWriterInterface> conjuctionWriter;
-  if (config.defines("io/hdf5")) {
-    hdf5WriteFrequency = config.get<unsigned int>("io/hdf5/writeFrequency", 0u);
-    const auto hdf5CompressionLvl = config.get<unsigned int>("io/hdf5/compressionLevel", 0u);
-    const auto hdf5FileName = config.get<std::string>("io/hdf5/fileName", "simulationData.h5");
-
-    hdf5Writer = std::make_shared<HDF5Writer>(hdf5FileName, hdf5CompressionLvl);
-    conjuctionWriter = hdf5Writer;
-  } else {
-    conjuctionWriter = std::make_shared<ConjunctionLogger>("");
-  }
-
+  // set constellation particle IDs and fetch maxExistingParticleId
+  const size_t maxExistingParticleId = setConstellationIDs(autopas, constellations);
   // only add the breakup model if enabled via yaml
   const std::unique_ptr<BreakupWrapper> breakupWrapper =
-      config.get<bool>("sim/breakup/enabled") ? std::make_unique<BreakupWrapper>(config, autopas) : nullptr;
+      config.get<bool>("sim/breakup/enabled") ? std::make_unique<BreakupWrapper>(config, autopas, maxExistingParticleId)
+                                              : nullptr;
 
   const auto timeout = computeTimeout(config);
 
@@ -208,7 +238,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
   config.printParsedValues();
 
   // in tuning mode ignore the iteration counter
-  for (size_t i = 0ul; i < iterations or tuningMode; ++i) {
+  for (size_t iteration = startingIteration; iteration < iterations or tuningMode; ++iteration) {
     // update positions
     timers.integrator.start();
     integrator.integrate(false);
@@ -221,7 +251,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
     timers.constellationInsertion.start();
     // new satellites from constellations inserted over time
-    if (i % constellationInsertionFrequency == 0) {
+    if (iteration % constellationInsertionFrequency == 0) {
       updateConstellation(autopas, constellations, delayedInsertion, constellationCutoff);
     }
     timers.constellationInsertion.stop();
@@ -234,10 +264,10 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
     // sanity check
     if (not escapedParticles.empty()) {
-      SPDLOG_LOGGER_ERROR(logger.get(), "Particles are escaping! \n{}", escapedParticles);
+      SPDLOG_LOGGER_ERROR(logger.get(), "It {} Particles are escaping! \n{}", iteration, escapedParticles);
     }
 
-    if (i % timestepsPerCollisionDetection == 0) {
+    if (iteration % timestepsPerCollisionDetection == 0) {
       timers.collisionDetection.start();
       auto [collisions, stillTuning] = collisionDetection(autopas,
                                                           deltaT * static_cast<double>(timestepsPerCollisionDetection),
@@ -252,7 +282,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
       timers.collisionWriting.start();
       totalConjunctions += collisions.size();
-      conjuctionWriter->writeConjunctions(i, collisions);
+      conjuctionWriter->writeConjunctions(iteration, collisions);
       timers.collisionWriting.stop();
 
       if (breakupWrapper and not collisions.empty()) {
@@ -261,7 +291,6 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
         timers.collisionSimulation.stop();
       }
     }
-
     // check if we hit the timeout and abort the loop if necessary
     if (timeout != 0) {
       // quickly interrupt timers.total to update its internal total time.
@@ -275,26 +304,26 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                            secondsSinceStart,
                            timeout);
         // set the config to the number of completed iterations (hence no +/-1) for the timer calculations.
-        config.setValue("sim/iterations", i);
-        // abort the loop by increasing i. This also leads to triggering the visualization
-        i = iterations;
+        config.setValue("sim/iterations", iteration);
+        // abort the loop by increasing the loop counter. This also leads to triggering the visualization
+        iteration = iterations - 1;
       }
     }
 
     timers.output.start();
-    if (i % progressOutputFrequency == 0 or i == (iterations - 1)) {
+    if (iteration % progressOutputFrequency == 0 or iteration == (iterations - 1)) {
       SPDLOG_LOGGER_INFO(logger.get(),
                          "It {} | Total particles: {} | Total conjunctions: {}",
-                         i,
+                         iteration,
                          autopas.getNumberOfParticles(),
                          totalConjunctions);
     }
     // Visualization:
-    if (vtkWriteFrequency and (i % vtkWriteFrequency == 0 or i == (iterations - 1))) {
-      VTUWriter::writeVTU(i, autopas);
+    if (vtkWriteFrequency and (iteration % vtkWriteFrequency == 0 or iteration == (iterations - 1))) {
+      VTUWriter::writeVTU(iteration, autopas);
     }
-    if (hdf5WriteFrequency and (i % hdf5WriteFrequency == 0 or i == (iterations - 1))) {
-      hdf5Writer->writeParticles(i, autopas);
+    if (hdf5WriteFrequency and (iteration % hdf5WriteFrequency == 0 or iteration == (iterations - 1))) {
+      hdf5Writer->writeParticles(iteration, autopas);
     }
     timers.output.stop();
   }
@@ -336,6 +365,25 @@ std::vector<Particle> Simulation::checkedInsert(autopas::AutoPas<Particle> &auto
   return delayedInsertion;
 }
 
+size_t Simulation::setConstellationIDs(autopas::AutoPas<Particle> &autopas,
+                                       std::vector<Constellation> &constellations) {
+  size_t nextBaseId = 0;
+  // 1. find highest existing particle id
+  // Particles are not sorted by id and might neither be starting by 0 nor be consecutive (e.g. due to burn-ups)
+  // therefore we have to go through all of them
+  for (const auto &p : autopas) {
+    nextBaseId = std::max(nextBaseId, p.getID());
+  }
+  nextBaseId += 1;
+  // 2. distribute globally unique ids for constellation satellites
+  for (auto &constellation : constellations) {
+    constellation.moveConstellationIDs(nextBaseId);
+    nextBaseId += constellation.getConstellationSize();
+  }
+  // 3. return new maxExistingParticleId
+  return nextBaseId - 1;
+}
+
 void Simulation::run(ConfigReader &config) {
   timers.total.start();
 
@@ -368,7 +416,7 @@ void Simulation::dumpCalibratedConfig(ConfigReader &config, const AutoPas_t &aut
 void Simulation::deleteBurnUps(autopas::AutoPas<Particle> &autopas, double burnUpAltitude) const {
   const auto critAltitude = burnUpAltitude + Physics::R_EARTH;
   const auto critAltitudeSquared = critAltitude * critAltitude;
-  // TODO: check if it worthwhile to do this in parallel
+#pragma omp parallel
   for (auto particleIter = autopas.getRegionIterator({-critAltitude, -critAltitude, -critAltitude},
                                                      {critAltitude, critAltitude, critAltitude});
        particleIter != autopas.end();

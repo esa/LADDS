@@ -20,6 +20,7 @@ void Timers::printTimers(ConfigReader &config) const {
       "  Initialization            ", initialization.getTotalTime(), maximumNumberOfDigits, timeTotal);
   std::cout << timerToString("  Simulation                ", timeSim, maximumNumberOfDigits, timeTotal);
   std::cout << timerToString("    Integrator              ", integrator.getTotalTime(), maximumNumberOfDigits, timeSim);
+  std::cout << timerToString("    Resolving Burn ups      ", burnUps.getTotalTime(), maximumNumberOfDigits, timeSim);
   std::cout << timerToString(
       "    Constellation insertion ", constellationInsertion.getTotalTime(), maximumNumberOfDigits, timeSim);
   std::cout << timerToString(

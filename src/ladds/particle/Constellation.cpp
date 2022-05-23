@@ -14,66 +14,84 @@
 
 std::mt19937 Constellation::generator{42};
 
-Constellation::Constellation(const std::string &constellation_data_str,
-                             size_t interval,
-                             double altitudeDeviation,
-                             double coefficientOfDrag)
-    : interval(interval), altitudeDeviation(altitudeDeviation), distribution(0., altitudeDeviation) {
-  // split the 3 comma seperated arguments
-  auto seperator1 = constellation_data_str.find(',', 0);
-  auto seperator2 = constellation_data_str.find(',', seperator1 + 1);
+Constellation::Constellation(ConfigReader &constellationConfig, ConfigReader &config)
+    : constellationName(constellationConfig.get<std::string>("constellation/name")),
+      interval(config.get<size_t>("io/constellationFrequency", 1)),
+      deltaT(config.get<double>("sim/deltaT")),
+      /* altitudeSpread = 3 * sigma */
+      distribution(std::normal_distribution<double>(0, config.get<double>("io/altitudeSpread", 0.0) / 3.0)) {
+  const auto coefficientOfDrag = config.get<double>("sim/prop/coefficientOfDrag");
 
-  // argDirPath s1 argStartTime s2  argDuration    // n: 4
-  // a   b   c   d   ,   e   f   ,   g   h   i   // n: 7-4-1=2
-  // 0   1   2   3   4   5   6   7   8   9   10  // n: 11-7-1=3
-  std::string argConstellationName = constellation_data_str.substr(0, seperator1);
-  std::string argStartTime = constellation_data_str.substr(seperator1 + 1, seperator2 - seperator1 - 1);
-  std::string argDuration =
-      constellation_data_str.substr(seperator2 + 1, constellation_data_str.size() - seperator2 - 1);
+  // set constellations insertion start and duration
+  setStartTime(constellationConfig.get<std::string>("constellation/startTime"),
+               config.get<std::string>("sim/referenceTime"));
+  setDuration(constellationConfig.get<std::string>("constellation/duration"));
 
-  // set variables using 3 args
   std::vector<Particle> sats =
-      readDatasetConstellation(std::string(DATADIR) + argConstellationName + "/pos_" + argConstellationName + ".csv",
-                               std::string(DATADIR) + argConstellationName + "/v_" + argConstellationName + ".csv",
+      readDatasetConstellation(std::string(DATADIR) + constellationName + "/pos_" + constellationName + ".csv",
+                               std::string(DATADIR) + constellationName + "/v_" + constellationName + ".csv",
                                coefficientOfDrag);
-
-  // convert vector to deque
+  // convert vector to deque and add noise to altitude
   constellationSize = sats.size();
   for (size_t i = 0ul; i < constellationSize; ++i) {
     sats[i].setPosition(randomDisplacement(sats[i].getPosition()));
     satellites.push_back(sats[i]);
   }
 
-  startTime = std::stoi(argStartTime);
-  duration = std::stoi(argDuration);
-
-  std::ifstream shellParameters(std::string(DATADIR) + argConstellationName + "/shells_" + argConstellationName +
-                                ".txt");
-  std::string tmp_string;
-  std::getline(shellParameters, tmp_string);
-  double altitude, inclination, nPlanes, satsPerPlane;
-  while (!tmp_string.empty()) {
-    std::istringstream numStream(tmp_string);
-    numStream >> altitude;
-    numStream >> inclination;
-    numStream >> nPlanes;
-    numStream >> satsPerPlane;
-    shells.emplace_back<std::array<double, 4>>({altitude, inclination, nPlanes, satsPerPlane});
-    std::getline(shellParameters, tmp_string);
+  const auto nShells = constellationConfig.get<int>("constellation/nShells");
+  for (int i = 1; i <= nShells; i++) {
+    std::string attribute = "shell" + std::to_string(i);
+    shells.emplace_back<std::array<double, 4>>({constellationConfig.get<double>(attribute + "/altitude"),
+                                                constellationConfig.get<double>(attribute + "/inclination"),
+                                                constellationConfig.get<double>(attribute + "/nPlanes"),
+                                                constellationConfig.get<double>(attribute + "/nSats")});
   }
-  shellParameters.close();
 
   // determine times when each shell has its deployment started
   double timestamp = 0;
+  std::vector<double> timestamps;
+  timestamps.reserve(nShells + 1);
   timestamps.push_back(0);
-  for (auto [alt, i, planes, nSats] : shells) {
+
+  for (const auto [alt, i, planes, nSats] : shells) {
     timestamp += (planes * nSats / static_cast<double>(constellationSize)) * static_cast<double>(duration);
     timestamps.push_back(timestamp);
   }
 
-  // for each shell determine the interval a new plane is added, each shell has its own timestep
-  for (size_t i = 0ul; i < timestamps.size() - 1; ++i) {
-    timeSteps.push_back((timestamps[i + 1] - timestamps[i]) / shells[i][2]);  // = duration_i / nPlanes_i
+  // calculate schedule with launch times for each plane in constellation
+  schedule.resize(nShells);
+  for (int i = 0ul; i < timestamps.size() - 1; ++i) {
+    int nPlanes = static_cast<int>(shells[i][2]);
+    double timeStepSize = (timestamps[i + 1] - timestamps[i]) / nPlanes;
+
+    schedule[i].reserve(nPlanes);
+    for (int j = 0ul; j < nPlanes; j++) {
+      schedule[i].push_back(timestamps[i] + j * timeStepSize);
+    }
+  }
+}
+
+void Constellation::setStartTime(const std::string &startTimeStr, const std::string &refTimeStr) {
+  // date string
+  if (startTimeStr.find('-') != std::string::npos) {
+    std::array<int, 3> dateArrayStart = parseDatestring(startTimeStr);
+    std::array<int, 3> dateArrayRef = parseDatestring(refTimeStr);
+    struct tm stm = {0, 0, 0, dateArrayStart[2], dateArrayStart[1] - 1, dateArrayStart[0]};
+    struct tm t0 = {0, 0, 0, dateArrayRef[2], dateArrayRef[1] - 1, dateArrayRef[0]};
+
+    time_t stime = std::mktime(&stm) - std::mktime(&t0);
+    startTime = static_cast<long>(static_cast<double>(stime) / deltaT);
+    return;
+  }
+  // iteration
+  startTime = std::stoi(startTimeStr);
+}
+
+void Constellation::setDuration(const std::string &durationStr) {
+  if (durationStr[durationStr.size() - 1] == 'd') {
+    duration = static_cast<size_t>(24 * 60 * 60 * std::stoi(durationStr.substr(0, durationStr.size() - 1)) / deltaT);
+  } else {
+    duration = std::stoi(durationStr);
   }
 }
 
@@ -85,17 +103,17 @@ std::vector<Particle> Constellation::tick() {
       break;
     case Status::inactive:
       // check time and activate if startTime is reached
-      if (simulationTime >= startTime) {
+      if (static_cast<long>(simulationTime) >= startTime) {
         status = Status::active;
+        timeActive = simulationTime - startTime;
       } else {
         break;
       }
     case Status::active:
-
-      while (static_cast<double>(timeActive) >=
-             timestamps[currentShellIndex] + planesDeployed * timeSteps[currentShellIndex]) {
-        int planeSize = static_cast<int>(shells[currentShellIndex][3]);
-        particles.reserve(planeSize);
+      // inserting scheduled particles
+      while (static_cast<double>(timeActive) >= schedule[currentShellIndex][planesDeployed]) {
+        auto planeSize = static_cast<size_t>(shells[currentShellIndex][3]);
+        particles.reserve(particles.capacity() + planeSize);
         for (int i = 0; i < planeSize; i++) {
           particles.push_back(satellites[0]);
           satellites.pop_front();
@@ -121,13 +139,33 @@ std::vector<Particle> Constellation::tick() {
   return particles;
 }
 
+void Constellation::moveConstellationIDs(const size_t baseId) {
+  for (auto &satellite : satellites) {
+    satellite.setID(baseId + satellite.getID());
+  }
+}
+
 size_t Constellation::getConstellationSize() const {
   return constellationSize;
+}
+
+std::string Constellation::getConstellationName() const {
+  return constellationName;
+}
+
+long Constellation::getStartTime() const {
+  return startTime;
+}
+
+size_t Constellation::getDuration() const {
+  return duration;
 }
 
 std::vector<Particle> Constellation::readDatasetConstellation(const std::string &position_filepath,
                                                               const std::string &velocity_filepath,
                                                               double coefficientOfDrag) {
+  size_t particleId = 0;
+
   CSVReader<double, double, double> pos_csvReader{position_filepath, false};
   CSVReader<double, double, double> vel_csvReader{velocity_filepath, false};
   std::vector<Particle> particleCollection;
@@ -142,7 +180,6 @@ std::vector<Particle> Constellation::readDatasetConstellation(const std::string 
 
   particleCollection.reserve(positions.size());
 
-  size_t particleId = 0;
   std::transform(positions.begin(),
                  positions.end(),
                  velocities.begin(),
@@ -176,4 +213,15 @@ std::array<double, 3> Constellation::randomDisplacement(const std::array<double,
   double offset = distribution(generator);
   // npos = pos + offset * u
   return autopas::utils::ArrayMath::add(pos, autopas::utils::ArrayMath::mulScalar(unitVector, offset));
+}
+
+std::array<int, 3> Constellation::parseDatestring(const std::string &dateStr) {
+  std::array<int, 3> dateArray{};
+  std::string currentStr = dateStr;
+  for (auto &dateField : dateArray) {
+    const size_t currentIdx = std::min(currentStr.find('-'), currentStr.size());
+    dateField = std::stoi(currentStr.substr(0, currentIdx));
+    currentStr = currentStr.erase(0, currentIdx + 1);
+  }
+  return dateArray;
 }

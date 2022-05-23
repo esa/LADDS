@@ -8,15 +8,18 @@
 
 #include "HDF5Definitions.h"
 
-HDF5Writer::HDF5Writer(const std::string &filename, unsigned int compressionLevel)
+HDF5Writer::HDF5Writer(const std::string &filename, bool replace, unsigned int compressionLevel)
 #ifdef LADDS_HDF5
-    : _file(filename, h5pp::FilePermission::REPLACE),
+    : _file(filename, replace ? h5pp::FilePermission::REPLACE : h5pp::FilePermission::READWRITE),
       collisionInfoH5Type(H5Tcreate(H5T_COMPOUND, sizeof(HDF5Definitions::CollisionInfo))),
       particleConstantPropertiesH5Type(H5Tcreate(H5T_COMPOUND, sizeof(HDF5Definitions::ParticleConstantProperties)))
 #endif
 {
 #ifdef LADDS_HDF5
-  _file.setCompressionLevel(compressionLevel);
+  // if the file already exists we don't need to set a compression level
+  if (replace) {
+    _file.setCompressionLevel(compressionLevel);
+  }
   // CollisionInfo
   H5Tinsert(collisionInfoH5Type,
             "idA",
