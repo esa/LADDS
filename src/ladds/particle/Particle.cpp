@@ -4,10 +4,10 @@
  * @date 28.06.21
  */
 
-#include "Particle.h"
-
 #include <satellitePropagator/physics/Constants.h>
 #include <satellitePropagator/utils/MathUtils.h>
+
+#include "Particle.h"
 
 double Particle::calculateBcInv(double bstar, double mass, double radius, double coefficientOfDrag) {
   if (std::isnan(bstar) or bstar == 0.) {
@@ -18,8 +18,7 @@ double Particle::calculateBcInv(double bstar, double mass, double radius, double
     // or via bstar
     // @note see https://en.wikipedia.org/wiki/BSTAR
     // B* == p_0 * c_D * A / (2 m) == bc_inv * p_0 / 2
-    // constexpr double p0Inv = 1. / (2.461 * 1e-5 * Physics::R_EARTH);  // 1/(kg/(m^2 * R_EARTH)) == R_EARTH * m^2/kg
-    // return bstar * 2. * p0Inv;                                        // m^2/kg
+    // Thus we factor out p0 (=0.1570), convert to m (original bstar is in Earth radii) and the factor 2
     return 2.0 * bstar / (0.1570 / Physics::R_EARTH);
   }
 }
