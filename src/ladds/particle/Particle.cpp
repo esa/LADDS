@@ -17,7 +17,8 @@ double Particle::calculateBcInv(double bstar, double mass, double radius, double
     // or via bstar
     // @note see https://en.wikipedia.org/wiki/BSTAR
     // B* == p_0 * c_D * A / (2 m) == bc_inv * p_0 / 2
-    // Thus we factor out p0 (=0.1570), convert to m (original bstar is in Earth radii) and the factor 2
+    // Thus we factor out p0 (=0.1570), convert to m (original bstar is in Earth radii) and the factor 2 comes
+    // from the propagator still having a 1/2 multiplication term included which is already accounted for in BSTAR
     return 2.0 * bstar * Physics::R_EARTH / 0.1570;
   }
 }
