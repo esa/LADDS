@@ -216,7 +216,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     SPDLOG_LOGGER_CRITICAL(
         logger.get(), "sim/timestepsPerCollisionDetection is {} but must not be <1!", timestepsPerCollisionDetection);
   }
-  const auto minDetectionRadius = config.get<double>("sim/minDetectionRadius", 0.1);
+  const auto minDetectionRadius = config.get<double>("sim/minDetectionRadius", 0.05);
   const auto minAltitude = config.get<double>("sim/minAltitude", 150.);
   std::vector<Particle> delayedInsertion;
 
