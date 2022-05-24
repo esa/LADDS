@@ -36,7 +36,7 @@ TEST_F(BreakupWrapperTest, testSimulationLoop) {
   // dummy
   std::vector<LADDS::Constellation> constellations;
   // do one loop where we expect a breakup to happen
-  simulation.simulationLoop(*autopas, *integrator, constellations, *configReader);
+  simulation.simulationLoop(*autopas, *integrator, constellations, *configReader, *decomposition);
 
   // expect more particles than before
   EXPECT_GT(autopas->getNumberOfParticles(), 2);

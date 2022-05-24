@@ -123,7 +123,7 @@ TEST_F(SimulationTest, testBurnUp) {
   // dummy because interface requires it
   std::vector<LADDS::Constellation> constellations{};
   // do one iteration where the burnup is expected to happen
-  simulation.simulationLoop(*autopas, *integrator, constellations, *configReader);
+  simulation.simulationLoop(*autopas, *integrator, constellations, *configReader, *decomposition);
 
   EXPECT_EQ(autopas->getNumberOfParticles(), 1) << "Exactly one particle should have burnt up!";
   EXPECT_EQ(autopas->begin()->getID(), 1) << "Remaining particle has unexpected Id!";
@@ -165,7 +165,8 @@ TEST_F(SimulationTest, testTimestepsPerCollisionDetection) {
     configReader->setValue("sim/timestepsPerCollisionDetection", 2);
     // dummy because interface requires it
     std::vector<LADDS::Constellation> constellations{};
-    const auto conjunctions = simulation.simulationLoop(*autopas, *integrator, constellations, *configReader);
+    const auto conjunctions =
+        simulation.simulationLoop(*autopas, *integrator, constellations, *configReader, *decomposition);
     constexpr auto errorString{"Unexpected number of conjunctions in iterations "};
     switch (iterations) {
       case 1:

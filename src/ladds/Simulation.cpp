@@ -18,9 +18,11 @@
 #include "ladds/io/ConjunctionLogger.h"
 #include "ladds/io/SatelliteLoader.h"
 #include "ladds/io/VTUWriter.h"
+#include "ladds/io/decompositionLogging/RegularGridDecompositionLogger.h"
 #include "ladds/io/hdf5/HDF5Writer.h"
 #include "ladds/particle/BreakupWrapper.h"
 #include "ladds/particle/Constellation.h"
+#include "ladds/distributedMemParallelization/RegularGridDecomposition.h"
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
 extern template class autopas::AutoPas<LADDS::Particle>;
@@ -52,7 +54,7 @@ void setAutoPasOption(ConfigReader &config,
 }
 }  // namespace
 
-std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config) {
+std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config, DomainDecomposition &domainDecomp) {
   auto autopas = std::make_unique<AutoPas_t>();
 
   const auto maxAltitude = config.get<double>("sim/maxAltitude");
@@ -66,13 +68,14 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config) {
 
   SPDLOG_LOGGER_DEBUG(logger.get(), "Verlet Skin: {}", verletSkin);
 
-  autopas->setBoxMin({-maxAltitude, -maxAltitude, -maxAltitude});
-  autopas->setBoxMax({maxAltitude, maxAltitude, maxAltitude});
+  autopas->setBoxMin(domainDecomp.getLocalBoxMin());
+  autopas->setBoxMax(domainDecomp.getLocalBoxMax());
   autopas->setCutoff(cutoff);
   autopas->setVerletSkin(verletSkin);
   autopas->setVerletRebuildFrequency(verletRebuildFrequency);
   // Scale Cell size so that we get the desired number of cells
   // -2 because internally there will be two halo cells added on top of maxAltitude
+  // FIXME: adapt calculation of CSF to MPI
   autopas->setCellSizeFactor((maxAltitude * 2.) / ((cutoff + verletSkin) * (desiredCellsPerDimension - 2)));
 
   // hardcode values that seem to be optimal
@@ -201,7 +204,8 @@ std::tuple<CollisionFunctor::CollisionCollectionT, bool> Simulation::collisionDe
 size_t Simulation::simulationLoop(AutoPas_t &autopas,
                                   YoshidaIntegrator<AutoPas_t> &integrator,
                                   std::vector<Constellation> &constellations,
-                                  ConfigReader &config) {
+                                  ConfigReader &config,
+                                  DomainDecomposition &domainDecomposition) {
   const auto tuningMode = config.get<bool>("autopas/tuningMode", false);
   const auto constellationInsertionFrequency = config.get<int>("io/constellationFrequency", 1);
   const auto constellationCutoff = config.get<double>("io/constellationCutoff", 0.1);
@@ -211,9 +215,8 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
   const auto timestepsPerCollisionDetection = config.get<size_t>("sim/timestepsPerCollisionDetection", 1);
   // if we start from a checkpoint we want to start at the checkpoint iteration +1
   // otherwise we start at iteration 0.
-  const auto startingIteration =
-      config.defines("io/hdf5", true) ? config.get<size_t>("io/hdf5/checkpoint/iteration", -1, true) + 1 : 0;
-  const auto iterations = config.get<size_t>("sim/iterations") + startingIteration;
+  const auto startingIteration = config.getFirstIterationNr();
+  const auto lastIteration = config.getLastIterationNr();
   if (timestepsPerCollisionDetection < 1) {
     SPDLOG_LOGGER_CRITICAL(
         logger.get(), "sim/timestepsPerCollisionDetection is {} but must not be <1!", timestepsPerCollisionDetection);
@@ -237,10 +240,19 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
   size_t totalConjunctions{0ul};
 
+  std::unique_ptr<DecompositionLogger> decompositionLogger{};
+
+  if(const auto *regularGridDecomp = dynamic_cast<const RegularGridDecomposition *>(&domainDecomposition)) {
+    decompositionLogger = std::make_unique<RegularGridDecompositionLogger>(config, *regularGridDecomp);
+  } else {
+    throw std::runtime_error(
+        "No decomposition logger associated with the chosen decomposition!");
+  }
+
   config.printParsedValues();
 
   // in tuning mode ignore the iteration counter
-  for (size_t iteration = startingIteration; iteration < iterations or tuningMode; ++iteration) {
+  for (size_t iteration = startingIteration; iteration <= lastIteration or tuningMode; ++iteration) {
     // update positions
     timers.integrator.start();
     integrator.integrate(false);
@@ -308,12 +320,12 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
         // set the config to the number of completed iterations (hence no +/-1) for the timer calculations.
         config.setValue("sim/iterations", iteration);
         // abort the loop by increasing the loop counter. This also leads to triggering the visualization
-        iteration = iterations - 1;
+        iteration = lastIteration;
       }
     }
 
     timers.output.start();
-    if (iteration % progressOutputFrequency == 0 or iteration == (iterations - 1)) {
+    if (iteration % progressOutputFrequency == 0 or iteration == lastIteration) {
       SPDLOG_LOGGER_INFO(logger.get(),
                          "It {} | Total particles: {} | Total conjunctions: {}",
                          iteration,
@@ -321,10 +333,12 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                          totalConjunctions);
     }
     // Visualization:
-    if (vtkWriteFrequency and (iteration % vtkWriteFrequency == 0 or iteration == (iterations - 1))) {
+    if (vtkWriteFrequency and (iteration % vtkWriteFrequency == 0 or iteration == lastIteration)) {
       VTUWriter::writeVTU(iteration, autopas);
+      decompositionLogger->writeMetafile(iteration);
+      decompositionLogger->writePayload(iteration, autopas.getCurrentConfig());
     }
-    if (hdf5WriteFrequency and (iteration % hdf5WriteFrequency == 0 or iteration == (iterations - 1))) {
+    if (hdf5WriteFrequency and (iteration % hdf5WriteFrequency == 0 or iteration == lastIteration)) {
       hdf5Writer->writeParticles(iteration, autopas);
     }
     timers.output.stop();
@@ -390,7 +404,8 @@ void Simulation::run(ConfigReader &config) {
   timers.total.start();
 
   timers.initialization.start();
-  auto autopas = initAutoPas(config);
+  auto domainDecomp = RegularGridDecomposition(config);
+  auto autopas = initAutoPas(config, domainDecomp);
   // need to keep csvWriter and accumulator alive bc integrator relies on pointers to them but does not take ownership
   auto [csvWriter, accumulator, integrator] = initIntegrator(*autopas, config);
   SatelliteLoader::loadSatellites(*autopas, config, logger);
@@ -398,7 +413,7 @@ void Simulation::run(ConfigReader &config) {
   timers.initialization.stop();
 
   timers.simulation.start();
-  simulationLoop(*autopas, *integrator, constellations, config);
+  simulationLoop(*autopas, *integrator, constellations, config, domainDecomp);
   timers.simulation.stop();
 
   timers.total.stop();

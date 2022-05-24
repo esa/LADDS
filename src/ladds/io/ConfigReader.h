@@ -132,6 +132,17 @@ class ConfigReader {
    */
   const Logger &getLogger() const;
 
+  /**
+   * Determines the number of the fist iteration for the simulation.
+   * @return
+   */
+  size_t getFirstIterationNr();
+
+  /**
+   * Determines the number of the last iteration for the simulation.
+   * @return
+   */
+  size_t getLastIterationNr();
  private:
   /**
    * Helper function for setValue recursively iterating through the yaml structure,

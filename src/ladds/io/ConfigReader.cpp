@@ -66,4 +66,12 @@ const Logger &ConfigReader::getLogger() const {
   return logger;
 }
 
+size_t ConfigReader::getFirstIterationNr() {
+  // either iteration of HDF5 checkpoint or 0
+  return defines("io/hdf5", true) ? get<size_t>("io/hdf5/checkpoint/iteration", -1, true) + 1 : 0;
+}
+size_t ConfigReader::getLastIterationNr() {
+  return get<size_t>("sim/iterations") + getFirstIterationNr() - 1;
+}
+
 }  // namespace LADDS

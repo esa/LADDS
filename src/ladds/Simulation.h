@@ -22,6 +22,7 @@
 #include "ladds/io/hdf5/HDF5Writer.h"
 #include "ladds/particle/Constellation.h"
 #include "ladds/particle/Particle.h"
+#include "ladds/distributedMemParallelization/DomainDecomposition.h"
 
 namespace LADDS {
 
@@ -47,7 +48,7 @@ class Simulation {
    * @param config
    * @return
    */
-  [[nodiscard]] std::unique_ptr<AutoPas_t> initAutoPas(ConfigReader &config);
+  [[nodiscard]] std::unique_ptr<AutoPas_t> initAutoPas(ConfigReader &config, DomainDecomposition &domainDecomp);
 
   /**
    * Create and initialize the integrator.
@@ -109,13 +110,16 @@ class Simulation {
    * The main loop.
    * @param autopas
    * @param integrator
+   * @param constellations
    * @param config
+   * @param domainDecomposition
    * @return Number of observed collisions.
    */
   [[maybe_unused]] size_t simulationLoop(AutoPas_t &autopas,
                                          YoshidaIntegrator<AutoPas_t> &integrator,
                                          std::vector<Constellation> &constellations,
-                                         ConfigReader &config);
+                                         ConfigReader &config,
+                                         DomainDecomposition &domainDecomposition);
 
   /**
    * Inserts particles into autopas if they have a safe distance to existing particles.

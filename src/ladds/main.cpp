@@ -4,14 +4,14 @@
  * @date 28.06.21
  */
 
-#include <iostream>
+#include <autopas/utils/WrapMPI.h>
+
 #include <string>
 
 #include "Simulation.h"
 #include "ladds/Version.h"
 #include "ladds/io/ConfigReader.h"
 #include "ladds/io/Logger.h"
-#include "autopas/utils/WrapMPI.h"
 
 /**
  * The entrypoint of the program.
@@ -27,6 +27,7 @@ int main(int argc, char **argv) {
   // Default config path
   if (argc != 2) {
     logger.log(LADDS::Logger::Level::critical, "No config given!");
+    autopas::AutoPas_MPI_Finalize();
     return -1;
   }
 
