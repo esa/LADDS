@@ -126,6 +126,12 @@ class ConfigReader {
     }
   }
 
+  /**
+   * Getter for the logger.
+   * @return logger
+   */
+  const Logger &getLogger() const;
+
  private:
   /**
    * Helper function for setValue recursively iterating through the yaml structure,

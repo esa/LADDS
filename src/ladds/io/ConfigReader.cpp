@@ -62,4 +62,8 @@ void ConfigReader::dumpConfig(const std::string &filename) const {
   file.close();
 }
 
+const Logger &ConfigReader::getLogger() const {
+  return logger;
+}
+
 }  // namespace LADDS
