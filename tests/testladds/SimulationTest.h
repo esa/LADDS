@@ -21,7 +21,7 @@ using ParameterTuple = std::tuple<std::array<double, 3>, bool>;
 class SimulationTest : public testing::TestWithParam<ParameterTuple> {
  public:
   SimulationTest() : logger("SimulationTestLogger"), simulation(logger) {
-    logger.get()->set_level(Logger::Level::off);
+    logger.get()->set_level(LADDS::Logger::Level::off);
 
     // initialize a minimal default configuration
     config["autopas"]["cutoff"] = 80.;
@@ -37,7 +37,7 @@ class SimulationTest : public testing::TestWithParam<ParameterTuple> {
     config["sim"]["minAltitude"] = 150.;
     config["sim"]["prop"]["useKEPComponent"] = true;
 
-    configReader = std::make_unique<ConfigReader>(config, logger);
+    configReader = std::make_unique<LADDS::ConfigReader>(config, logger);
     autopas = simulation.initAutoPas(*configReader);
   }
 
@@ -62,9 +62,9 @@ class SimulationTest : public testing::TestWithParam<ParameterTuple> {
 
   YAML::Node config;
 
-  Logger logger;
-  Simulation simulation;
-  std::unique_ptr<ConfigReader> configReader;
+  LADDS::Logger logger;
+  LADDS::Simulation simulation;
+  std::unique_ptr<LADDS::ConfigReader> configReader;
   std::unique_ptr<AutoPas_t> autopas;
   static constexpr std::array<double, 3> zeroVec{0., 0., 0.};
   static constexpr std::array<double, 3> testCheckedInsertParticlePos{6871, 0, 0};

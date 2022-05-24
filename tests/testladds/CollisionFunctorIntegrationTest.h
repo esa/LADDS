@@ -53,7 +53,7 @@ class CollisionFunctorIntegrationTest : public testing::TestWithParam<ParameterT
   };
 
   static inline std::vector<std::pair<size_t, size_t>> _reference{};
-  static inline std::vector<Particle> _debris{};
+  static inline std::vector<LADDS::Particle> _debris{};
   static constexpr double _cutoff{1.};
   static constexpr std::array<double, 3> _boxMin{0., 0., 0.};
   static constexpr std::array<double, 3> _boxMax{5., 5., 5.};
