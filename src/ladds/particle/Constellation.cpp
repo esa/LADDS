@@ -12,6 +12,8 @@
 #include <iostream>
 #include <string>
 
+namespace LADDS {
+
 std::mt19937 Constellation::generator{42};
 
 Constellation::Constellation(ConfigReader &constellationConfig, ConfigReader &config)
@@ -225,3 +227,5 @@ std::array<int, 3> Constellation::parseDatestring(const std::string &dateStr) {
   }
   return dateArray;
 }
+
+}  // namespace LADDS

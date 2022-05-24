@@ -14,6 +14,7 @@
 
 #include "ladds/particle/Particle.h"
 
+namespace LADDS {
 /**
  * Class describing the pairwise particle computation for determining whether a collision occured.
  * This functor is passed to autopas::AutoPas::iteratePairwise() as the primary pairwise interaction.
@@ -110,3 +111,5 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
    */
   const double _minDetectionRadius;
 };
+
+}  // namespace LADDS

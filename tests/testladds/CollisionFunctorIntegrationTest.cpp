@@ -12,28 +12,28 @@
 #include <gmock/gmock-more-matchers.h>
 #include <ladds/CollisionFunctor.h>
 
-extern template class autopas::AutoPas<Particle>;
-extern template bool autopas::AutoPas<Particle>::iteratePairwise(CollisionFunctor *);
+extern template class autopas::AutoPas<LADDS::Particle>;
+extern template bool autopas::AutoPas<LADDS::Particle>::iteratePairwise(LADDS::CollisionFunctor *);
 
 void CollisionFunctorIntegrationTest::SetUpTestSuite() {
   using autopasTools::generators::RandomGenerator;
   constexpr size_t numDebris = 15;
-  Particle defaultParticle{{
-                               0.,
-                               0.,
-                               0.,
-                           },
-                           {
-                               0.,
-                               0.,
-                               0.,
-                           },
-                           0,
-                           "dummy",
-                           Particle::ActivityState::passive,
-                           1.,
-                           1.,
-                           Particle::calculateBcInv(0., 1., 1., 2.2)};
+  LADDS::Particle defaultParticle{{
+                                      0.,
+                                      0.,
+                                      0.,
+                                  },
+                                  {
+                                      0.,
+                                      0.,
+                                      0.,
+                                  },
+                                  0,
+                                  "dummy",
+                                  LADDS::Particle::ActivityState::passive,
+                                  1.,
+                                  1.,
+                                  LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)};
   _debris.reserve(numDebris);
 
   // fix seed for randomPosition()
@@ -81,14 +81,14 @@ TEST_P(CollisionFunctorIntegrationTest, testAutoPasAlgorithm) {
     GTEST_SKIP_("SoAFunctor currently not implemented!");
   }
 
-  CollisionFunctor functor(_cutoff, 10.0, 1., 0.1);
+  LADDS::CollisionFunctor functor(_cutoff, 10.0, 1., 0.1);
 
   if (not functor.allowsNonNewton3() and newton3 == autopas::Newton3Option::disabled) {
     GTEST_SKIP_("Functor does not support Newton3==disabled!");
   }
 
   // configure the AutoPas container
-  autopas::AutoPas<Particle> autopas;
+  autopas::AutoPas<LADDS::Particle> autopas;
   // allow all container options since the traversal determines it uniquely
   autopas.setAllowedContainers({autopas::ContainerOption::getAllOptions()});
   autopas.setAllowedTraversals({traversal});

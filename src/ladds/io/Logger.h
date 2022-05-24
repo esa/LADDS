@@ -14,6 +14,8 @@
 #include <string>
 #include <utility>
 
+namespace LADDS {
+
 class Logger {
  public:
   explicit Logger(std::string name = "laddsLog", std::ostream &ostream = std::cout);
@@ -49,3 +51,5 @@ class Logger {
  private:
   std::string _name;
 };
+
+}  // namespace LADDS

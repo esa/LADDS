@@ -15,7 +15,7 @@
 class BreakupWrapperTest : public testing::Test {
  public:
   BreakupWrapperTest() : logger("BreakupWrapperTestLogger"), simulation(logger) {
-    logger.get()->set_level(Logger::Level::off);
+    logger.get()->set_level(LADDS::Logger::Level::off);
 
     // initialize a minimal default configuration
     config["autopas"]["cutoff"] = 3;
@@ -28,14 +28,14 @@ class BreakupWrapperTest : public testing::Test {
     config["sim"]["iterations"] = 1;
     config["sim"]["breakup"]["enabled"] = true;
 
-    configReader = std::make_unique<ConfigReader>(config, logger);
+    configReader = std::make_unique<LADDS::ConfigReader>(config, logger);
     autopas = simulation.initAutoPas(*configReader);
   };
 
   YAML::Node config;
 
-  Logger logger;
-  Simulation simulation;
-  std::unique_ptr<ConfigReader> configReader;
+  LADDS::Logger logger;
+  LADDS::Simulation simulation;
+  std::unique_ptr<LADDS::ConfigReader> configReader;
   std::unique_ptr<AutoPas_t> autopas;
 };

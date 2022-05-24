@@ -6,7 +6,7 @@
 
 #include "Particle.h"
 
-namespace SatelliteToParticleConverter {
+namespace LADDS::SatelliteToParticleConverter {
 
 /**
  * This function is used to convert the satellite data into particles.
@@ -52,4 +52,4 @@ namespace SatelliteToParticleConverter {
 
   return satelliteBuilder.getResult();
 }
-}  // namespace SatelliteToParticleConverter
+}  // namespace LADDS::SatelliteToParticleConverter

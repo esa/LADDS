@@ -9,6 +9,8 @@
 #include "ladds/CollisionFunctor.h"
 #include "ladds/particle/Particle.h"
 
+namespace LADDS {
+
 class ConjuctionWriterInterface {
  public:
   ConjuctionWriterInterface() = default;
@@ -21,3 +23,5 @@ class ConjuctionWriterInterface {
    */
   virtual void writeConjunctions(size_t iteration, const CollisionFunctor::CollisionCollectionT &collisions) = 0;
 };
+
+}  // namespace LADDS

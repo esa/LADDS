@@ -23,8 +23,10 @@
 #include "ladds/particle/Constellation.h"
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
-extern template class autopas::AutoPas<Particle>;
-extern template bool autopas::AutoPas<Particle>::iteratePairwise(CollisionFunctor *);
+extern template class autopas::AutoPas<LADDS::Particle>;
+extern template bool autopas::AutoPas<LADDS::Particle>::iteratePairwise(LADDS::CollisionFunctor *);
+
+namespace LADDS {
 
 /**
  * Anonymous namespace to hide this content from the outside.
@@ -443,3 +445,5 @@ size_t Simulation::computeTimeout(ConfigReader &config) {
   // if everything resolved to 0 return the error value
   return sum;
 }
+
+}  // namespace LADDS

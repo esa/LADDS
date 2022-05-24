@@ -15,6 +15,8 @@
 #include "ladds/io/ConfigReader.h"
 #include "ladds/particle/Particle.h"
 
+namespace LADDS {
+
 /**
  * The Constellation class contains a collection of Particles that inserts these into
  * the simulation over time, based on .csv files and a .yaml file as created by the
@@ -216,3 +218,5 @@ class Constellation {
    */
   std::normal_distribution<double> distribution;
 };
+
+}  // namespace LADDS

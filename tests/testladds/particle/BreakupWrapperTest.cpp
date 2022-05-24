@@ -16,25 +16,25 @@ TEST_F(BreakupWrapperTest, testSimulationLoop) {
 
   // two particles 1000km above earth whose paths cross exactly at [R+1000, 0, 0]
   size_t highestIdBeforeCrash = 4;
-  autopas->addParticle(Particle({Physics::R_EARTH + 1000., -1., 0.},
-                                {0., 2., 0.},
-                                1,
-                                "A",
-                                Particle::ActivityState::passive,
-                                1.,
-                                1.,
-                                Particle::calculateBcInv(0., 1., 1., 2.2)));
-  autopas->addParticle(Particle({Physics::R_EARTH + 1000., 0., -1.},
-                                {0., 0., 2.},
-                                highestIdBeforeCrash,
-                                "B",
-                                Particle::ActivityState::passive,
-                                1.,
-                                1.,
-                                Particle::calculateBcInv(0., 1., 1., 2.2)));
+  autopas->addParticle(LADDS::Particle({Physics::R_EARTH + 1000., -1., 0.},
+                                       {0., 2., 0.},
+                                       1,
+                                       "A",
+                                       LADDS::Particle::ActivityState::passive,
+                                       1.,
+                                       1.,
+                                       LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)));
+  autopas->addParticle(LADDS::Particle({Physics::R_EARTH + 1000., 0., -1.},
+                                       {0., 0., 2.},
+                                       highestIdBeforeCrash,
+                                       "B",
+                                       LADDS::Particle::ActivityState::passive,
+                                       1.,
+                                       1.,
+                                       LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)));
 
   // dummy
-  std::vector<Constellation> constellations;
+  std::vector<LADDS::Constellation> constellations;
   // do one loop where we expect a breakup to happen
   simulation.simulationLoop(*autopas, *integrator, constellations, *configReader);
 
