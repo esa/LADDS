@@ -13,7 +13,7 @@
 
 namespace LADDS {
 
-void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, const Logger &logger) {
+void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, const DomainDecomposition &decomp) {
   std::vector<Particle> satellites;
 
   // if the value is not set this is the only place that should define the default value as it is the first to access it
@@ -36,17 +36,17 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
     // TODO: Remove DATADIR functionality
     const auto csvFilePath = std::string(DATADIR) + csvFileName;
 
-    SPDLOG_LOGGER_INFO(logger.get(), "Loading scenario from CSV: {}", csvFilePath);
+    SPDLOG_LOGGER_INFO(config.getLogger().get(), "Loading scenario from CSV: {}", csvFilePath);
 
     // Read in scenario
     satellites = DatasetReader::readDataset(csvFilePath, coefficientOfDrag);
-    SPDLOG_LOGGER_DEBUG(logger.get(), "Parsed {} satellites", satellites.size());
+    SPDLOG_LOGGER_DEBUG(config.getLogger().get(), "Parsed {} satellites", satellites.size());
   }
   // ... or load checkpoint ...
   if (not checkpointPathCfg.empty()) {
     // TODO: Remove DATADIR functionality
     const auto checkpointPath = std::string(DATADIR) + checkpointPathCfg;
-    SPDLOG_LOGGER_INFO(logger.get(), "Loading scenario from HDF5 checkpoint\nFile: {}", checkpointPath);
+    SPDLOG_LOGGER_INFO(config.getLogger().get(), "Loading scenario from HDF5 checkpoint\nFile: {}", checkpointPath);
 
     HDF5Reader hdfReader(checkpointPath);
     // either load the given iteration or fall back to the last iteration stored in the file
@@ -59,29 +59,46 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
   const auto maxAltitudeSquared = maxAltitude * maxAltitude;
   double minAltitudeFound{std::numeric_limits<double>::max()};
   double maxAltitudeFound{0.};
+  const auto &boxMin = autopas.getBoxMin();
+  const auto &boxMax = autopas.getBoxMax();
   for (const auto &particle : satellites) {
     const auto &pos = particle.getPosition();
-    const double altitudeSquared = autopas::utils::ArrayMath::dot(pos, pos);
-    minAltitudeFound = std::min(minAltitudeFound, altitudeSquared);
-    maxAltitudeFound = std::max(maxAltitudeFound, altitudeSquared);
-    if (altitudeSquared < maxAltitudeSquared) {
-      autopas.addParticle(particle);
-    } else {
-      SPDLOG_LOGGER_WARN(logger.get(),
-                         "Particle NOT added because its altitudeSquared was too high!\n"
-                         "Max allowed: {}\n"
-                         "Actual: {}\n"
-                         "{})",
-                         maxAltitude,
-                         sqrt(altitudeSquared),
-                         particle.toString());
+    // check if this particle is relevant for the current rank
+    if (autopas::utils::inBox(pos, boxMin, boxMax)) {
+      const double altitudeSquared = autopas::utils::ArrayMath::dot(pos, pos);
+      minAltitudeFound = std::min(minAltitudeFound, altitudeSquared);
+      maxAltitudeFound = std::max(maxAltitudeFound, altitudeSquared);
+      if (altitudeSquared < maxAltitudeSquared) {
+        autopas.addParticle(particle);
+      } else {
+        SPDLOG_LOGGER_WARN(config.getLogger().get(),
+                           "Particle NOT added because its altitudeSquared was too high!\n"
+                           "Max allowed: {}\n"
+                           "Actual: {}\n"
+                           "{})",
+                           maxAltitude,
+                           sqrt(altitudeSquared),
+                           particle.toString());
+      }
     }
   }
-  minAltitudeFound = sqrt(minAltitudeFound);
-  maxAltitudeFound = sqrt(maxAltitudeFound);
-  SPDLOG_LOGGER_INFO(logger.get(), "Min altitude is {}", minAltitudeFound);
-  SPDLOG_LOGGER_INFO(logger.get(), "Max altitude is {}", maxAltitudeFound);
-  SPDLOG_LOGGER_INFO(logger.get(), "Number of particles: {}", autopas.getNumberOfParticles());
+
+  // collect and reduce global values
+  double minAltitudeFoundGlobal{};
+  autopas::AutoPas_MPI_Reduce(
+      &minAltitudeFound, &minAltitudeFoundGlobal, 1, AUTOPAS_MPI_DOUBLE, AUTOPAS_MPI_MIN, 0, decomp.getCommunicator());
+  double maxAltitudeFoundGlobal{};
+  autopas::AutoPas_MPI_Reduce(
+      &maxAltitudeFound, &maxAltitudeFoundGlobal, 1, AUTOPAS_MPI_DOUBLE, AUTOPAS_MPI_MAX, 0, decomp.getCommunicator());
+  minAltitudeFoundGlobal = sqrt(minAltitudeFoundGlobal);
+  maxAltitudeFoundGlobal = sqrt(maxAltitudeFoundGlobal);
+  SPDLOG_LOGGER_INFO(config.getLogger().get(), "Min altitude is {}", minAltitudeFoundGlobal);
+  SPDLOG_LOGGER_INFO(config.getLogger().get(), "Max altitude is {}", maxAltitudeFoundGlobal);
+  unsigned long numParticles = autopas.getNumberOfParticles();
+  unsigned long numParticlesGlobal{};
+  autopas::AutoPas_MPI_Reduce(
+      &numParticles, &numParticlesGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, decomp.getCommunicator());
+  SPDLOG_LOGGER_INFO(config.getLogger().get(), "Number of particles: {}", numParticlesGlobal);
 }
 
 std::vector<Constellation> SatelliteLoader::loadConstellations(ConfigReader &config, const Logger &logger) {

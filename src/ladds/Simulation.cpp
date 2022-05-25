@@ -409,7 +409,7 @@ void Simulation::run(ConfigReader &config) {
   auto autopas = initAutoPas(config, domainDecomp);
   // need to keep csvWriter and accumulator alive bc integrator relies on pointers to them but does not take ownership
   auto [csvWriter, accumulator, integrator] = initIntegrator(*autopas, config);
-  SatelliteLoader::loadSatellites(*autopas, config, logger);
+  SatelliteLoader::loadSatellites(*autopas, config, domainDecomp);
   auto constellations = SatelliteLoader::loadConstellations(config, logger);
   timers.initialization.stop();
 
