@@ -35,7 +35,11 @@ int main(int argc, char **argv) {
   const auto *cfgFilePath = argv[1];
   auto config = LADDS::ConfigReader(cfgFilePath, logger);
 
-  logger.get()->set_level(spdlog::level::from_str(config.get<std::string>("sim/logLevel", "info")));
+  int mpiRank{};
+  autopas::AutoPas_MPI_Comm_rank(AUTOPAS_MPI_COMM_WORLD, &mpiRank);
+  if (mpiRank == 0) {
+    logger.get()->set_level(spdlog::level::from_str(config.get<std::string>("sim/logLevel", "info")));
+  }
   SPDLOG_LOGGER_INFO(logger.get(), "LADDS version: {}", LADDS_VERSION);
   SPDLOG_LOGGER_INFO(logger.get(), "Config loaded.");
 
