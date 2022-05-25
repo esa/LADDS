@@ -20,9 +20,9 @@
  * @return
  */
 int main(int argc, char **argv) {
-  LADDS::Logger logger;
-
   autopas::AutoPas_MPI_Init(&argc, &argv);
+
+  LADDS::Logger logger;
 
   // Default config path
   if (argc != 2) {

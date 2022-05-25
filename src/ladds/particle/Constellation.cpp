@@ -176,7 +176,7 @@ std::vector<Particle> Constellation::readDatasetConstellation(const std::string 
   auto velocities = vel_csvReader.getLines();
 
   if (positions.size() != velocities.size()) {
-    std::cout << "Error: Position and velocity file have different number of lines." << std::endl;
+    throw std::runtime_error("Error: Position and velocity file have different number of lines.");
     return particleCollection;
   }
 

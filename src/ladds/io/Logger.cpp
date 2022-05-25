@@ -6,12 +6,21 @@
 
 #include "Logger.h"
 
+#include <autopas/utils/WrapMPI.h>
+
 namespace LADDS {
 
 Logger::Logger(std::string name, std::ostream &ostream) : _name(std::move(name)) {
   auto sink = std::make_shared<spdlog::sinks::ostream_sink_mt>(ostream);
   auto logger = std::make_shared<spdlog::logger>(_name, sink);
   spdlog::register_logger(logger);
+
+  // set all loggers which are not on rank 0 to only output errors!
+  int mpiRank{};
+  autopas::AutoPas_MPI_Comm_rank(AUTOPAS_MPI_COMM_WORLD, &mpiRank);
+  if(mpiRank != 0) {
+    get()->set_level(spdlog::level::err);
+  }
 }
 
 Logger::~Logger() {

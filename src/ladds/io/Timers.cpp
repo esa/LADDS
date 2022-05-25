@@ -17,24 +17,22 @@ void Timers::printTimers(ConfigReader &config) const {
   const auto timeTotal = total.getTotalTime();
   const auto timeSim = simulation.getTotalTime();
   const auto maximumNumberOfDigits = static_cast<int>(std::to_string(timeTotal).length());
-  std::cout << timerToString("Total                       ", timeTotal, maximumNumberOfDigits);
-  std::cout << timerToString(
-      "  Initialization            ", initialization.getTotalTime(), maximumNumberOfDigits, timeTotal);
-  std::cout << timerToString("  Simulation                ", timeSim, maximumNumberOfDigits, timeTotal);
-  std::cout << timerToString("    Integrator              ", integrator.getTotalTime(), maximumNumberOfDigits, timeSim);
-  std::cout << timerToString("    Resolving Burn ups      ", burnUps.getTotalTime(), maximumNumberOfDigits, timeSim);
-  std::cout << timerToString(
-      "    Constellation insertion ", constellationInsertion.getTotalTime(), maximumNumberOfDigits, timeSim);
-  std::cout << timerToString(
-      "    Collision detection     ", collisionDetection.getTotalTime(), maximumNumberOfDigits, timeSim);
-  std::cout << timerToString(
-      "    Collision writer        ", collisionWriting.getTotalTime(), maximumNumberOfDigits, timeSim);
-  std::cout << timerToString(
-      "    Collision simulation    ", collisionSimulation.getTotalTime(), maximumNumberOfDigits, timeSim);
-  std::cout << timerToString(
-      "    Container update        ", containerUpdate.getTotalTime(), maximumNumberOfDigits, timeSim);
-  std::cout << timerToString("    Output                  ", output.getTotalTime(), maximumNumberOfDigits, timeTotal);
-  std::cout << timerToString("One iteration               ", timeSim / iterations, maximumNumberOfDigits, timeTotal);
+  SPDLOG_LOGGER_INFO(
+      config.getLogger().get(),
+      "Runtime summary:\n{}{}{}{}{}{}{}{}{}{}{}{}",
+      timerToString("Total                       ", timeTotal, maximumNumberOfDigits),
+      timerToString("  Initialization            ", initialization.getTotalTime(), maximumNumberOfDigits, timeTotal),
+      timerToString("  Simulation                ", timeSim, maximumNumberOfDigits, timeTotal),
+      timerToString("    Integrator              ", integrator.getTotalTime(), maximumNumberOfDigits, timeSim),
+      timerToString("    Resolving Burn ups      ", burnUps.getTotalTime(), maximumNumberOfDigits, timeSim),
+      timerToString(
+          "    Constellation insertion ", constellationInsertion.getTotalTime(), maximumNumberOfDigits, timeSim),
+      timerToString("    Collision detection     ", collisionDetection.getTotalTime(), maximumNumberOfDigits, timeSim),
+      timerToString("    Collision writer        ", collisionWriting.getTotalTime(), maximumNumberOfDigits, timeSim),
+      timerToString("    Collision simulation    ", collisionSimulation.getTotalTime(), maximumNumberOfDigits, timeSim),
+      timerToString("    Container update        ", containerUpdate.getTotalTime(), maximumNumberOfDigits, timeSim),
+      timerToString("    Output                  ", output.getTotalTime(), maximumNumberOfDigits, timeTotal),
+      timerToString("One iteration               ", timeSim / iterations, maximumNumberOfDigits, timeTotal));
 }
 
 /**
