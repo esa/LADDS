@@ -313,6 +313,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       // convert timer value from ns to s
       const size_t secondsSinceStart = timers.total.getTotalTime() / static_cast<size_t>(1e9);
       if (secondsSinceStart > timeout) {
+        // FIXME: MPI SYNC THIS?
         SPDLOG_LOGGER_INFO(logger.get(),
                            "Simulation timeout hit! Time since simulation start ({} s) > Timeout ({} s))",
                            secondsSinceStart,
