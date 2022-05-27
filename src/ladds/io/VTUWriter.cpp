@@ -76,7 +76,9 @@ void VTUWriter::writeVTU(ConfigReader &config,
   std::vector<Satellite> allParticles;
   allParticles.reserve(autopas.getNumberOfParticles());
   for (const auto &p : autopas) {
-    allParticles.push_back(SatelliteToParticleConverter::convertParticleToSatellite(p));
+    auto sat = SatelliteToParticleConverter::convertParticleToSatellite(p);
+    sat.setPosition(autopas::utils::ArrayMath::mulScalar(sat.getPosition(), 1 / 1000.));
+    allParticles.push_back(sat);
   }
   // sort particles by Id to provide consistent output files
   std::sort(
@@ -97,8 +99,6 @@ void VTUWriter::writePVTU(ConfigReader &config, size_t iteration, const DomainDe
   pvtuFile << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n";
   pvtuFile << "<VTKFile byte_order=\"LittleEndian\" type=\"PUnstructuredGrid\" version=\"0.1\">\n";
   pvtuFile << "  <PUnstructuredGrid>\n";
-  //    timestepFile << "  <PUnstructuredGrid WholeExtent=\"0 " << wholeExtent[0] << " 0 " << wholeExtent[1] << " 0 "
-  //                 << wholeExtent[2] << "\" GhostLevel=\"0\">\n";
   pvtuFile << "    <PPointData>\n";
   pvtuFile << "      <PDataArray type=\"Float32\" Name=\"characteristic-length\" />\n";
   pvtuFile << "      <PDataArray type=\"Float32\" Name=\"mass\" />\n";
@@ -118,12 +118,7 @@ void VTUWriter::writePVTU(ConfigReader &config, size_t iteration, const DomainDe
   int numRanks{};
   autopas::AutoPas_MPI_Comm_size(decomposition.getCommunicator(), &numRanks);
   for (int rank = 0; rank < numRanks; ++rank) {
-    //      std::array<int, 6> pieceExtent = decomposition.getExtentOfSubdomain(i);
-    pvtuFile
-        << "    <Piece "
-        //                   << "Extent=\"" << pieceExtent[0] << " " << pieceExtent[1] << " " << pieceExtent[2] << " "
-        //                   << pieceExtent[3] << " " << pieceExtent[4] << " " << pieceExtent[5] << "\" "
-        << "Source=\"" << filenamePayload(config, iteration, decomposition, rank) << "\"/>\n";
+    pvtuFile << "    <Piece Source=\"" << filenamePayload(config, iteration, decomposition, rank) << "\"/>\n";
   }
 
   pvtuFile << "  </PUnstructuredGrid>\n";
