@@ -441,7 +441,7 @@ void Simulation::run(ConfigReader &config) {
   timers.simulation.stop();
 
   timers.total.stop();
-  timers.printTimers(config);
+  timers.printTimers(config, domainDecomp);
 }
 
 void Simulation::dumpCalibratedConfig(ConfigReader &config, const AutoPas_t &autopas) const {

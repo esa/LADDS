@@ -10,6 +10,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include "ConfigReader.h"
+#include "ladds/distributedMemParallelization/DomainDecomposition.h"
 
 namespace LADDS {
 
@@ -30,8 +31,9 @@ class Timers {
   /**
    * Print timer information to stdout.
    * @param config
+   * @param decomp
    */
-  void printTimers(ConfigReader &config) const;
+  void printTimers(ConfigReader &config, const DomainDecomposition &decomp) const;
 
  private:
   /**
@@ -43,6 +45,14 @@ class Timers {
    * @return
    */
   static std::string timerToString(const std::string &name, long timeNS, int numberWidth = 0, long maxTime = 0ul);
+
+  /**
+   * Calculate some load imbalance statistics for a given timer
+   * @param timer
+   * @param decomp
+   * @return
+   */
+  static std::tuple<double, double> calcImbalances(const autopas::utils::Timer &timer, const DomainDecomposition &decomp);
 
   /**
    * Floating point precision for command line output.
