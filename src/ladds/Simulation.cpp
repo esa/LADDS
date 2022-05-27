@@ -15,6 +15,7 @@
 #include <tuple>
 #include <vector>
 
+#include "ladds/distributedMemParallelization/RegularGridDecomposition.h"
 #include "ladds/io/ConjunctionLogger.h"
 #include "ladds/io/SatelliteLoader.h"
 #include "ladds/io/VTUWriter.h"
@@ -22,7 +23,6 @@
 #include "ladds/io/hdf5/HDF5Writer.h"
 #include "ladds/particle/BreakupWrapper.h"
 #include "ladds/particle/Constellation.h"
-#include "ladds/distributedMemParallelization/RegularGridDecomposition.h"
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
 extern template class autopas::AutoPas<LADDS::Particle>;
@@ -242,11 +242,10 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
   std::unique_ptr<DecompositionLogger> decompositionLogger{};
 
-  if(const auto *regularGridDecomp = dynamic_cast<const RegularGridDecomposition *>(&domainDecomposition)) {
+  if (const auto *regularGridDecomp = dynamic_cast<const RegularGridDecomposition *>(&domainDecomposition)) {
     decompositionLogger = std::make_unique<RegularGridDecompositionLogger>(config, *regularGridDecomp);
   } else {
-    throw std::runtime_error(
-        "No decomposition logger associated with the chosen decomposition!");
+    throw std::runtime_error("No decomposition logger associated with the chosen decomposition!");
   }
 
   config.printParsedValues();
@@ -327,11 +326,28 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
     timers.output.start();
     if (iteration % progressOutputFrequency == 0 or iteration == lastIteration) {
+      unsigned long numParticlesLocal = autopas.getNumberOfParticles();
+      unsigned long numParticlesGlobal{};
+      unsigned long totalConjunctionsGlobal{};
+      autopas::AutoPas_MPI_Reduce(&numParticlesLocal,
+                                  &numParticlesGlobal,
+                                  1,
+                                  AUTOPAS_MPI_UNSIGNED_LONG,
+                                  AUTOPAS_MPI_SUM,
+                                  0,
+                                  domainDecomposition.getCommunicator());
+      autopas::AutoPas_MPI_Reduce(&totalConjunctions,
+                                  &totalConjunctionsGlobal,
+                                  1,
+                                  AUTOPAS_MPI_UNSIGNED_LONG,
+                                  AUTOPAS_MPI_SUM,
+                                  0,
+                                  domainDecomposition.getCommunicator());
       SPDLOG_LOGGER_INFO(logger.get(),
                          "It {} | Total particles: {} | Total conjunctions: {}",
                          iteration,
-                         autopas.getNumberOfParticles(),
-                         totalConjunctions);
+                         numParticlesGlobal,
+                         totalConjunctionsGlobal);
     }
     // Visualization:
     if (vtkWriteFrequency and (iteration % vtkWriteFrequency == 0 or iteration == lastIteration)) {
