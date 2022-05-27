@@ -68,8 +68,11 @@ void VTUWriter::writeLegacyVTKBinary(size_t iteration, const AutoPas_t &autopas)
   file.close();
 }
 
-void VTUWriter::writeVTU(size_t iteration, const AutoPas_t &autopas) {
-  VTKWriter vtkWriter("output_" + std::to_string(iteration) + ".vtu");
+void VTUWriter::writeVTU(ConfigReader &config,
+                         size_t iteration,
+                         const AutoPas_t &autopas,
+                         const DomainDecomposition &decomposition) {
+  VTKWriter vtkWriter(filenamePayload(config, iteration, decomposition));
   std::vector<Satellite> allParticles;
   allParticles.reserve(autopas.getNumberOfParticles());
   for (const auto &p : autopas) {
@@ -79,6 +82,77 @@ void VTUWriter::writeVTU(size_t iteration, const AutoPas_t &autopas) {
   std::sort(
       allParticles.begin(), allParticles.end(), [](const auto &p1, const auto &p2) { return p1.getId() < p2.getId(); });
   vtkWriter.printResult(allParticles);
+}
+
+void VTUWriter::writePVTU(ConfigReader &config, size_t iteration, const DomainDecomposition &decomposition) {
+  const auto filename = filenameMetadata(config, iteration);
+  std::ofstream pvtuFile;
+  pvtuFile.open(filename, std::ios::out | std::ios::binary);
+
+  if (not pvtuFile.is_open()) {
+    throw std::runtime_error("Simulation::writeVTKFile(): Failed to open file \"" + filename + "\"");
+  }
+  const std::array<double, 3> globalBoxMin = decomposition.getGlobalBoxMin();
+  const std::array<double, 3> globalBoxMax = decomposition.getGlobalBoxMax();
+  pvtuFile << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n";
+  pvtuFile << "<VTKFile byte_order=\"LittleEndian\" type=\"PUnstructuredGrid\" version=\"0.1\">\n";
+  pvtuFile << "  <PUnstructuredGrid>\n";
+  //    timestepFile << "  <PUnstructuredGrid WholeExtent=\"0 " << wholeExtent[0] << " 0 " << wholeExtent[1] << " 0 "
+  //                 << wholeExtent[2] << "\" GhostLevel=\"0\">\n";
+  pvtuFile << "    <PPointData>\n";
+  pvtuFile << "      <PDataArray type=\"Float32\" Name=\"characteristic-length\" />\n";
+  pvtuFile << "      <PDataArray type=\"Float32\" Name=\"mass\" />\n";
+  pvtuFile << "      <PDataArray type=\"Float32\" Name=\"area\" />\n";
+  pvtuFile << "      <PDataArray type=\"Float32\" Name=\"area-to-mass\" />\n";
+  pvtuFile << "      <PDataArray type=\"Float32\" Name=\"velocity\" />\n";
+  pvtuFile << "      <PDataArray type=\"Float32\" Name=\"ejection-velocity\" />\n";
+  pvtuFile << "    </PPointData>\n";
+  pvtuFile << "    <PCellData/>\n";
+  pvtuFile << "    <PPoints>\n";
+  pvtuFile << "      <PDataArray Name=\"position\" NumberOfComponents=\"3\" format=\"ascii\" type=\"Float32\" />\n";
+  pvtuFile << "    </PPoints>\n";
+  pvtuFile << "    <PCells>\n";
+  pvtuFile << "      <PDataArray Name=\"types\" NumberOfComponents=\"0\" format=\"ascii\" type=\"Float32\"/>\n";
+  pvtuFile << "    </PCells>\n";
+
+  int numRanks{};
+  autopas::AutoPas_MPI_Comm_size(decomposition.getCommunicator(), &numRanks);
+  for (int rank = 0; rank < numRanks; ++rank) {
+    //      std::array<int, 6> pieceExtent = decomposition.getExtentOfSubdomain(i);
+    pvtuFile
+        << "    <Piece "
+        //                   << "Extent=\"" << pieceExtent[0] << " " << pieceExtent[1] << " " << pieceExtent[2] << " "
+        //                   << pieceExtent[3] << " " << pieceExtent[4] << " " << pieceExtent[5] << "\" "
+        << "Source=\"" << filenamePayload(config, iteration, decomposition, rank) << "\"/>\n";
+  }
+
+  pvtuFile << "  </PUnstructuredGrid>\n";
+  pvtuFile << "</VTKFile>\n";
+
+  pvtuFile.close();
+}
+
+std::string VTUWriter::filenameMetadata(ConfigReader &config, size_t iteration) {
+  const auto maxDigitsIterations = std::to_string(config.getLastIterationNr()).size();
+  std::stringstream ss;
+  ss << "Output_" << std::setfill('0') << std::setw(static_cast<int>(maxDigitsIterations)) << iteration << ".pvtu";
+  return ss.str();
+}
+
+std::string VTUWriter::filenamePayload(ConfigReader &config,
+                                       size_t iteration,
+                                       const DomainDecomposition &decomposition,
+                                       int rank) {
+  if (rank == -1) {
+    autopas::AutoPas_MPI_Comm_rank(decomposition.getCommunicator(), &rank);
+  }
+  int numRanks{};
+  autopas::AutoPas_MPI_Comm_size(decomposition.getCommunicator(), &numRanks);
+  const auto maxDigitsIterations = std::to_string(config.getLastIterationNr()).size();
+  std::stringstream ss;
+  ss << "Output_" << std::setfill('0') << std::setw(static_cast<int>(maxDigitsIterations)) << iteration << "_"
+     << std::setw(static_cast<int>(std::to_string(numRanks).size())) << rank << ".vtu";
+  return ss.str();
 }
 
 }  // namespace LADDS
