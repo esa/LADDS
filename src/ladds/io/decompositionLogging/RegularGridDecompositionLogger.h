@@ -11,8 +11,8 @@
 #include <string>
 
 #include "DecompositionLogger.h"
-#include "ladds/io/ConfigReader.h"
 #include "ladds/distributedMemParallelization/RegularGridDecomposition.h"
+#include "ladds/io/ConfigReader.h"
 
 namespace LADDS {
 class RegularGridDecompositionLogger : public DecompositionLogger {
@@ -45,9 +45,9 @@ class RegularGridDecompositionLogger : public DecompositionLogger {
   std::string filenameMetadata(size_t iteration) const;
 
   /**
-   * Generates a filename for the payload file (vts).
+   * Generates a filename for the payload file (vts) of a specific rank.
    * @param iteration
-   * @param rank
+   * @param rank If omitted, the current rank number is chosen.
    * @return
    */
   std::string filenamePayload(size_t iteration, int rank = -1) const;
