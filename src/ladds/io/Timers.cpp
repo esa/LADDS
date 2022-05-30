@@ -72,8 +72,8 @@ void Timers::printTimers(ConfigReader &config, const DomainDecomposition &decomp
           timerToString("    Container update        ", accMPITimers(containerUpdate), maxNumberOfDigits, timeSimAcc) +
           printLB(containerUpdate) +
           timerToString("    Output                  ", accMPITimers(output), maxNumberOfDigits, timeTotalAcc) +
-          printLB(output) + timerToString("Total (wall-time)           ", timeTotal, maxNumberOfDigits, timeTotal) +
-          "\n" + timerToString("    One iteration           ", timeSim / iterations, maxNumberOfDigits, timeTotal));
+          printLB(output) + timerToString("Total (wall-time)           ", timeTotal, maxNumberOfDigits) + "\n" +
+          timerToString("  One iteration             ", timeSim / iterations, maxNumberOfDigits, timeTotal));
 }
 
 /**
@@ -101,7 +101,8 @@ std::string Timers::timerToString(const std::string &name, long timeNS, int numb
   if (maxTime != 0) {
     ss << " =" << std::setw(7) << std::right << ((double)timeNS / (double)maxTime * 100) << "%";
   } else {
-    // TODO whitespaces
+    // fill up same space with whitespaces
+    ss << std::setw(2 + 7 + 1) << "";
   }
   return ss.str();
 }
