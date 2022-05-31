@@ -10,6 +10,7 @@
 
 #include <array>
 #include <ostream>
+#include <utility>
 
 namespace LADDS {
 
@@ -61,18 +62,19 @@ class Particle final : public autopas::ParticleFP64 {
   Particle(std::array<double, 3> pos,
            std::array<double, 3> v,
            size_t debrisId,
-           const std::string &identifier,
+           std::string identifier,
            ActivityState activityState,
            double mass,
            double radius,
            double bcInv)
       : autopas::ParticleFP64(pos, v, debrisId),
-        aom(M_PI * radius * radius * 1e-6 / mass),  // convert m^2 -> km^2
-        mass(mass),
-        radius(radius),
-        bc_inv(bcInv),
-        activityState(activityState),
-        identifier(identifier) {}
+        _aom(M_PI * radius * radius * 1e-6 / mass),  // convert m^2 -> km^2
+        _mass(mass),
+        _radius(radius),
+        _bc_inv(bcInv),
+        _activityState(activityState),
+        // FIXME: Make sure the identifier is always 11 chars (+terminal?) long
+        _identifier(std::move(identifier)) {}
 
   /**
    * Destructor.
@@ -83,45 +85,45 @@ class Particle final : public autopas::ParticleFP64 {
   /**
    *  3D vector representation of the debris acceleration at the last time step. [km/s^2]
    */
-  std::array<double, 3> acc_t0{};
+  std::array<double, 3> _acc_t0{};
   /**
    * 3D vector representation of the debris acceleration at the current time step. [km/s^2]
    */
-  std::array<double, 3> acc_t1{};
+  std::array<double, 3> _acc_t1{};
   /**
-   * Area to mass relation [km^2/kg].
+   * Area to _mass relation [km^2/kg].
    * @note Used in the Propagator in SRPComponent::apply().
    */
-  double aom;
+  double _aom;
   /**
    * Mass of the object [kg].
    */
-  double mass;
+  double _mass;
   /**
    * Radius of the object when approximating it as a ball [m].
    */
-  double radius;
+  double _radius;
   /**
    * c_D*A/m is the inverse of the ballistic coefficient. [kg m^2]
    * @note Used in the Propagator in Acceleration::DragComponent::apply().
    */
-  double bc_inv;
+  double _bc_inv;
 
   /**
    * If a particle can actively influence its orbit. See ActivityState.
    */
-  ActivityState activityState;
+  ActivityState _activityState;
 
   /**
-   * Unique string identifier to relate objects to catalogue objects
+   * Unique string _identifier to relate objects to catalogue objects
    */
-  std::string identifier;
+  std::string _identifier;
 
  public:
   /**
    * Enums used as ids for accessing and creating a dynamically sized SoA.
    */
-  enum class AttributeNames : int {
+  enum AttributeNames : int {
     ptr,
     id,
     posX,
@@ -130,13 +132,16 @@ class Particle final : public autopas::ParticleFP64 {
     forceX,
     forceY,
     forceZ,
+    velocityX,
+    velocityY,
+    velocityZ,
     ownershipState,
-    acc_t0x,
-    acc_t0y,
-    acc_t0z,
-    acc_t1x,
-    acc_t1y,
-    acc_t1z,
+    acc_t0X,
+    acc_t0Y,
+    acc_t0Z,
+    acc_t1X,
+    acc_t1Y,
+    acc_t1Z,
     aom,
     mass,
     radius,
@@ -150,37 +155,48 @@ class Particle final : public autopas::ParticleFP64 {
    */
   using SoAArraysType = typename autopas::utils::SoAType<Particle *,
                                                          decltype(_id) /*id*/,
-                                                         decltype(_r[0]) /*x*/,
-                                                         decltype(_r[1]) /*y*/,
-                                                         decltype(_r[2]) /*z*/,
-                                                         decltype(_f[0]) /*fx*/,
-                                                         decltype(_f[1]) /*fy*/,
-                                                         decltype(_f[2]) /*fz*/,
+                                                         std::remove_reference_t<decltype(_r[0])> /*x*/,
+                                                         std::remove_reference_t<decltype(_r[1])> /*y*/,
+                                                         std::remove_reference_t<decltype(_r[2])> /*z*/,
+                                                         std::remove_reference_t<decltype(_f[0])> /*fx*/,
+                                                         std::remove_reference_t<decltype(_f[1])> /*fy*/,
+                                                         std::remove_reference_t<decltype(_f[2])> /*fz*/,
+                                                         std::remove_reference_t<decltype(_v[0])> /*vx*/,
+                                                         std::remove_reference_t<decltype(_v[1])> /*vy*/,
+                                                         std::remove_reference_t<decltype(_v[2])> /*vz*/,
                                                          decltype(_ownershipState) /*ownershipState*/,
-                                                         decltype(acc_t0[0]) /*acc_t0x*/,
-                                                         decltype(acc_t0[1]) /*acc_t0y*/,
-                                                         decltype(acc_t0[2]) /*acc_t0z*/,
-                                                         decltype(acc_t1[0]) /*acc_t1x*/,
-                                                         decltype(acc_t1[1]) /*acc_t1y*/,
-                                                         decltype(acc_t1[2]) /*acc_t1z*/,
-                                                         decltype(aom) /*aom*/,
-                                                         decltype(mass) /*mass*/,
-                                                         decltype(radius) /*radius*/,
-                                                         decltype(bc_inv) /*bc_inv*/,
-                                                         decltype(activityState) /*activityState*/,
-                                                         decltype(identifier) /*identifier*/
+                                                         std::remove_reference_t<decltype(_acc_t0[0])> /*acc_t0X*/,
+                                                         std::remove_reference_t<decltype(_acc_t0[1])> /*acc_t0Y*/,
+                                                         std::remove_reference_t<decltype(_acc_t0[2])> /*acc_t0Z*/,
+                                                         std::remove_reference_t<decltype(_acc_t1[0])> /*acc_t1X*/,
+                                                         std::remove_reference_t<decltype(_acc_t1[1])> /*acc_t1Y*/,
+                                                         std::remove_reference_t<decltype(_acc_t1[2])> /*acc_t1Z*/,
+                                                         decltype(_aom) /*_aom*/,
+                                                         decltype(_mass) /*_mass*/,
+                                                         decltype(_radius) /*_radius*/,
+                                                         decltype(_bc_inv) /*_bc_inv*/,
+                                                         decltype(_activityState) /*_activityState*/,
+                                                         decltype(_identifier) /*_identifier*/
                                                          >::Type;
+
+  /**
+   * Non-const getter for the pointer of this object.
+   * @tparam attribute Attribute name.
+   * @return this.
+   */
+  template <AttributeNames attribute, std::enable_if_t<attribute == AttributeNames::ptr, bool> = true>
+  [[nodiscard]] constexpr auto get() {
+    return this;
+  }
 
   /**
    * Getter, which allows access to an attribute using the corresponding attribute name (defined in AttributeNames).
    * @tparam attribute Attribute name.
    * @return Value of the requested attribute.
    */
-  template <AttributeNames attribute>
-  [[nodiscard]] constexpr auto get() {
-    if constexpr (attribute == AttributeNames::ptr) {
-      return this;
-    } else if constexpr (attribute == AttributeNames::id) {
+  template <AttributeNames attribute, std::enable_if_t<attribute != AttributeNames::ptr, bool> = true>
+  [[nodiscard]] constexpr auto get() const {
+    if constexpr (attribute == AttributeNames::id) {
       return getID();
     } else if constexpr (attribute == AttributeNames::posX) {
       return getR()[0];
@@ -194,8 +210,38 @@ class Particle final : public autopas::ParticleFP64 {
       return getF()[1];
     } else if constexpr (attribute == AttributeNames::forceZ) {
       return getF()[2];
+    } else if constexpr (attribute == AttributeNames::velocityX) {
+      return getVelocity()[0];
+    } else if constexpr (attribute == AttributeNames::velocityY) {
+      return getVelocity()[1];
+    } else if constexpr (attribute == AttributeNames::velocityZ) {
+      return getVelocity()[2];
     } else if constexpr (attribute == AttributeNames::ownershipState) {
-      return this->_ownershipState;
+      return getOwnershipState();
+    } else if constexpr (attribute == AttributeNames::acc_t0X) {
+      return getAccT0()[0];
+    } else if constexpr (attribute == AttributeNames::acc_t0Y) {
+      return getAccT0()[1];
+    } else if constexpr (attribute == AttributeNames::acc_t0Z) {
+      return getAccT0()[2];
+    } else if constexpr (attribute == AttributeNames::acc_t1X) {
+      return getAccT1()[0];
+    } else if constexpr (attribute == AttributeNames::acc_t1Y) {
+      return getAccT1()[1];
+    } else if constexpr (attribute == AttributeNames::acc_t1Z) {
+      return getAccT1()[2];
+    } else if constexpr (attribute == AttributeNames::aom) {
+      return getAom();
+    } else if constexpr (attribute == AttributeNames::mass) {
+      return getMass();
+    } else if constexpr (attribute == AttributeNames::radius) {
+      return getRadius();
+    } else if constexpr (attribute == AttributeNames::bc_inv) {
+      return getBcInv();
+    } else if constexpr (attribute == AttributeNames::activityState) {
+      return getActivityState();
+    } else if constexpr (attribute == AttributeNames::identifier) {
+      return getIdentifier();
     } else {
       autopas::utils::ExceptionHandler::exception("Particle::get() unknown attribute {}", attribute);
     }
@@ -207,7 +253,7 @@ class Particle final : public autopas::ParticleFP64 {
    * @param value New value of the requested attribute.
    */
   template <AttributeNames attribute>
-  constexpr void set(typename std::tuple_element<static_cast<int>(attribute), SoAArraysType>::type::value_type value) {
+  constexpr void set(typename std::tuple_element<attribute, SoAArraysType>::type::value_type value) {
     if constexpr (attribute == AttributeNames::id) {
       setID(value);
     } else if constexpr (attribute == AttributeNames::posX) {
@@ -222,8 +268,38 @@ class Particle final : public autopas::ParticleFP64 {
       _f[1] = value;
     } else if constexpr (attribute == AttributeNames::forceZ) {
       _f[2] = value;
+    } else if constexpr (attribute == AttributeNames::velocityX) {
+      _v[0] = value;
+    } else if constexpr (attribute == AttributeNames::velocityY) {
+      _v[1] = value;
+    } else if constexpr (attribute == AttributeNames::velocityZ) {
+      _v[2] = value;
     } else if constexpr (attribute == AttributeNames::ownershipState) {
       this->_ownershipState = value;
+    } else if constexpr (attribute == AttributeNames::acc_t0X) {
+      _acc_t0[0] = value;
+    } else if constexpr (attribute == AttributeNames::acc_t0Y) {
+      _acc_t0[1] = value;
+    } else if constexpr (attribute == AttributeNames::acc_t0Z) {
+      _acc_t0[2] = value;
+    } else if constexpr (attribute == AttributeNames::acc_t1X) {
+      _acc_t1[0] = value;
+    } else if constexpr (attribute == AttributeNames::acc_t1Y) {
+      _acc_t1[1] = value;
+    } else if constexpr (attribute == AttributeNames::acc_t1Z) {
+      _acc_t1[2] = value;
+    } else if constexpr (attribute == AttributeNames::aom) {
+      _aom = value;
+    } else if constexpr (attribute == AttributeNames::mass) {
+      _mass = value;
+    } else if constexpr (attribute == AttributeNames::radius) {
+      _radius = value;
+    } else if constexpr (attribute == AttributeNames::bc_inv) {
+      _bc_inv = value;
+    } else if constexpr (attribute == AttributeNames::activityState) {
+      _activityState = value;
+    } else if constexpr (attribute == AttributeNames::identifier) {
+      _identifier = value;
     } else {
       autopas::utils::ExceptionHandler::exception("Particle::set() unknown attribute {}", attribute);
     }

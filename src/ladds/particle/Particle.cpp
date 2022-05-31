@@ -34,11 +34,11 @@ double Particle::getSpeed() const {
 }
 
 double Particle::getAccT0Norm() const {
-  return MathUtils::euclideanNorm(acc_t0);
+  return MathUtils::euclideanNorm(_acc_t0);
 }
 
 double Particle::getAccT1Norm() const {
-  return MathUtils::euclideanNorm(acc_t1);
+  return MathUtils::euclideanNorm(_acc_t1);
 }
 
 const std::array<double, 3> &Particle::getPosition() const {
@@ -58,51 +58,51 @@ void Particle::setVelocity(const std::array<double, 3> &velocity) {
 }
 
 const std::array<double, 3> &Particle::getAccT0() const {
-  return acc_t0;
+  return _acc_t0;
 }
 
 void Particle::setAccT0(const std::array<double, 3> &accT0) {
-  acc_t0 = accT0;
+  _acc_t0 = accT0;
 }
 
 const std::array<double, 3> &Particle::getAccT1() const {
-  return acc_t1;
+  return _acc_t1;
 }
 
 void Particle::setAccT1(const std::array<double, 3> &accT1) {
-  acc_t1 = accT1;
+  _acc_t1 = accT1;
 }
 
 double Particle::getAom() const {
-  return aom;
+  return _aom;
 }
 
 void Particle::setAom(const double aom) {
-  Particle::aom = aom;
+  Particle::_aom = aom;
 }
 
 double Particle::getBcInv() const {
-  return bc_inv;
+  return _bc_inv;
 }
 
 void Particle::setBcInv(const double bcInv) {
-  bc_inv = bcInv;
+  _bc_inv = bcInv;
 }
 
 Particle::ActivityState Particle::getActivityState() const {
-  return activityState;
+  return _activityState;
 }
 
 void Particle::setActivityState(Particle::ActivityState activityState) {
-  Particle::activityState = activityState;
+  Particle::_activityState = activityState;
 }
 
 const std::string &Particle::getIdentifier() const {
-  return identifier;
+  return _identifier;
 }
 
 void Particle::setIdentifier(const std::string &identifier) {
-  this->identifier = identifier;
+  this->_identifier = identifier;
 }
 
 std::ostream &operator<<(std::ostream &os, const Particle &particle) {
@@ -134,15 +134,15 @@ bool Particle::operator==(const Particle &rhs) const {
   // clang-format off
   return static_cast<const autopas::ParticleBase<double, unsigned long> &>(*this)
       == static_cast<const autopas::ParticleBase<double, unsigned long> &>(rhs) and
-      acc_t0 == rhs.acc_t0 and
-      acc_t1 == rhs.acc_t1 and
+      _acc_t0 == rhs._acc_t0 and
+      _acc_t1 == rhs._acc_t1 and
       // the following values can only be compared upon float32 bit precision since we write them as such to HDF5
-      (std::abs(aom - rhs.aom) < 1e-7) and
-      (std::abs(mass - rhs.mass) < 1e-7) and
-      (std::abs(radius - rhs.radius) < 1e-7) and
-      (std::abs(bc_inv - rhs.bc_inv) < 1e-7) and
-      activityState == rhs.activityState and
-      identifier == rhs.identifier;
+      (std::abs(_aom - rhs._aom) < 1e-7) and
+      (std::abs(_mass - rhs._mass) < 1e-7) and
+      (std::abs(_radius - rhs._radius) < 1e-7) and
+      (std::abs(_bc_inv - rhs._bc_inv) < 1e-7) and
+      _activityState == rhs._activityState and
+      _identifier == rhs._identifier;
   // clang-format on
 }
 bool Particle::operator!=(const Particle &rhs) const {
@@ -150,19 +150,19 @@ bool Particle::operator!=(const Particle &rhs) const {
 }
 
 double Particle::getMass() const {
-  return mass;
+  return _mass;
 }
 
 void Particle::setMass(double mass) {
-  Particle::mass = mass;
+  Particle::_mass = mass;
 }
 
 double Particle::getRadius() const {
-  return radius;
+  return _radius;
 }
 
 void Particle::setRadius(double radius) {
-  Particle::radius = radius;
+  Particle::_radius = radius;
 }
 
 }  // namespace LADDS
