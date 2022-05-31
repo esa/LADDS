@@ -94,8 +94,6 @@ void VTUWriter::writePVTU(ConfigReader &config, size_t iteration, const DomainDe
   if (not pvtuFile.is_open()) {
     throw std::runtime_error("Simulation::writeVTKFile(): Failed to open file \"" + filename + "\"");
   }
-  const std::array<double, 3> globalBoxMin = decomposition.getGlobalBoxMin();
-  const std::array<double, 3> globalBoxMax = decomposition.getGlobalBoxMax();
   pvtuFile << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n";
   pvtuFile << "<VTKFile byte_order=\"LittleEndian\" type=\"PUnstructuredGrid\" version=\"0.1\">\n";
   pvtuFile << "  <PUnstructuredGrid>\n";
