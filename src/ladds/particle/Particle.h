@@ -79,23 +79,97 @@ class Particle final : public autopas::ParticleFP64 {
    */
   ~Particle() final = default;
 
+ private:
+  /**
+   *  3D vector representation of the debris acceleration at the last time step. [km/s^2]
+   */
+  std::array<double, 3> acc_t0{};
+  /**
+   * 3D vector representation of the debris acceleration at the current time step. [km/s^2]
+   */
+  std::array<double, 3> acc_t1{};
+  /**
+   * Area to mass relation [km^2/kg].
+   * @note Used in the Propagator in SRPComponent::apply().
+   */
+  double aom;
+  /**
+   * Mass of the object [kg].
+   */
+  double mass;
+  /**
+   * Radius of the object when approximating it as a ball [m].
+   */
+  double radius;
+  /**
+   * c_D*A/m is the inverse of the ballistic coefficient. [kg m^2]
+   * @note Used in the Propagator in Acceleration::DragComponent::apply().
+   */
+  double bc_inv;
+
+  /**
+   * If a particle can actively influence its orbit. See ActivityState.
+   */
+  ActivityState activityState;
+
+  /**
+   * Unique string identifier to relate objects to catalogue objects
+   */
+  std::string identifier;
+
+ public:
   /**
    * Enums used as ids for accessing and creating a dynamically sized SoA.
    */
-  enum AttributeNames : int { ptr, id, posX, posY, posZ, forceX, forceY, forceZ, ownershipState };
+  enum class AttributeNames : int {
+    ptr,
+    id,
+    posX,
+    posY,
+    posZ,
+    forceX,
+    forceY,
+    forceZ,
+    ownershipState,
+    acc_t0x,
+    acc_t0y,
+    acc_t0z,
+    acc_t1x,
+    acc_t1y,
+    acc_t1z,
+    aom,
+    mass,
+    radius,
+    bc_inv,
+    activityState,
+    identifier
+  };
 
   /**
    * The type for the SoA storage.
    */
   using SoAArraysType = typename autopas::utils::SoAType<Particle *,
-                                                         size_t /*id*/,
-                                                         double /*x*/,
-                                                         double /*y*/,
-                                                         double /*z*/,
-                                                         double /*fx*/,
-                                                         double /*fy*/,
-                                                         double /*fz*/,
-                                                         autopas::OwnershipState /*ownershipState*/>::Type;
+                                                         decltype(_id) /*id*/,
+                                                         decltype(_r[0]) /*x*/,
+                                                         decltype(_r[1]) /*y*/,
+                                                         decltype(_r[2]) /*z*/,
+                                                         decltype(_f[0]) /*fx*/,
+                                                         decltype(_f[1]) /*fy*/,
+                                                         decltype(_f[2]) /*fz*/,
+                                                         decltype(_ownershipState) /*ownershipState*/,
+                                                         decltype(acc_t0[0]) /*acc_t0x*/,
+                                                         decltype(acc_t0[1]) /*acc_t0y*/,
+                                                         decltype(acc_t0[2]) /*acc_t0z*/,
+                                                         decltype(acc_t1[0]) /*acc_t1x*/,
+                                                         decltype(acc_t1[1]) /*acc_t1y*/,
+                                                         decltype(acc_t1[2]) /*acc_t1z*/,
+                                                         decltype(aom) /*aom*/,
+                                                         decltype(mass) /*mass*/,
+                                                         decltype(radius) /*radius*/,
+                                                         decltype(bc_inv) /*bc_inv*/,
+                                                         decltype(activityState) /*activityState*/,
+                                                         decltype(identifier) /*identifier*/
+                                                         >::Type;
 
   /**
    * Getter, which allows access to an attribute using the corresponding attribute name (defined in AttributeNames).
@@ -133,7 +207,7 @@ class Particle final : public autopas::ParticleFP64 {
    * @param value New value of the requested attribute.
    */
   template <AttributeNames attribute>
-  constexpr void set(typename std::tuple_element<attribute, SoAArraysType>::type::value_type value) {
+  constexpr void set(typename std::tuple_element<static_cast<int>(attribute), SoAArraysType>::type::value_type value) {
     if constexpr (attribute == AttributeNames::id) {
       setID(value);
     } else if constexpr (attribute == AttributeNames::posX) {
@@ -336,44 +410,6 @@ class Particle final : public autopas::ParticleFP64 {
    * @return
    */
   bool operator!=(const Particle &rhs) const;
-
- private:
-  /**
-   *  3D vector representation of the debris acceleration at the last time step. [km/s^2]
-   */
-  std::array<double, 3> acc_t0{};
-  /**
-   * 3D vector representation of the debris acceleration at the current time step. [km/s^2]
-   */
-  std::array<double, 3> acc_t1{};
-  /**
-   * Area to mass relation [km^2/kg].
-   * @note Used in the Propagator in SRPComponent::apply().
-   */
-  double aom;
-  /**
-   * Mass of the object [kg].
-   */
-  double mass;
-  /**
-   * Radius of the object when approximating it as a ball [m].
-   */
-  double radius;
-  /**
-   * c_D*A/m is the inverse of the ballistic coefficient. [kg m^2]
-   * @note Used in the Propagator in Acceleration::DragComponent::apply().
-   */
-  double bc_inv;
-
-  /**
-   * If a particle can actively influence its orbit. See ActivityState.
-   */
-  ActivityState activityState;
-
-  /**
-   * Unique string identifier to relate objects to catalogue objects
-   */
-  std::string identifier;
 };
 
 /**
