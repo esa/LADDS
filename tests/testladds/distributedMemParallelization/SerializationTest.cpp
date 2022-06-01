@@ -18,10 +18,12 @@ TEST(SerializationTest, serializeAndDeserializeTest) {
                                    4.2,
                                    13.37,
                                    0.5);
+  originalParticle.setAccT0({7., 8., 9.});
+  originalParticle.setAccT1({10., 11., 12.});
+
   std::vector<char> serializedParticle;
   LADDS::Serialization::serializeParticle(originalParticle, serializedParticle);
   std::vector<LADDS::Particle> deserializedParticles{};
-//  LADDS::Serialization::deserializeParticle(serializedParticle.data(), deserializedParticles);
   LADDS::Serialization::deserializeParticles(serializedParticle, deserializedParticles);
 
   EXPECT_EQ(deserializedParticles[0].get<LADDS::Particle::AttributeNames::posX>(),
