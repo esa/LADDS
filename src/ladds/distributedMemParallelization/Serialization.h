@@ -16,10 +16,10 @@
 namespace LADDS::Serialization {
 /**
  * Serializes a particle and appends it to the serializedParticles container.
- * @param particle The particle which will be serialized.
- * @param serializedParticles The container to wich the serialized particle will be appended.
+ * @param particles The particles which will be serialized.
+ * @param serializedParticles The container to which the serialized particle will be appended.
  */
-void serializeParticle(const Particle &particle, std::vector<char> &serializedParticles);
+void serializeParticles(const std::vector<Particle> &particles, std::vector<char> &serializedParticles);
 
 /**
  * Deserializes a container of serialized particles.

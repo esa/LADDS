@@ -40,8 +40,10 @@ constexpr std::array<typename Particle::AttributeNames, 20> Attributes = {Partic
 
 /**
  * The combined size in byte of the attributes which need to be communicated using MPI.
+ * Not really sure where the 4 extra bytes in the end come from but they are needed.
  */
-constexpr size_t AttributesSize = 192;
+constexpr size_t AttributesSize =
+    1 * sizeof(size_t) /*id*/ + 16 * sizeof(double) + 2 * sizeof(int) /*enums*/ + 12 * sizeof(char) /*identifier*/ + 4;
 
 /**
  * Serializes the attribute defined by I.
@@ -116,11 +118,15 @@ void deserializeParticleImpl(char *particleData, Particle &particle, std::index_
 }  // namespace
 
 namespace Serialization {
-void serializeParticle(const Particle &particle, std::vector<char> &serializedParticles) {
-  serializeParticleImpl(particle, serializedParticles, std::make_index_sequence<Attributes.size()>{});
+
+void serializeParticles(const std::vector<Particle> &particles, std::vector<char> &serializedParticles) {
+  for (const auto &particle : particles) {
+    serializeParticleImpl(particle, serializedParticles, std::make_index_sequence<Attributes.size()>{});
+  }
 }
 
 void deserializeParticles(std::vector<char> &particlesData, std::vector<Particle> &particles) {
+  particles.reserve(particles.size() + (particlesData.size() / AttributesSize));
   // initialize a dummy particle which will be filled with parsed values
   Particle particle{{0., 0., 0.}, {0., 0., 0.}, 0, "0123-456abc", Particle::ActivityState::passive, 0., 0., 0.};
   for (size_t i = 0; i < particlesData.size(); i += AttributesSize) {
