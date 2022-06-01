@@ -32,7 +32,7 @@ TEST(SerializationTest, serializeAndDeserializeTest) {
   originalParticles[1].setAccT1({100., 110., 120.});
 
   std::vector<char> serializedParticle;
-  LADDS::Serialization::serializeParticles(originalParticles, serializedParticle);
+  LADDS::Serialization::serializeParticles(originalParticles.begin(), originalParticles.end(), serializedParticle);
   std::vector<LADDS::Particle> deserializedParticles{};
   LADDS::Serialization::deserializeParticles(serializedParticle, deserializedParticles);
 

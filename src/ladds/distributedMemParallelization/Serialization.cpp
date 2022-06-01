@@ -119,9 +119,11 @@ void deserializeParticleImpl(char *particleData, Particle &particle, std::index_
 
 namespace Serialization {
 
-void serializeParticles(const std::vector<Particle> &particles, std::vector<char> &serializedParticles) {
-  for (const auto &particle : particles) {
-    serializeParticleImpl(particle, serializedParticles, std::make_index_sequence<Attributes.size()>{});
+void serializeParticles(const std::vector<Particle>::iterator &particlesBegin,
+                        const std::vector<Particle>::iterator &particlesEnd,
+                        std::vector<char> &serializedParticles) {
+  for (auto particleIter = particlesBegin; particleIter < particlesEnd; ++particleIter) {
+    serializeParticleImpl(*particleIter, serializedParticles, std::make_index_sequence<Attributes.size()>{});
   }
 }
 
