@@ -73,8 +73,10 @@ class Particle final : public autopas::ParticleFP64 {
         _radius(radius),
         _bc_inv(bcInv),
         _activityState(activityState),
-        // FIXME: Make sure the identifier is always 11 chars (+terminal?) long
-        _identifier(std::move(identifier)) {}
+        _identifier(std::move(identifier)) {
+    // to make serialization easier make sure COSPAR IDs are always padded with spaces to full length of 11
+    _identifier.insert(_identifier.end(), 11 - _identifier.size(), ' ');
+  }
 
   /**
    * Destructor.
