@@ -45,7 +45,7 @@ LADDS::RegularGridDecomposition::RegularGridDecomposition(LADDS::ConfigReader &c
   // print parallelization info
   if (rank == 0) {
     SPDLOG_LOGGER_INFO(config.getLogger().get(),
-                       "Parallelization Configuration"
+                       "Parallelization Configuration\n"
                        "MPI Ranks              : {}\n"
                        "OpenMP Threads per Rank: {}\n"
                        "MPI Decomposition      : {}",
