@@ -15,10 +15,11 @@
 #include <tuple>
 #include <vector>
 
-#include "ladds/distributedMemParallelization/RegularGridDecomposition.h"
+#include "ladds/distributedMemParallelization/ParticleCommunicator.h"
 #include "ladds/io/ConjunctionLogger.h"
 #include "ladds/io/SatelliteLoader.h"
 #include "ladds/io/VTUWriter.h"
+#include "ladds/io/decompositionLogging/DecompositionLogger.h"
 #include "ladds/io/decompositionLogging/RegularGridDecompositionLogger.h"
 #include "ladds/io/hdf5/HDF5Writer.h"
 #include "ladds/particle/BreakupWrapper.h"
@@ -269,17 +270,29 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     }
     timers.constellationInsertion.stop();
 
-    // TODO MPI: handle particle exchange between ranks
     timers.containerUpdate.start();
     // (potentially) update the internal data structure and collect particles which are leaving the container.
-    const auto escapedParticles = autopas.updateContainer();
+    auto leavingParticles = autopas.updateContainer();
     timers.containerUpdate.stop();
 
-    // sanity check
-    if (not escapedParticles.empty()) {
-      SPDLOG_LOGGER_ERROR(logger.get(), "It {} Particles are escaping! \n{}", iteration, escapedParticles);
+    timers.particleCommunication.start();
+    if (const auto *regularGridDecomp = dynamic_cast<const RegularGridDecomposition *>(&domainDecomposition)) {
+      communicateParticles(leavingParticles, autopas, *regularGridDecomp);
+    } else {
+      throw std::runtime_error("No particle communication implemented for the chosen decomposition!");
+    }
+    timers.particleCommunication.stop();
+
+    // sanity check: after communication there should be no leaving particles left
+    if (not leavingParticles.empty()) {
+      SPDLOG_LOGGER_ERROR(logger.get(),
+                          "It {} | {} Particles are escaping! \n{}",
+                          iteration,
+                          leavingParticles.size(),
+                          leavingParticles);
     }
 
+    // TODO MPI: handle halo exchange between ranks
     if (iteration % timestepsPerCollisionDetection == 0) {
       timers.collisionDetection.start();
       auto [collisions, stillTuning] = collisionDetection(autopas,
@@ -455,6 +468,7 @@ void Simulation::dumpCalibratedConfig(ConfigReader &config, const AutoPas_t &aut
 }
 
 void Simulation::deleteBurnUps(autopas::AutoPas<Particle> &autopas, double burnUpAltitude) const {
+  // FIXME: skip if rank does not contain burn-up zone
   const auto critAltitude = burnUpAltitude + Physics::R_EARTH;
   const auto critAltitudeSquared = critAltitude * critAltitude;
 #pragma omp parallel
@@ -483,6 +497,82 @@ size_t Simulation::computeTimeout(ConfigReader &config) {
   const auto sum = seconds + minutes + hours + days;
   // if everything resolved to 0 return the error value
   return sum;
+}
+
+void Simulation::communicateParticles(std::vector<Particle> &leavingParticles,
+                                      autopas::AutoPas<Particle> &autopas,
+                                      const RegularGridDecomposition &decomposition) {
+  const auto &comm = decomposition.getCommunicator();
+  const auto &[coordsMax, periods, coords] = decomposition.getGridInfo();
+
+  const auto &localBoxMin = autopas.getBoxMin();
+  const auto &localBoxMax = autopas.getBoxMax();
+
+  std::vector<Particle> incomingParticles;
+
+  auto getNeighborRank = [&](const auto &coordsThis, int direction, auto op) {
+    auto coordsOther = coordsThis;
+    coordsOther[direction] = op(coordsOther[direction], 1);
+    int rankOther{};
+    //    std::cout << "getNeighborRank: coordsOther= " << coordsOther[0] << " " << coordsOther[1] << " " <<
+    //    coordsOther[2]
+    //              << std::endl;
+    autopas::AutoPas_MPI_Cart_rank(comm, coordsOther.data(), &rankOther);
+    return rankOther;
+  };
+
+  enum CommDir : int { X, Y, Z };
+  for (CommDir commDir = X; commDir <= Z; commDir = static_cast<CommDir>(commDir + 1)) {
+    // trigger both non-blocking sends before doing both blocking receives
+
+    // send left (negative direction)
+    if (coords[commDir] != 0) {
+      // sort particles that are leaving in the negative direction to the end of leavingParticles
+      auto leavingParticlesIter =
+          std::partition(leavingParticles.begin(), leavingParticles.end(), [&](const Particle &p) {
+            return p.getPosition()[commDir] > localBoxMin[commDir];
+          });
+      const int rankLeft = getNeighborRank(coords, commDir, std::minus<>());
+      ParticleCommunicator::sendParticles(leavingParticlesIter, leavingParticles.end(), rankLeft, comm);
+      // clip sent particles
+      leavingParticles.erase(leavingParticlesIter, leavingParticles.end());
+    }
+
+    // communication right (positive direction)
+    if (coords[commDir] != coordsMax[commDir] - 1) {
+      // sort particles that are leaving in the positive direction to the end of leavingParticles
+      auto leavingParticlesIter =
+          std::partition(leavingParticles.begin(), leavingParticles.end(), [&](const Particle &p) {
+            return p.getPosition()[commDir] < localBoxMax[commDir];
+          });
+      const int rankRight = getNeighborRank(coords, commDir, std::plus<>());
+      ParticleCommunicator::sendParticles(leavingParticlesIter, leavingParticles.end(), rankRight, comm);
+      // clip sent particles
+      leavingParticles.erase(leavingParticlesIter, leavingParticles.end());
+
+      // receive
+      auto incomingParticlesRight = ParticleCommunicator::receiveParticles(rankRight, comm);
+      incomingParticles.insert(incomingParticles.end(), incomingParticlesRight.begin(), incomingParticlesRight.end());
+    }
+
+    // receive left (negative direction)
+    if (coords[commDir] != 0) {
+      const int rankLeft = getNeighborRank(coords, commDir, std::minus<>());
+      auto incomingParticlesLeft = ParticleCommunicator::receiveParticles(rankLeft, comm);
+      incomingParticles.insert(incomingParticles.end(), incomingParticlesLeft.begin(), incomingParticlesLeft.end());
+    }
+
+    // sort particles which have to be added to the local container to the end of incomingParticles
+    auto incomingParticlesIter =
+        std::partition(incomingParticles.begin(), incomingParticles.end(), [&](const Particle &p) {
+          return autopas::utils::notInBox(p.getPosition(), localBoxMin, localBoxMax);
+        });
+    for (auto particleIter = incomingParticlesIter; particleIter < incomingParticles.end(); ++particleIter) {
+      autopas.addParticle(*particleIter);
+    }
+    // clip added particles
+    incomingParticles.erase(incomingParticlesIter, incomingParticles.end());
+  }
 }
 
 }  // namespace LADDS

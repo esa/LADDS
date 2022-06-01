@@ -16,13 +16,14 @@
 
 #include "CollisionFunctor.h"
 #include "TypeDefinitions.h"
+#include "ladds/distributedMemParallelization/DomainDecomposition.h"
+#include "ladds/distributedMemParallelization/RegularGridDecomposition.h"
 #include "ladds/io/ConfigReader.h"
 #include "ladds/io/ConjunctionLogger.h"
 #include "ladds/io/Timers.h"
 #include "ladds/io/hdf5/HDF5Writer.h"
 #include "ladds/particle/Constellation.h"
 #include "ladds/particle/Particle.h"
-#include "ladds/distributedMemParallelization/DomainDecomposition.h"
 
 namespace LADDS {
 
@@ -156,6 +157,18 @@ class Simulation {
    * @return timeout in seconds.
    */
   size_t computeTimeout(ConfigReader &config);
+
+  /**
+   * Check if the current rank is on the global domain boundary.
+   * @param decomposition container
+   * @return
+   */
+  bool rankIsOnGlobalBoundary(const DomainDecomposition &decomposition);
+
+  void communicateParticles(std::vector<Particle> &leavingParticles,
+                            autopas::AutoPas<Particle> &autopas,
+                            const RegularGridDecomposition &decomposition);
+
   /**
    * One logger to log them all.
    */
