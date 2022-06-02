@@ -12,6 +12,15 @@
 
 namespace LADDS {
 
+VTUWriter::VTUWriter(ConfigReader &config, size_t iteration, const DomainDecomposition &decomposition)
+    : _loggerName{VTUWriter::filenamePayload(config, iteration, decomposition)} {
+  auto logger{spdlog::basic_logger_mt<spdlog::async_factory>(_loggerName, _loggerName)};
+  logger->set_pattern("%v");
+}
+VTUWriter::~VTUWriter() {
+  spdlog::drop(_loggerName);
+}
+
 template <class T>
 void swapEndianess(T &var) {
   char *varArray = reinterpret_cast<char *>(&var);
@@ -68,22 +77,31 @@ void VTUWriter::writeLegacyVTKBinary(size_t iteration, const AutoPas_t &autopas)
   file.close();
 }
 
-void VTUWriter::writeVTU(ConfigReader &config,
-                         size_t iteration,
-                         const AutoPas_t &autopas,
-                         const DomainDecomposition &decomposition) {
-  VTKWriter vtkWriter(filenamePayload(config, iteration, decomposition));
-  std::vector<Satellite> allParticles;
-  allParticles.reserve(autopas.getNumberOfParticles());
-  for (const auto &p : autopas) {
-    auto sat = SatelliteToParticleConverter::convertParticleToSatellite(p);
-    sat.setPosition(autopas::utils::ArrayMath::mulScalar(sat.getPosition(), 1 / 1000.));
-    allParticles.push_back(sat);
-  }
-  // sort particles by Id to provide consistent output files
-  std::sort(
-      allParticles.begin(), allParticles.end(), [](const auto &p1, const auto &p2) { return p1.getId() < p2.getId(); });
-  vtkWriter.printResult(allParticles);
+void VTUWriter::writeVTU(const AutoPas_t &autopas) {
+  // Header
+  this->printHeader(autopas.getNumberOfParticles());
+
+  // Point properties
+  this->printProperty<size_t, Particle>("ID", &Particle::getID, autopas);
+  this->printProperty<Particle::ActivityState, Particle>("activityState", &Particle::getActivityState, autopas);
+  this->printProperty<double, Particle>("mass", &Particle::getMass, autopas);
+  this->printProperty<double, Particle>("radius", &Particle::getRadius, autopas);
+  //  this->printProperty<double, Particle>("areaToMass", &Particle::getAom, autopas);
+  //  this->printProperty<double, Particle>("bcInv", &Particle::getBcInv, autopas);
+  //  this->printProperty<double, Particle>("absSpeed", &Particle::getSpeed, autopas);
+  //  this->printProperty<double, Particle>("heightAboveGround", &Particle::getHeight, autopas);
+  this->printProperty<std::array<double, 3>, Particle>("velocity", &Particle::getVelocity, autopas);
+  //  this->printProperty<std::array<double, 3>, Particle>("accT0", &Particle::getAccT0, autopas);
+  //  this->printProperty<std::array<double, 3>, Particle>("accT1", &Particle::getAccT1, autopas);
+
+  // Separator between point and point-tore-cell data
+  this->printSeparator();
+
+  // Point properties related to cell (position)
+  this->printProperty<std::array<double, 3>, Particle>("position", &Particle::getPosition, autopas);
+
+  // Footer
+  this->printFooter();
 }
 
 void VTUWriter::writePVTU(ConfigReader &config, size_t iteration, const DomainDecomposition &decomposition) {
@@ -98,12 +116,17 @@ void VTUWriter::writePVTU(ConfigReader &config, size_t iteration, const DomainDe
   pvtuFile << "<VTKFile byte_order=\"LittleEndian\" type=\"PUnstructuredGrid\" version=\"0.1\">\n";
   pvtuFile << "  <PUnstructuredGrid>\n";
   pvtuFile << "    <PPointData>\n";
-  pvtuFile << "      <PDataArray type=\"Float32\" Name=\"characteristic-length\" />\n";
+  pvtuFile << "      <PDataArray type=\"Int64\" Name=\"ID\" />\n";
+  pvtuFile << "      <PDataArray type=\"Int32\" Name=\"activityState\" />\n";
   pvtuFile << "      <PDataArray type=\"Float32\" Name=\"mass\" />\n";
-  pvtuFile << "      <PDataArray type=\"Float32\" Name=\"area\" />\n";
-  pvtuFile << "      <PDataArray type=\"Float32\" Name=\"area-to-mass\" />\n";
-  pvtuFile << "      <PDataArray type=\"Float32\" Name=\"velocity\" />\n";
-  pvtuFile << "      <PDataArray type=\"Float32\" Name=\"ejection-velocity\" />\n";
+  pvtuFile << "      <PDataArray type=\"Float32\" Name=\"radius\" />\n";
+  //  pvtuFile << "      <PDataArray type=\"Float32\" Name=\"areaToMass\" />\n";
+  //  pvtuFile << "      <PDataArray type=\"Float32\" Name=\"bcInv\" />\n";
+  //  pvtuFile << "      <PDataArray type=\"Float32\" Name=\"absSpeed\" />\n";
+  //  pvtuFile << "      <PDataArray type=\"Float32\" Name=\"heightAboveGround\" />\n";
+  pvtuFile << "      <PDataArray type=\"Float32\" Name=\"velocity\" NumberOfComponents=\"3\" format=\"ascii\" />\n";
+  //  pvtuFile << "      <PDataArray type=\"Float32\" Name=\"accT0\" NumberOfComponents=\"3\" format=\"ascii\" />\n";
+  //  pvtuFile << "      <PDataArray type=\"Float32\" Name=\"accT1\" NumberOfComponents=\"3\" format=\"ascii\" />\n";
   pvtuFile << "    </PPointData>\n";
   pvtuFile << "    <PCellData/>\n";
   pvtuFile << "    <PPoints>\n";
@@ -148,4 +171,30 @@ std::string VTUWriter::filenamePayload(ConfigReader &config,
   return ss.str();
 }
 
+void VTUWriter::printHeader(size_t size) const {
+  auto logger = spdlog::get(_loggerName);
+  logger->info(R"(<?xml version="1.0" encoding="UTF-8" standalone="no" ?>)");
+  logger->info(R"(<VTKFile byte_order="LittleEndian" type="UnstructuredGrid" version="0.1">)");
+  logger->info(R"(  <UnstructuredGrid>)");
+  logger->info(R"(    <Piece NumberOfCells="0" NumberOfPoints="{}">)", size);
+  logger->info(R"(      <PointData>)");
+}
+
+void VTUWriter::printSeparator() const {
+  auto logger = spdlog::get(_loggerName);
+  logger->info(R"(      </PointData>)");
+  logger->info(R"(      <CellData/>)");
+  logger->info(R"(      <Points>)");
+}
+
+void VTUWriter::printFooter() const {
+  auto logger = spdlog::get(_loggerName);
+  logger->info(R"(      </Points>)");
+  logger->info(R"(      <Cells>)");
+  logger->info(R"(        <DataArray Name="types" NumberOfComponents="0" format="ascii" type="Float32"/>)");
+  logger->info(R"(      </Cells>)");
+  logger->info(R"(    </Piece>)");
+  logger->info(R"(  </UnstructuredGrid>)");
+  logger->info(R"(</VTKFile>)");
+}
 }  // namespace LADDS

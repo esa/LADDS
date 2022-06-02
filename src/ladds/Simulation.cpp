@@ -364,15 +364,16 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     }
     // Visualization:
     if (vtkWriteFrequency and (iteration % vtkWriteFrequency == 0 or iteration == lastIteration)) {
+      VTUWriter vtuWriter(config, iteration, domainDecomposition);
       // one rank has to produce the meta files
       int rank{};
       autopas::AutoPas_MPI_Comm_rank(domainDecomposition.getCommunicator(), &rank);
       if (rank == 0) {
-        VTUWriter::writePVTU(config, iteration, domainDecomposition);
+        vtuWriter.writePVTU(config, iteration, domainDecomposition);
         decompositionLogger->writeMetafile(iteration);
       }
 
-      VTUWriter::writeVTU(config, iteration, autopas, domainDecomposition);
+      vtuWriter.writeVTU(autopas);
       decompositionLogger->writePayload(iteration, autopas.getCurrentConfig());
     }
     if (hdf5WriteFrequency and (iteration % hdf5WriteFrequency == 0 or iteration == lastIteration)) {
