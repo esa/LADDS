@@ -62,7 +62,7 @@ Constellation::Constellation(ConfigReader &constellationConfig, ConfigReader &co
 
   // calculate schedule with launch times for each plane in constellation
   schedule.resize(nShells);
-  for (int i = 0ul; i < timestamps.size() - 1; ++i) {
+  for (size_t i = 0ul; i < timestamps.size() - 1; ++i) {
     int nPlanes = static_cast<int>(shells[i][2]);
     double timeStepSize = (timestamps[i + 1] - timestamps[i]) / nPlanes;
 
@@ -116,7 +116,7 @@ std::vector<Particle> Constellation::tick() {
       while (static_cast<double>(timeActive) >= schedule[currentShellIndex][planesDeployed]) {
         auto planeSize = static_cast<size_t>(shells[currentShellIndex][3]);
         particles.reserve(particles.capacity() + planeSize);
-        for (int i = 0; i < planeSize; i++) {
+        for (size_t i = 0; i < planeSize; i++) {
           particles.push_back(satellites[0]);
           satellites.pop_front();
         }
