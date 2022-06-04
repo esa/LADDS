@@ -52,9 +52,6 @@ target_compile_definitions(${TEST_EXECUTABLE_NAME}
     $<$<BOOL:${LADDS_HDF5}>:LADDS_HDF5=1>
 )
 
-set(TSAN_OPTIONS_STR "TSAN_OPTIONS=suppressions=${LADDS_SOURCE_DIR}/.tsanIgnoreList.txt ignore_noninstrumented_modules=1")
-set(LSAN_OPTIONS_STR "LSAN_OPTIONS=suppressions=${LADDS_SOURCE_DIR}/.lsanIgnoreList.txt ignore_noninstrumented_modules=1")
-
 gtest_discover_tests(${TEST_EXECUTABLE_NAME}
     PROPERTIES
         ENVIRONMENT "${TSAN_OPTIONS_STR}"
