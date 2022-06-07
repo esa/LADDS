@@ -509,8 +509,6 @@ void Simulation::communicateParticles(std::vector<Particle> &leavingParticles,
   const auto &localBoxMin = autopas.getBoxMin();
   const auto &localBoxMax = autopas.getBoxMax();
 
-  std::vector<Particle> incomingParticles;
-
   auto getNeighborRank = [&](const auto &coordsThis, int direction, auto op) {
     auto coordsOther = coordsThis;
     coordsOther[direction] = op(coordsOther[direction], 1);
@@ -526,6 +524,7 @@ void Simulation::communicateParticles(std::vector<Particle> &leavingParticles,
   for (CommDir commDir = X; commDir <= Z; commDir = static_cast<CommDir>(commDir + 1)) {
     // trigger both non-blocking sends before doing both blocking receives
 
+    std::vector<Particle> incomingParticles;
     // send left (negative direction)
     if (coords[commDir] != 0) {
       // sort particles that are leaving in the negative direction to the end of leavingParticles
@@ -571,8 +570,9 @@ void Simulation::communicateParticles(std::vector<Particle> &leavingParticles,
     for (auto particleIter = incomingParticlesIter; particleIter < incomingParticles.end(); ++particleIter) {
       autopas.addParticle(*particleIter);
     }
-    // clip added particles
-    incomingParticles.erase(incomingParticlesIter, incomingParticles.end());
+    // add particles that were not inserted to leaving particles.
+    // These pass-through particles are those changing ranks in more than one dimension.
+    leavingParticles.insert(leavingParticles.end(), incomingParticles.begin(), incomingParticlesIter);
   }
 }
 
