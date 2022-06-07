@@ -6,6 +6,41 @@
 
 #include "SimulationTest.h"
 
+#include "autopas/utils/WrapOpenMP.h"
+
+SimulationTest::SimulationTest()
+    : maxThreadsBefore(autopas::autopas_get_max_threads()), logger("SimulationTestLogger"), simulation(logger) {
+  // make sure to only use one thread
+  autopas::autopas_set_num_threads(1);
+
+  logger.get()->set_level(LADDS::Logger::Level::err);
+
+  // initialize a minimal default configuration
+  config["autopas"]["cutoff"] = 80.;
+  config["sim"]["breakup"]["enabled"] = false;
+  config["sim"]["deltaT"] = 1.0;
+  config["sim"]["maxAltitude"] = 85000.;
+  config["sim"]["prop"]["coefficientOfDrag"] = 2.2;
+
+  // optional parameters which are necessary for the tests here
+  config["io"]["constellationCutoff"] = constellationCutoff;
+  config["sim"]["collisionDistanceFactor"] = 1.;
+  config["sim"]["iterations"] = 1;
+  config["sim"]["minAltitude"] = 150.;
+  config["sim"]["prop"]["useKEPComponent"] = true;
+
+  configReader = std::make_unique<LADDS::ConfigReader>(config, logger);
+
+  decomposition = std::make_unique<LADDS::RegularGridDecomposition>(*configReader);
+
+  autopas = simulation.initAutoPas(*configReader, *decomposition);
+}
+
+SimulationTest::~SimulationTest() {
+  // reset omp max threads
+  autopas::autopas_set_num_threads(maxThreadsBefore);
+}
+
 /**
  * This test is expected to run on 8 MPI ranks
  */
@@ -28,6 +63,7 @@ TEST_F(SimulationTest, testRankMigration) {
   configReader->setValue("sim/breakup/enabled", true);
   auto [csvWriter, accumulator, integrator] = simulation.initIntegrator(*autopas, *configReader);
 
+  const auto globalBoxMin = decomposition->getGlobalBoxMin();
   const auto localBoxMin = decomposition->getLocalBoxMin();
   const auto localBoxMax = decomposition->getLocalBoxMax();
   const auto localBoxLength = sub(localBoxMax, localBoxMin);
@@ -35,47 +71,54 @@ TEST_F(SimulationTest, testRankMigration) {
   const auto localBoxMid = add(localBoxMin, localBoxLengthHalf);
 
   // initialize N particles on the local rank
-  std::vector<LADDS::Particle> particles;
+  std::vector<LADDS::Particle> particles{};
   for (size_t i = 0; i < numRanks; ++i) {
     constexpr double mass = 42.;
     constexpr double radius = 42.;
-    autopas->addParticle(
-        {localBoxMid,
-         {1., 2., 3.},
-         static_cast<size_t>(rank) * 1000ul + i,
-         "Rank " + std::to_string(rank) + " p" + std::to_string(i),
-         LADDS::Particle::ActivityState::evasivePreserving,
-         mass,
-         radius,
-         LADDS::Particle::calculateBcInv(std::numeric_limits<double>::quiet_NaN(), mass, radius, 2.2)});
+    const LADDS::Particle p{
+        localBoxMid,
+        {1., 2., 3.},
+        static_cast<size_t>(rank) * 1000ul + i,
+        "Rank " + std::to_string(rank) + " p" + std::to_string(i),
+        LADDS::Particle::ActivityState::evasivePreserving,
+        mass,
+        radius,
+        LADDS::Particle::calculateBcInv(std::numeric_limits<double>::quiet_NaN(), mass, radius, 2.2)};
+    autopas->addParticle(p);
   }
-  std::cout << "RANK " << rank  << ": " << autopas::utils::ArrayUtils::to_string(localBoxMin) << " - " << autopas::utils::ArrayUtils::to_string(localBoxMax) << std::endl;
   // move the particles to other ranks
   auto particleIter = autopas->begin();
-  for (int z = 0; z < 2; ++z) {
-    for (int y = 0 ; y < 2; ++y) {
-      for (int x = 0; x < 2; ++x) {
+  for (int x = 0; x < 2; ++x) {
+    for (int y = 0; y < 2; ++y) {
+      for (int z = 0; z < 2; ++z) {
         const std::array<int, 3> rankGridIndex{x, y, z};
-        const auto newPosition = add(localBoxLengthHalf, mul(localBoxLength, static_cast_array<double>(rankGridIndex)));
+        // newPos = globalBoxMin + (localBoxLength / 2) + (localBoxLength * index)
+        const auto newPosition =
+            add(globalBoxMin, add(localBoxLengthHalf, mul(localBoxLength, static_cast_array<double>(rankGridIndex))));
         // make sure all except one particle is moved away
         ASSERT_TRUE(
-            (x == 0 and y == 0 and z == 0) or
+            (x == rankGridIndex[0] and y == rankGridIndex[1] and z == rankGridIndex[2]) or
             autopas::utils::notInBox(newPosition, decomposition->getLocalBoxMin(), decomposition->getLocalBoxMax()))
-            << "Updated positions should not be in the same box anymore!";
+            << "Updated positions should not be in the same box anymore!\n"
+            << "Box: " << autopas::utils::ArrayUtils::to_string(decomposition->getLocalBoxMin()) << " - "
+            << autopas::utils::ArrayUtils::to_string(decomposition->getLocalBoxMax()) << "\n"
+            << particleIter->toString();
         particleIter->setPosition(newPosition);
-        std::cout << "RANK " << rank  << ": " << particleIter->getIdentifier() << " newPos: " << autopas::utils::ArrayUtils::to_string(newPosition) << std::endl;
+        ++particleIter;
       }
     }
   }
   // migrate particles
   auto leavingParticles = autopas->updateContainer();
-  ASSERT_EQ(autopas->getNumberOfParticles(), 1) << "Expected all except one particle to have emigrated";
+  EXPECT_EQ(leavingParticles.size(), 7) << "Expected all except one particle to have left.";
+  ASSERT_EQ(autopas->getNumberOfParticles(), 1) << "Expected exactly one particle to remain.";
   simulation.communicateParticles(leavingParticles, *autopas, *decomposition);
-  EXPECT_EQ(autopas->getNumberOfParticles(), numRanks) << "Not enough particles immigrated! " << [&]() {
-    std::vector<std::string> localParticleIdentifiers;
-    for (const auto &p : *autopas) {
-      localParticleIdentifiers.push_back(p.getIdentifier());
-    }
-    return autopas::utils::ArrayUtils::to_string(localParticleIdentifiers);
-  }();
+  EXPECT_EQ(autopas->getNumberOfParticles(), numRanks)
+      << "Rank " << rank << ": Wrong number of particles immigrated! " << [&]() {
+           std::vector<std::string> localParticleIdentifiers;
+           for (const auto &p : *autopas) {
+             localParticleIdentifiers.push_back(p.getIdentifier());
+           }
+           return autopas::utils::ArrayUtils::to_string(localParticleIdentifiers);
+         }();
 }

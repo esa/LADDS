@@ -513,9 +513,6 @@ void Simulation::communicateParticles(std::vector<Particle> &leavingParticles,
     auto coordsOther = coordsThis;
     coordsOther[direction] = op(coordsOther[direction], 1);
     int rankOther{};
-    //    std::cout << "getNeighborRank: coordsOther= " << coordsOther[0] << " " << coordsOther[1] << " " <<
-    //    coordsOther[2]
-    //              << std::endl;
     autopas::AutoPas_MPI_Cart_rank(comm, coordsOther.data(), &rankOther);
     return rankOther;
   };

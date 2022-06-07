@@ -9,7 +9,6 @@
 #include <gtest/gtest.h>
 #include <yaml-cpp/node/node.h>
 
-#include "autopas/utils/WrapOpenMP.h"
 #include "ladds/Simulation.h"
 #include "ladds/distributedMemParallelization/DomainDecomposition.h"
 #include "ladds/io/ConfigReader.h"
@@ -17,38 +16,9 @@
 
 class SimulationTest : public testing::Test {
  public:
-  SimulationTest()
-      : maxThreadsBefore(autopas::autopas_get_max_threads()), logger("SimulationTestLogger"), simulation(logger) {
-    // make sure to only use one thread
-    autopas::autopas_set_num_threads(1);
+  SimulationTest();
 
-    logger.get()->set_level(LADDS::Logger::Level::err);
-
-    // initialize a minimal default configuration
-    config["autopas"]["cutoff"] = 80.;
-    config["sim"]["breakup"]["enabled"] = false;
-    config["sim"]["deltaT"] = 1.0;
-    config["sim"]["maxAltitude"] = 85000.;
-    config["sim"]["prop"]["coefficientOfDrag"] = 2.2;
-
-    // optional parameters which are necessary for the tests here
-    config["io"]["constellationCutoff"] = constellationCutoff;
-    config["sim"]["collisionDistanceFactor"] = 1.;
-    config["sim"]["iterations"] = 1;
-    config["sim"]["minAltitude"] = 150.;
-    config["sim"]["prop"]["useKEPComponent"] = true;
-
-    configReader = std::make_unique<LADDS::ConfigReader>(config, logger);
-
-    decomposition = std::make_unique<LADDS::RegularGridDecomposition>(*configReader);
-
-    autopas = simulation.initAutoPas(*configReader, *decomposition);
-  }
-
-  virtual ~SimulationTest() {
-    // reset omp max threads
-    autopas::autopas_set_num_threads(maxThreadsBefore);
-  }
+  ~SimulationTest() override;
 
  public:
   int maxThreadsBefore;
