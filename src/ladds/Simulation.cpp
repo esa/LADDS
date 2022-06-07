@@ -508,8 +508,25 @@ void Simulation::dumpCalibratedConfig(ConfigReader &config, const AutoPas_t &aut
 }
 
 void Simulation::deleteBurnUps(autopas::AutoPas<Particle> &autopas, double burnUpAltitude) const {
-  // FIXME: skip if rank does not contain burn-up zone
+  // helper function for applying comparison operators to arrays (taking OR of results)
+  // => True if op is true for at least one comparison
+  auto arrayComp = [](const auto &a, const auto &b, auto op) {
+    bool result = false;
+    for (size_t i = 0; i < a.size(); ++i) {
+      result |= op(a[i], b[i]);
+    }
+    return result;
+  };
+
+  // skip if local box does not contain burn-up zone
   const auto critAltitude = burnUpAltitude + Physics::R_EARTH;
+  const std::array<double, 3> critAltitudeBoxMin = {-critAltitude, -critAltitude, -critAltitude};
+  const std::array<double, 3> critAltitudeBoxMax = {critAltitude, critAltitude, critAltitude};
+  if (arrayComp(autopas.getBoxMax(), critAltitudeBoxMin, std::less()) or
+      arrayComp(autopas.getBoxMin(), critAltitudeBoxMax, std::greater())) {
+    return;
+  }
+
   const auto critAltitudeSquared = critAltitude * critAltitude;
 #pragma omp parallel
   for (auto particleIter = autopas.getRegionIterator({-critAltitude, -critAltitude, -critAltitude},
