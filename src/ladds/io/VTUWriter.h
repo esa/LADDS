@@ -82,7 +82,25 @@ class VTUWriter {
                      const Container &dataCollection) const {
     auto logger = spdlog::get(_loggerName);
     if constexpr (std::is_scalar<Property>::value) {
-      logger->info(R"(        <DataArray Name="{}" NumberOfComponents="1" format="ascii" type="Float32">)", name);
+      std::string typeString = [&]() {
+        if constexpr (std::is_same_v<Property, float>) {
+          return "Float32";
+        } else if constexpr (std::is_same_v<Property, double>) {
+          return "Float64";
+        } else if constexpr (std::is_same_v<Property, int>) {
+          return "Int32";
+        } else if constexpr (std::is_same_v<Property, long>) {
+          return "Int64";
+        } else if constexpr (std::is_same_v<Property, unsigned int>) {
+          return "UInt32";
+        } else if constexpr (std::is_same_v<Property, unsigned long>) {
+          return "UInt64";
+        } else if constexpr (std::is_same_v<Property, Particle::ActivityState>) {
+          return "Int32";
+        }
+      }();
+      logger->info(
+          R"(        <DataArray Name="{}" NumberOfComponents="1" format="ascii" type="{}">)", name, typeString);
       for (const auto &date : dataCollection) {
         logger->info("          {}", property(date));
       }

@@ -82,7 +82,8 @@ void VTUWriter::writeVTU(const AutoPas_t &autopas) {
   this->printHeader(autopas.getNumberOfParticles());
 
   // Point properties
-  this->printProperty<size_t, Particle>("ID", &Particle::getID, autopas);
+  //  this->printProperty<int, Particle>("rank", [](const Particle &p) {return p.rank;}, autopas);
+  this->printProperty<unsigned int, Particle>("ID", &Particle::getID, autopas);
   this->printProperty<Particle::ActivityState, Particle>("activityState", &Particle::getActivityState, autopas);
   this->printProperty<double, Particle>("mass", &Particle::getMass, autopas);
   this->printProperty<double, Particle>("radius", &Particle::getRadius, autopas);
@@ -116,7 +117,8 @@ void VTUWriter::writePVTU(ConfigReader &config, size_t iteration, const DomainDe
   pvtuFile << "<VTKFile byte_order=\"LittleEndian\" type=\"PUnstructuredGrid\" version=\"0.1\">\n";
   pvtuFile << "  <PUnstructuredGrid>\n";
   pvtuFile << "    <PPointData>\n";
-  pvtuFile << "      <PDataArray type=\"Int64\" Name=\"ID\" />\n";
+  //  pvtuFile << "      <PDataArray type=\"Int32\" Name=\"rank\" />\n";
+  pvtuFile << "      <PDataArray type=\"Int32\" Name=\"ID\" />\n";
   pvtuFile << "      <PDataArray type=\"Int32\" Name=\"activityState\" />\n";
   pvtuFile << "      <PDataArray type=\"Float32\" Name=\"mass\" />\n";
   pvtuFile << "      <PDataArray type=\"Float32\" Name=\"radius\" />\n";
