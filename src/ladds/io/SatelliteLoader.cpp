@@ -54,6 +54,9 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
     satellites = hdfReader.readParticles(iteration, coefficientOfDrag);
   }
 
+  int rank{};
+  autopas::AutoPas_MPI_Comm_rank(AUTOPAS_MPI_COMM_WORLD, &rank);
+
   // load particle vector into autopas while checking that they are within the desired altitude
   const auto maxAltitude = config.get<double>("sim/maxAltitude");
   const auto maxAltitudeSquared = maxAltitude * maxAltitude;
@@ -61,7 +64,7 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
   double maxAltitudeFound{0.};
   const auto &boxMin = autopas.getBoxMin();
   const auto &boxMax = autopas.getBoxMax();
-  for (const auto &particle : satellites) {
+  for (auto &particle : satellites) {
     const auto &pos = particle.getPosition();
     // check if this particle is relevant for the current rank
     if (autopas::utils::inBox(pos, boxMin, boxMax)) {
@@ -69,6 +72,8 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
       minAltitudeFound = std::min(minAltitudeFound, altitudeSquared);
       maxAltitudeFound = std::max(maxAltitudeFound, altitudeSquared);
       if (altitudeSquared < maxAltitudeSquared) {
+        // set the id to the next free particle id of this rank
+        particle.setID(config.newParticleID());
         autopas.addParticle(particle);
       } else {
         SPDLOG_LOGGER_WARN(config.getLogger().get(),

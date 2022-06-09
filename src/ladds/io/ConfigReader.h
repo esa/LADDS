@@ -6,6 +6,7 @@
 
 #include <autopas/utils/ArrayUtils.h>
 #include <autopas/utils/StringUtils.h>
+#include <autopas/utils/WrapMPI.h>
 
 #include <optional>
 
@@ -25,8 +26,10 @@ class ConfigReader {
    * @param configPath
    * @param logger
    */
-  ConfigReader(const std::string &configPath, const Logger &logger)
-      : config(loadConfig(configPath, logger)), logger(logger){};
+  ConfigReader(const std::string &configPath, const Logger &logger, int rank = 0, int numRanks = 1);
+  ;
+
+  size_t newParticleID();
 
   /**
    * Constructor that uses an already loaded YAML tree.
@@ -143,6 +146,7 @@ class ConfigReader {
    * @return
    */
   size_t getLastIterationNr();
+
  private:
   /**
    * Helper function for setValue recursively iterating through the yaml structure,
@@ -189,6 +193,16 @@ class ConfigReader {
    * Reference to the logger used for any output.
    */
   const Logger &logger;
+
+  /**
+   * Next ID that will be returned the next time newParticleID() is called.
+   */
+  size_t nextSafeParticleID{};
+
+  /**
+   * Last particle ID of the rank-local particle id range which is safe to assign.
+   */
+  size_t lastSafeParticleID{};
 
   /**
    * Map keeping track of all loaded / parsed values.

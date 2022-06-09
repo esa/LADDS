@@ -31,12 +31,15 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  // Read in config
-  const auto *cfgFilePath = argv[1];
-  auto config = LADDS::ConfigReader(cfgFilePath, logger);
-
   int mpiRank{};
   autopas::AutoPas_MPI_Comm_rank(AUTOPAS_MPI_COMM_WORLD, &mpiRank);
+  int numMpiRanks{};
+  autopas::AutoPas_MPI_Comm_size(AUTOPAS_MPI_COMM_WORLD, &numMpiRanks);
+
+  // Read in config
+  const auto *cfgFilePath = argv[1];
+  auto config = LADDS::ConfigReader(cfgFilePath, logger, mpiRank, numMpiRanks);
+
   if (mpiRank == 0) {
     logger.get()->set_level(spdlog::level::from_str(config.get<std::string>("sim/logLevel", "info")));
   }

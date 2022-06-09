@@ -231,7 +231,8 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
   const auto [hdf5WriteFrequency, hdf5Writer, conjuctionWriter] = initWriter(config);
 
   // set constellation particle IDs and fetch maxExistingParticleId
-  const size_t maxExistingParticleId = setConstellationIDs(autopas, constellations);
+  setConstellationIDs(autopas, constellations);
+  const size_t maxExistingParticleId = autopas.getNumberOfParticles();
   // only add the breakup model if enabled via yaml
   const std::unique_ptr<BreakupWrapper> breakupWrapper =
       config.get<bool>("sim/breakup/enabled") ? std::make_unique<BreakupWrapper>(config, autopas, maxExistingParticleId)
@@ -419,23 +420,17 @@ std::vector<Particle> Simulation::checkedInsert(autopas::AutoPas<Particle> &auto
   return delayedInsertion;
 }
 
-size_t Simulation::setConstellationIDs(autopas::AutoPas<Particle> &autopas,
-                                       std::vector<Constellation> &constellations) {
-  size_t nextBaseId = 0;
-  // 1. find highest existing particle id
-  // Particles are not sorted by id and might neither be starting by 0 nor be consecutive (e.g. due to burn-ups)
-  // therefore we have to go through all of them
-  for (const auto &p : autopas) {
-    nextBaseId = std::max(nextBaseId, p.getID());
+void Simulation::setConstellationIDs(autopas::AutoPas<Particle> &autopas, std::vector<Constellation> &constellations) {
+  int numRanks{};
+  // AUTOPAS_MPI_COMM_WORLD should have the same size as the one stored in the decomposition
+  autopas::AutoPas_MPI_Comm_size(AUTOPAS_MPI_COMM_WORLD, &numRanks);
+
+  const auto lengthIDRange = std::numeric_limits<HDF5Definitions::IntType>::max() / (numRanks + constellations.size());
+
+  // distribute globally unique ids for constellation satellites
+  for (size_t i = 0; i < constellations.size(); ++i) {
+    constellations[i].moveConstellationIDs(lengthIDRange * (numRanks + i));
   }
-  nextBaseId += 1;
-  // 2. distribute globally unique ids for constellation satellites
-  for (auto &constellation : constellations) {
-    constellation.moveConstellationIDs(nextBaseId);
-    nextBaseId += constellation.getConstellationSize();
-  }
-  // 3. return new maxExistingParticleId
-  return nextBaseId - 1;
 }
 
 void Simulation::run(ConfigReader &config) {

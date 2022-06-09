@@ -138,9 +138,9 @@ class Simulation {
    * Distributes global IDs for all constellation particles and returns the resulting maxExistingParticleId.
    * @param autopas
    * @param constellations
-   * @return size_t maxExistingParticleId
+   * @return
    */
-  size_t setConstellationIDs(autopas::AutoPas<Particle> &autopas, std::vector<Constellation> &constellations);
+  void setConstellationIDs(autopas::AutoPas<Particle> &autopas, std::vector<Constellation> &constellations);
 
   /**
    * Remove all particles below a certain altitude from the particle container.

@@ -9,7 +9,25 @@
 #include <fstream>
 #include <iomanip>
 
+#include "ladds/io/hdf5/HDF5Definitions.h"
+
 namespace LADDS {
+
+ConfigReader::ConfigReader(const std::string &configPath, const Logger &logger, int rank, int numRanks)
+    : config(loadConfig(configPath, logger)), logger(logger) {
+  const auto constellationList = get<std::string>("io/constellationList", "", true);
+  const auto numConstellations =
+      constellationList.empty() ? 0 : std::count(constellationList.begin(), constellationList.end(), ';') + 1;
+  const auto lengthIDRange = std::numeric_limits<HDF5Definitions::IntType>::max() / (numRanks + numConstellations);
+  nextSafeParticleID = lengthIDRange * rank;
+  lastSafeParticleID = lengthIDRange * (rank + 1) - 1;
+}
+size_t ConfigReader::newParticleID() {
+  if (nextSafeParticleID > lastSafeParticleID) {
+    throw std::runtime_error("No particle IDs left in this rank's ID space!");
+  }
+  return nextSafeParticleID++;
+}
 
 YAML::Node ConfigReader::loadConfig(const std::string &cfgFilePath, const Logger &logger) {
   YAML::Node file;
@@ -70,6 +88,7 @@ size_t ConfigReader::getFirstIterationNr() {
   // either iteration of HDF5 checkpoint or 0
   return defines("io/hdf5", true) ? get<size_t>("io/hdf5/checkpoint/iteration", -1, true) + 1 : 0;
 }
+
 size_t ConfigReader::getLastIterationNr() {
   return get<size_t>("sim/iterations") + getFirstIterationNr() - 1;
 }
