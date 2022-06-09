@@ -19,6 +19,10 @@ if (LADDS_HDF5)
             GIT_TAG v1.9.0
     )
 
+    if (LADDS_MPI)
+        option(H5PP_ENABLE_MPI "" ON)
+    endif ()
+
     FetchContent_MakeAvailable(h5pp)
 
     # get includes from the HEADER target and set them to system includes

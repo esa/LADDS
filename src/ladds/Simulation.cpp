@@ -154,7 +154,14 @@ std::tuple<size_t, std::shared_ptr<HDF5Writer>, std::shared_ptr<ConjuctionWriter
       hdf5Writer = std::make_shared<HDF5Writer>(checkpointPath, false, 0);
     }
     // ... or write to new HDF5 file ....
-    if (const auto hdf5FileName = config.get<std::string>("io/hdf5/fileName", ""); not hdf5FileName.empty()) {
+    if (const auto hdf5FileName =
+            [&]() {
+              int rank{};
+              autopas::AutoPas_MPI_Comm_rank(AUTOPAS_MPI_COMM_WORLD, &rank);
+              const auto f = config.get<std::string>("io/hdf5/fileName", "");
+              return f.empty() ? "" : f + "_rank_" + std::to_string(rank);
+            }();
+        not hdf5FileName.empty()) {
       // ... but not both!
       if (not checkpointFileName.empty()) {
         throw std::runtime_error(
