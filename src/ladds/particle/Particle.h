@@ -54,8 +54,8 @@ class Particle final : public autopas::ParticleFP64 {
 
   /**
    * Constructor
-   * @param pos
-   * @param v
+   * @param pos [km]
+   * @param v [km/s]
    * @param debrisId
    * @param activityState
    */
@@ -76,6 +76,10 @@ class Particle final : public autopas::ParticleFP64 {
         _identifier(std::move(identifier)) {
     // to make serialization easier make sure COSPAR IDs are always padded with spaces to full length of 11
     _identifier.insert(_identifier.end(), 11 - _identifier.size(), ' ');
+    // FIXME: remove this check as soon as we are confident that it works
+    if (_identifier.length() > 11) {
+      std::cerr << "WARNING identifier.length() == " << _identifier.length() << " |" << _identifier << "|" << std::endl;
+    }
   }
 
   /**
@@ -315,7 +319,7 @@ class Particle final : public autopas::ParticleFP64 {
   [[nodiscard]] double getHeight() const;
 
   /**
-   * Calculates speed of the debris
+   * Calculates speed of the debris [km/s]
    *
    * @return Euclidean norm of the #velocity vector
    */
