@@ -23,6 +23,7 @@ class Timers {
   autopas::utils::Timer burnUps{};
   autopas::utils::Timer constellationInsertion{};
   autopas::utils::Timer collisionDetection{};
+  autopas::utils::Timer collisionDetectionImmigrants{};
   autopas::utils::Timer collisionSimulation{};
   autopas::utils::Timer collisionWriting{};
   autopas::utils::Timer containerUpdate{};

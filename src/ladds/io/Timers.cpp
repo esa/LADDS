@@ -49,31 +49,43 @@ void Timers::printTimers(ConfigReader &config, const DomainDecomposition &decomp
   SPDLOG_LOGGER_INFO(
       config.getLogger().get(),
       "Runtime summary:\n{}",
-      timerToString("Total (ranks accumulated)   ", timeTotalAcc, maxNumberOfDigits) + printLB(total) +
-          timerToString("  Initialization            ", accMPITimers(initialization), maxNumberOfDigits, timeTotalAcc) +
-          printLB(initialization) +
-          timerToString("  Simulation                ", timeSimAcc, maxNumberOfDigits, timeTotalAcc) +
-          printLB(simulation) +
-          timerToString("    Integrator              ", accMPITimers(integrator), maxNumberOfDigits, timeSimAcc) +
-          printLB(integrator) +
-          timerToString("    Resolving Burn ups      ", accMPITimers(burnUps), maxNumberOfDigits, timeSimAcc) +
-          printLB(burnUps) +
+      timerToString("Total (ranks accumulated)          ", timeTotalAcc, maxNumberOfDigits) + printLB(total) +
           timerToString(
-              "    Constellation insertion ", accMPITimers(constellationInsertion), maxNumberOfDigits, timeSimAcc) +
+              "  Initialization                   ", accMPITimers(initialization), maxNumberOfDigits, timeTotalAcc) +
+          printLB(initialization) +
+          timerToString("  Simulation                       ", timeSimAcc, maxNumberOfDigits, timeTotalAcc) +
+          printLB(simulation) +
+          timerToString(
+              "    Integrator                     ", accMPITimers(integrator), maxNumberOfDigits, timeSimAcc) +
+          printLB(integrator) +
+          timerToString("    Resolving Burn ups             ", accMPITimers(burnUps), maxNumberOfDigits, timeSimAcc) +
+          printLB(burnUps) +
+          timerToString("    Constellation insertion        ",
+                        accMPITimers(constellationInsertion),
+                        maxNumberOfDigits,
+                        timeSimAcc) +
           printLB(constellationInsertion) +
           timerToString(
-              "    Collision detection     ", accMPITimers(collisionDetection), maxNumberOfDigits, timeSimAcc) +
+              "    Collision detection            ", accMPITimers(collisionDetection), maxNumberOfDigits, timeSimAcc) +
           printLB(collisionDetection) +
-          timerToString("    Collision writer        ", accMPITimers(collisionWriting), maxNumberOfDigits, timeSimAcc) +
+          timerToString("    Collision detection immigrants ",
+                        accMPITimers(collisionDetectionImmigrants),
+                        maxNumberOfDigits,
+                        timeSimAcc) +
+          printLB(collisionDetectionImmigrants) +
+          timerToString(
+              "    Collision writer               ", accMPITimers(collisionWriting), maxNumberOfDigits, timeSimAcc) +
           printLB(collisionWriting) +
           timerToString(
-              "    Collision simulation    ", accMPITimers(collisionSimulation), maxNumberOfDigits, timeSimAcc) +
+              "    Collision simulation           ", accMPITimers(collisionSimulation), maxNumberOfDigits, timeSimAcc) +
           printLB(collisionSimulation) +
-          timerToString("    Container update        ", accMPITimers(containerUpdate), maxNumberOfDigits, timeSimAcc) +
+          timerToString(
+              "    Container update               ", accMPITimers(containerUpdate), maxNumberOfDigits, timeSimAcc) +
           printLB(containerUpdate) +
-          timerToString("    Output                  ", accMPITimers(output), maxNumberOfDigits, timeTotalAcc) +
-          printLB(output) + timerToString("Total (wall-time)           ", timeTotal, maxNumberOfDigits) + "\n" +
-          timerToString("  One iteration             ", timeSim / iterations, maxNumberOfDigits, timeTotal));
+          timerToString("    Output                         ", accMPITimers(output), maxNumberOfDigits, timeTotalAcc) +
+          printLB(output /*offest for formatting*/) +
+          timerToString("Total (wall-time)                  ", timeTotal, maxNumberOfDigits) + "\n" +
+          timerToString("  One iteration                    ", timeSim / iterations, maxNumberOfDigits, timeTotal));
 }
 
 /**

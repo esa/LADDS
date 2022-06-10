@@ -22,7 +22,6 @@
 #include "ladds/io/decompositionLogging/DecompositionLogger.h"
 #include "ladds/io/decompositionLogging/RegularGridDecompositionLogger.h"
 #include "ladds/io/hdf5/HDF5Writer.h"
-#include "ladds/particle/BreakupWrapper.h"
 #include "ladds/particle/Constellation.h"
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
@@ -209,6 +208,41 @@ std::tuple<CollisionFunctor::CollisionCollectionT, bool> Simulation::collisionDe
   return {collisionFunctor.getCollisions(), stillTuning};
 }
 
+CollisionFunctor::CollisionCollectionT Simulation::collisionDetectionImmigrants(
+    AutoPas_t &autopas,
+    std::vector<Particle> &incomingParticles,
+    double deltaT,
+    double maxV,
+    double collisionDistanceFactor,
+    double minDetectionRadius) {
+  using autopas::utils::ArrayMath::abs;
+  using autopas::utils::ArrayMath::add;
+  using autopas::utils::ArrayMath::div;
+  using autopas::utils::ArrayMath::mul;
+  using autopas::utils::ArrayMath::mulScalar;
+  using autopas::utils::ArrayMath::sub;
+
+  CollisionFunctor collisionFunctor(autopas.getCutoff(), deltaT, collisionDistanceFactor, minDetectionRadius);
+  const std::array<double, 3> maxVVec{maxV, maxV, maxV};
+  const auto maxCoveredDistance = mulScalar(maxVVec, deltaT);
+
+  for (auto &immigrant : incomingParticles) {
+    // find the bounding box around the path the immigrant took since the last update
+    // pos - velocity * time
+    const auto posFirstPotentialCollision = sub(immigrant.getPosition(), mulScalar(immigrant.getVelocity(), deltaT));
+    // pos + maxVelocity * time
+    const auto higherCorner = add(posFirstPotentialCollision, maxCoveredDistance);
+    // pos - maxVelocity * time
+    const auto lowerCorner = sub(posFirstPotentialCollision, maxCoveredDistance);
+
+    // interact the immigrant with everything in the box
+    autopas.forEachInRegion(
+        [&](auto &p) { collisionFunctor.AoSFunctor(immigrant, p, false); }, lowerCorner, higherCorner);
+  }
+
+  return collisionFunctor.getCollisions();
+}
+
 size_t Simulation::simulationLoop(AutoPas_t &autopas,
                                   YoshidaIntegrator<AutoPas_t> &integrator,
                                   std::vector<Constellation> &constellations,
@@ -283,13 +317,40 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     auto leavingParticles = autopas.updateContainer();
     timers.containerUpdate.stop();
 
-    timers.particleCommunication.start();
     if (const auto *regularGridDecomp = dynamic_cast<const RegularGridDecomposition *>(&domainDecomposition)) {
-      communicateParticles(leavingParticles, autopas, *regularGridDecomp);
+      timers.particleCommunication.start();
+      auto incomingParticles = communicateParticles(leavingParticles, autopas, *regularGridDecomp);
+      timers.particleCommunication.stop();
+
+      timers.collisionDetectionImmigrants.start();
+      auto collisions = collisionDetectionImmigrants(autopas,
+                                                     incomingParticles,
+                                                     deltaT * autopas.getVerletRebuildFrequency(),
+                                                     8.,
+                                                     collisionDistanceFactor,
+                                                     minDetectionRadius);
+      timers.collisionDetectionImmigrants.stop();
+      totalConjunctions += collisions.size();
+
+      if (breakupWrapper) {
+        // all particles which are part of a collision will be deleted in the breakup.
+        // As we pass particle-pointers to the vector and not to autopas we have to mark the particles as deleted
+        // manually
+        for (const auto &[p1, p2, _] : collisions) {
+          p1->setOwnershipState(autopas::OwnershipState::dummy);
+          p2->setOwnershipState(autopas::OwnershipState::dummy);
+        }
+      }
+      // all particles still need to be added, even if marked as deleted to not mess up autopas' internal counters.
+      for (const auto &p : incomingParticles) {
+        autopas.addParticle(p);
+      }
+
+      processCollisions(iteration, collisions, *conjuctionWriter, breakupWrapper.get());
+
     } else {
       throw std::runtime_error("No particle communication implemented for the chosen decomposition!");
     }
-    timers.particleCommunication.stop();
 
     // sanity check: after communication there should be no leaving particles left
     if (not leavingParticles.empty()) {
@@ -300,7 +361,6 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                           leavingParticles);
     }
 
-    // TODO MPI: handle halo exchange between ranks
     if (iteration % timestepsPerCollisionDetection == 0) {
       timers.collisionDetection.start();
       auto [collisions, stillTuning] = collisionDetection(autopas,
@@ -308,22 +368,14 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                                                           collisionDistanceFactor,
                                                           minDetectionRadius);
       timers.collisionDetection.stop();
+      totalConjunctions += collisions.size();
 
       if (tuningMode and not stillTuning) {
         dumpCalibratedConfig(config, autopas);
         return totalConjunctions;
       }
 
-      timers.collisionWriting.start();
-      totalConjunctions += collisions.size();
-      conjuctionWriter->writeConjunctions(iteration, collisions);
-      timers.collisionWriting.stop();
-
-      if (breakupWrapper and not collisions.empty()) {
-        timers.collisionSimulation.start();
-        breakupWrapper->simulateBreakup(collisions);
-        timers.collisionSimulation.stop();
-      }
+      processCollisions(iteration, collisions, *conjuctionWriter, breakupWrapper.get());
     }
     // check if we hit the timeout and abort the loop if necessary
     if (timeout != 0) {
@@ -502,9 +554,9 @@ size_t Simulation::computeTimeout(ConfigReader &config) {
   return sum;
 }
 
-void Simulation::communicateParticles(std::vector<Particle> &leavingParticles,
-                                      autopas::AutoPas<Particle> &autopas,
-                                      const RegularGridDecomposition &decomposition) {
+std::vector<Particle> Simulation::communicateParticles(std::vector<Particle> &leavingParticles,
+                                                       autopas::AutoPas<Particle> &autopas,
+                                                       const RegularGridDecomposition &decomposition) {
   const auto &comm = decomposition.getCommunicator();
   const auto &[coordsMax, periods, coords] = decomposition.getGridInfo();
 
@@ -519,11 +571,11 @@ void Simulation::communicateParticles(std::vector<Particle> &leavingParticles,
     return rankOther;
   };
 
+  std::vector<Particle> incomingParticles;
   enum CommDir : int { X, Y, Z };
   for (CommDir commDir = X; commDir <= Z; commDir = static_cast<CommDir>(commDir + 1)) {
     // trigger both non-blocking sends before doing both blocking receives
 
-    std::vector<Particle> incomingParticles;
     // send left (negative direction)
     if (coords[commDir] != 0) {
       // sort particles that are leaving in the negative direction to the end of leavingParticles
@@ -561,17 +613,32 @@ void Simulation::communicateParticles(std::vector<Particle> &leavingParticles,
       incomingParticles.insert(incomingParticles.end(), incomingParticlesLeft.begin(), incomingParticlesLeft.end());
     }
 
-    // sort particles which have to be added to the local container to the end of incomingParticles
+    // sort particles which have to be added to the local container to the front of incomingParticles
     auto incomingParticlesIter =
         std::partition(incomingParticles.begin(), incomingParticles.end(), [&](const Particle &p) {
-          return autopas::utils::notInBox(p.getPosition(), localBoxMin, localBoxMax);
+          return autopas::utils::inBox(p.getPosition(), localBoxMin, localBoxMax);
         });
-    for (auto particleIter = incomingParticlesIter; particleIter < incomingParticles.end(); ++particleIter) {
-      autopas.addParticle(*particleIter);
-    }
-    // add particles that were not inserted to leaving particles.
+
+    // move particles that were not inserted to leaving particles.
     // These pass-through particles are those changing ranks in more than one dimension.
-    leavingParticles.insert(leavingParticles.end(), incomingParticles.begin(), incomingParticlesIter);
+    leavingParticles.insert(leavingParticles.end(), incomingParticlesIter, incomingParticles.end());
+    incomingParticles.erase(incomingParticlesIter, incomingParticles.end());
+  }
+  return incomingParticles;
+}
+
+void Simulation::processCollisions(size_t iteration,
+                                   const CollisionFunctor::CollisionCollectionT &collisions,
+                                   ConjuctionWriterInterface &conjunctionWriter,
+                                   BreakupWrapper *breakupWrapper) {
+  timers.collisionWriting.start();
+  conjunctionWriter.writeConjunctions(iteration, collisions);
+  timers.collisionWriting.stop();
+
+  if (breakupWrapper and not collisions.empty()) {
+    timers.collisionSimulation.start();
+    breakupWrapper->simulateBreakup(collisions);
+    timers.collisionSimulation.stop();
   }
 }
 

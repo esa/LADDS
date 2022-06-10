@@ -22,6 +22,7 @@
 #include "ladds/io/ConjunctionLogger.h"
 #include "ladds/io/Timers.h"
 #include "ladds/io/hdf5/HDF5Writer.h"
+#include "ladds/particle/BreakupWrapper.h"
 #include "ladds/particle/Constellation.h"
 #include "ladds/particle/Particle.h"
 
@@ -101,6 +102,43 @@ class Simulation {
                                                                               double minDetectionRadius);
 
   /**
+   * Interact all incoming particles with all particles which potentially crossed it's path since the last container
+   * update.
+   *
+   * These particles are found in a box around the immigrant's position -deltaT time ago.
+   * The box has a side length of 2x the maximum cover able distance by any particle.
+   *
+   * @note The first pointers in the returned tuple collection point to particles in the immigrant vector!
+   *
+   * @param autopas
+   * @param incomingParticles
+   * @param deltaT Time since the last container update.
+   * @param maxV Maximal velocity a particle is assumed to have. Has to be positive.
+   * @param collisionDistanceFactor See CollisionFunctor::_collisionDistanceFactor
+   * @param minDetectionRadius
+   * @return Collection of collision partners
+   */
+  CollisionFunctor::CollisionCollectionT collisionDetectionImmigrants(AutoPas_t &autopas,
+                                                                      std::vector<Particle> &incomingParticles,
+                                                                      double deltaT,
+                                                                      double maxV,
+                                                                      double collisionDistanceFactor,
+                                                                      double minDetectionRadius);
+
+  /**
+   * Auxiliary function to avoid code duplication. Triggers the writing of collisions and if necessary the breakup
+   * simulation. Also invokes the relevant timers.
+   * @param iteration
+   * @param collisions
+   * @param conjuctionWriter
+   * @param breakupWrapper
+   */
+  void processCollisions(size_t iteration,
+                         const CollisionFunctor::CollisionCollectionT &collisions,
+                         ConjuctionWriterInterface &conjunctionWriter,
+                         BreakupWrapper *breakupWrapper);
+
+  /**
    * Updates the configuration with the latest AutoPas configuration and writes it to a new YAML file.
    * @param config
    * @param autopas
@@ -158,16 +196,9 @@ class Simulation {
    */
   size_t computeTimeout(ConfigReader &config);
 
-  /**
-   * Check if the current rank is on the global domain boundary.
-   * @param decomposition container
-   * @return
-   */
-  bool rankIsOnGlobalBoundary(const DomainDecomposition &decomposition);
-
-  void communicateParticles(std::vector<Particle> &leavingParticles,
-                            autopas::AutoPas<Particle> &autopas,
-                            const RegularGridDecomposition &decomposition);
+  std::vector<Particle> communicateParticles(std::vector<Particle> &leavingParticles,
+                                             autopas::AutoPas<Particle> &autopas,
+                                             const RegularGridDecomposition &decomposition);
 
   /**
    * One logger to log them all.

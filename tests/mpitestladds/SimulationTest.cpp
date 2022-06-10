@@ -112,7 +112,11 @@ TEST_F(SimulationTest, testRankMigration) {
   auto leavingParticles = autopas->updateContainer();
   EXPECT_EQ(leavingParticles.size(), 7) << "Expected all except one particle to have left.";
   ASSERT_EQ(autopas->getNumberOfParticles(), 1) << "Expected exactly one particle to remain.";
-  simulation.communicateParticles(leavingParticles, *autopas, *decomposition);
+  const auto incomingParticles = simulation.communicateParticles(leavingParticles, *autopas, *decomposition);
+  EXPECT_EQ(incomingParticles.size(), numRanks - 1);
+  for (const auto &p : incomingParticles) {
+    autopas->addParticle(p);
+  }
   EXPECT_EQ(autopas->getNumberOfParticles(), numRanks)
       << "Rank " << rank << ": Wrong number of particles immigrated! " << [&]() {
            std::vector<std::string> localParticleIdentifiers;
