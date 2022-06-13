@@ -58,17 +58,17 @@ gtest_discover_tests(${TEST_EXECUTABLE_NAME}
         ENVIRONMENT "${LSAN_OPTIONS_STR}"
 )
 
-add_test(
-        NAME validationtest.testValidation.yaml
-        COMMAND
-        ${PROJECT_SOURCE_DIR}/tests/validationtest.py
-        ${CMAKE_BINARY_DIR}/src/ladds/ladds
-        ${PROJECT_SOURCE_DIR}/cfg/testValidation.yaml
-        output_209.vtu
-        ${PROJECT_SOURCE_DIR}/tests/data/reference_validationTest.vtu
-        CONFIGURATIONS validation
-)
-set_tests_properties(validationtest.testValidation.yaml
-        PROPERTIES
-        ENVIRONMENT "${TSAN_OPTIONS_STR};${LSAN_OPTIONS_STR}"
-)
+# add_test(
+#         NAME validationtest.testValidation.yaml
+#         COMMAND
+#         ${PROJECT_SOURCE_DIR}/tests/validationtest.py
+#         ${CMAKE_BINARY_DIR}/src/ladds/ladds
+#         ${PROJECT_SOURCE_DIR}/cfg/testValidation.yaml
+#         output_209.vtu
+#         ${PROJECT_SOURCE_DIR}/tests/data/reference_validationTest.vtu
+#         CONFIGURATIONS validation
+# )
+# set_tests_properties(validationtest.testValidation.yaml
+#         PROPERTIES
+#         ENVIRONMENT "${TSAN_OPTIONS_STR};${LSAN_OPTIONS_STR}"
+# )
