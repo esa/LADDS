@@ -3,7 +3,6 @@
  * @author F. Gratl
  * @date 28.06.21
  */
-
 #include "Particle.h"
 
 #include <satellitePropagator/physics/Constants.h>
@@ -20,8 +19,10 @@ double Particle::calculateBcInv(double bstar, double mass, double radius, double
     // or via bstar
     // @note see https://en.wikipedia.org/wiki/BSTAR
     // B* == p_0 * c_D * A / (2 m) == bc_inv * p_0 / 2
-    constexpr double p0Inv = 1. / (2.461 * 1e-5 * Physics::R_EARTH);  // 1/(kg/(m^2 * R_EARTH)) == R_EARTH * m^2/kg
-    return bstar * 2. * p0Inv;                                        // m^2/kg
+    // Thus we factor out p0 (=0.1570), convert to m (original bstar is in Earth radii) and the factor 2 comes
+    // from the propagator still having a 1/2 multiplication term included which is already accounted for in BSTAR
+    constexpr auto factor = 2.0 * Physics::R_EARTH / 0.1570;
+    return factor * bstar;
   }
 }
 

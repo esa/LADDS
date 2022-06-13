@@ -3,7 +3,6 @@
  * @author F. Gratl
  * @date 30.11.21
  */
-
 #include "Simulation.h"
 
 #include <breakupModel/output/VTKWriter.h>
@@ -293,6 +292,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
         timers.collisionSimulation.stop();
       }
     }
+
     // check if we hit the timeout and abort the loop if necessary
     if (timeout != 0) {
       // quickly interrupt timers.total to update its internal total time.
