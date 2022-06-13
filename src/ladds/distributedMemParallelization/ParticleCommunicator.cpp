@@ -28,7 +28,7 @@ autopas::AutoPas_MPI_Request LADDS::ParticleCommunicator::sendParticles(
 }
 
 std::vector<LADDS::Particle> LADDS::ParticleCommunicator::receiveParticles(
-    const int sender, autopas::AutoPas_MPI_Comm const &communicator) {
+    const int sender, const autopas::AutoPas_MPI_Comm &communicator) {
   std::vector<char> serializedParticles;
 
   autopas::AutoPas_MPI_Status status;

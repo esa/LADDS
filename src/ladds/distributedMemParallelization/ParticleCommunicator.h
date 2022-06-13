@@ -22,7 +22,7 @@ namespace LADDS::ParticleCommunicator {
  */
 autopas::AutoPas_MPI_Request sendParticles(const std::vector<Particle>::iterator &particlesBegin,
                                            const std::vector<Particle>::iterator &particlesEnd,
-                                           const int receiver,
+                                           int receiver,
                                            const autopas::AutoPas_MPI_Comm &communicator);
 
 /**
@@ -31,5 +31,5 @@ autopas::AutoPas_MPI_Request sendParticles(const std::vector<Particle>::iterator
  * @param communicator
  * @return
  */
-std::vector<Particle> receiveParticles(const int sender, const autopas::AutoPas_MPI_Comm &communicator);
+std::vector<Particle> receiveParticles(int sender, const autopas::AutoPas_MPI_Comm &communicator);
 }  // namespace LADDS::ParticleCommunicator
