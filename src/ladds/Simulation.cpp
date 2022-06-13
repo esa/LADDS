@@ -291,7 +291,9 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     throw std::runtime_error("No decomposition logger associated with the chosen decomposition!");
   }
 
+  // status output at start of the simulation
   config.printParsedValues();
+  printNumParticlesPerRank(autopas, domainDecomposition);
 
   // in tuning mode ignore the iteration counter
   for (size_t iteration = startingIteration; iteration <= lastIteration or tuningMode; ++iteration) {
@@ -441,6 +443,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     }
     timers.output.stop();
   }
+  printNumParticlesPerRank(autopas, domainDecomposition);
   SPDLOG_LOGGER_INFO(logger.get(), "Total conjunctions: {}", totalConjunctions);
   return totalConjunctions;
 }
@@ -639,6 +642,39 @@ void Simulation::processCollisions(size_t iteration,
     timers.collisionSimulation.start();
     breakupWrapper->simulateBreakup(collisions);
     timers.collisionSimulation.stop();
+  }
+}
+
+void Simulation::printNumParticlesPerRank(const autopas::AutoPas<Particle> &autopas,
+                                          const DomainDecomposition &decomposition) const {
+  const auto communicator = decomposition.getCommunicator();
+  int myRank{};
+  autopas::AutoPas_MPI_Comm_rank(communicator, &myRank);
+  int numRanks{};
+  autopas::AutoPas_MPI_Comm_size(communicator, &numRanks);
+  std::vector<size_t> numParticlesPerRank(numRanks);
+  // rank zero collects all data and prints
+  if (myRank == 0) {
+    numParticlesPerRank[myRank] = autopas.getNumberOfParticles();
+    for (int rank = 1; rank < numRanks; ++rank) {
+      autopas::AutoPas_MPI_Recv(&numParticlesPerRank[rank],
+                                1,
+                                AUTOPAS_MPI_UNSIGNED_LONG,
+                                rank,
+                                rank,
+                                communicator,
+                                AUTOPAS_MPI_STATUS_IGNORE);
+    }
+    const auto numParticlesAvg =
+        std::accumulate(numParticlesPerRank.begin(), numParticlesPerRank.end(), 0ul) / numRanks;
+    logger.log(LADDS::Logger::Level::info,
+               "Particles per rank (Avg: {}) : {}",
+               numParticlesAvg,
+               autopas::utils::ArrayUtils::to_string(numParticlesPerRank, " ", {"", ""}));
+  } else {
+    // other ranks only send
+    const auto myNumParticles = autopas.getNumberOfParticles();
+    autopas::AutoPas_MPI_Send(&myNumParticles, 1, AUTOPAS_MPI_UNSIGNED_LONG, 0, myRank, communicator);
   }
 }
 

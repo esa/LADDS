@@ -201,6 +201,13 @@ class Simulation {
                                              const RegularGridDecomposition &decomposition);
 
   /**
+   * Prints one line on the info log level stating every rank's number of particles, sorted by rank number.
+   * @param autopas
+   * @param decomposition
+   */
+  void printNumParticlesPerRank(const autopas::AutoPas<Particle> &autopas, const DomainDecomposition &decomposition) const;
+
+  /**
    * One logger to log them all.
    */
   Logger &logger;
