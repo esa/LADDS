@@ -52,9 +52,10 @@ target_compile_definitions(${MPITEST_EXECUTABLE_NAME}
                            $<$<BOOL:${LADDS_HDF5}>:LADDS_HDF5=1>
                            )
 
+# if this breaks check that cmake found the right mpirun executable (e.g. not ParaView's)
 set(LADDS_TESTS_NUM_MPI_RANKS 8 CACHE STRING "Number of MPI Ranks to run LADDS MPI tests with.")
 set_property(TARGET ${MPITEST_EXECUTABLE_NAME} PROPERTY CROSSCOMPILING_EMULATOR '${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${LADDS_TESTS_NUM_MPI_RANKS}')
-#TODO: Something is not working here...
+
 gtest_discover_tests(${MPITEST_EXECUTABLE_NAME}
                      TEST_PREFIX "MPITests/"
                      PROPERTIES
