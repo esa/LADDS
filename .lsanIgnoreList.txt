@@ -1,4 +1,5 @@
 # Leak Sanitizer ignore list
 # libhf5 is leaky so ignore everything that comes from it
 leak:libhdf5
+# mpich is leaky so ignore everything that comes from it
 leak:mpich
