@@ -14,7 +14,7 @@ namespace {
 /**
  * Stores the AttributeNames of the attributes of ParticleType which have to be communicated using MPI.
  */
-constexpr std::array<typename Particle::AttributeNames, 14> Attributes = {Particle::AttributeNames::id,
+constexpr std::array<typename Particle::AttributeNames, 13> Attributes = {Particle::AttributeNames::id,
                                                                           Particle::AttributeNames::posX,
                                                                           Particle::AttributeNames::posY,
                                                                           Particle::AttributeNames::posZ,
@@ -35,15 +35,17 @@ constexpr std::array<typename Particle::AttributeNames, 14> Attributes = {Partic
                                                                           Particle::AttributeNames::mass,
                                                                           Particle::AttributeNames::radius,
                                                                           Particle::AttributeNames::bc_inv,
-                                                                          Particle::AttributeNames::activityState,
-                                                                          Particle::AttributeNames::identifier};
+                                                                          Particle::AttributeNames::activityState};
+// FIXME: something is broken when strings are communicated
+// Particle::AttributeNames::identifier
 
 /**
  * The combined size in byte of the attributes which need to be communicated using MPI.
- * Not really sure where the 4 extra bytes in the end come from but they are needed.
  */
-constexpr size_t AttributesSize =
-    1 * sizeof(size_t) /*id*/ + 10 * sizeof(double) + 2 * sizeof(int) /*enums*/ + 12 * sizeof(char) /*identifier*/ + 4;
+constexpr size_t AttributesSize = 1 * sizeof(size_t) /*id*/ + 10 * sizeof(double) + 1 * sizeof(int) /*activityState*/ +
+                                  sizeof(int64_t) /*ownershipState*/;
+// FIXME: something is broken when strings are communicated
+//+ 12 * sizeof(char) /*identifier*/;
 
 /**
  * Serializes the attribute defined by I.
