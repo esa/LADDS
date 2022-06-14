@@ -272,11 +272,11 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
   // set constellation particle IDs and fetch maxExistingParticleId
   setConstellationIDs(autopas, constellations);
-  const size_t maxExistingParticleId = autopas.getNumberOfParticles();
   // only add the breakup model if enabled via yaml
   const std::unique_ptr<BreakupWrapper> breakupWrapper =
-      config.get<bool>("sim/breakup/enabled") ? std::make_unique<BreakupWrapper>(config, autopas, maxExistingParticleId)
-                                              : nullptr;
+      config.get<bool>("sim/breakup/enabled")
+          ? std::make_unique<BreakupWrapper>(config, autopas, autopas.getNumberOfParticles())
+          : nullptr;
 
   const auto timeout = computeTimeout(config);
 
