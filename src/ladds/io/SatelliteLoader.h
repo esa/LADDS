@@ -9,9 +9,9 @@
 #include "ConfigReader.h"
 #include "Logger.h"
 #include "ladds/TypeDefinitions.h"
+#include "ladds/distributedMemParallelization/DomainDecomposition.h"
 #include "ladds/particle/Constellation.h"
 #include "yaml-cpp/yaml.h"
-#include "ladds/distributedMemParallelization/DomainDecomposition.h"
 
 namespace LADDS::SatelliteLoader {
 /**

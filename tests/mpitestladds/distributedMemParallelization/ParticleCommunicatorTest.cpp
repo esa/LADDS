@@ -8,6 +8,6 @@
 
 #include <ladds/distributedMemParallelization/ParticleCommunicator.h>
 
-//TEST(ParticleCommunicatorTest, orbitsTest) {
+// TEST(ParticleCommunicatorTest, orbitsTest) {
 // TODO
 //}

@@ -54,7 +54,8 @@ class Timers {
    * @param decomp
    * @return
    */
-  static std::tuple<double, double> calcImbalances(const autopas::utils::Timer &timer, const DomainDecomposition &decomp);
+  static std::tuple<double, double> calcImbalances(const autopas::utils::Timer &timer,
+                                                   const DomainDecomposition &decomp);
 
   /**
    * Floating point precision for command line output.

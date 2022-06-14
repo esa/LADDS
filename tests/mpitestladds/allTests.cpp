@@ -5,6 +5,7 @@
  */
 
 #include <gtest/gtest.h>
+
 #include "autopas/utils/WrapMPI.h"
 
 int main(int argc, char **argv) {
