@@ -401,28 +401,8 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
     timers.output.start();
     if (iteration % progressOutputFrequency == 0 or iteration == lastIteration) {
-      unsigned long numParticlesLocal = autopas.getNumberOfParticles();
-      unsigned long numParticlesGlobal{};
-      unsigned long totalConjunctionsGlobal{};
-      autopas::AutoPas_MPI_Reduce(&numParticlesLocal,
-                                  &numParticlesGlobal,
-                                  1,
-                                  AUTOPAS_MPI_UNSIGNED_LONG,
-                                  AUTOPAS_MPI_SUM,
-                                  0,
-                                  domainDecomposition.getCommunicator());
-      autopas::AutoPas_MPI_Reduce(&totalConjunctions,
-                                  &totalConjunctionsGlobal,
-                                  1,
-                                  AUTOPAS_MPI_UNSIGNED_LONG,
-                                  AUTOPAS_MPI_SUM,
-                                  0,
-                                  domainDecomposition.getCommunicator());
-      SPDLOG_LOGGER_INFO(logger.get(),
-                         "It {} | Total particles: {} | Total conjunctions: {}",
-                         iteration,
-                         numParticlesGlobal,
-                         totalConjunctionsGlobal);
+      printProgressOutput(
+          iteration, autopas.getNumberOfParticles(), totalConjunctions, domainDecomposition.getCommunicator());
     }
     // Visualization:
     if (vtkWriteFrequency and (iteration % vtkWriteFrequency == 0 or iteration == lastIteration)) {
@@ -676,6 +656,23 @@ void Simulation::printNumParticlesPerRank(const autopas::AutoPas<Particle> &auto
     const auto myNumParticles = autopas.getNumberOfParticles();
     autopas::AutoPas_MPI_Send(&myNumParticles, 1, AUTOPAS_MPI_UNSIGNED_LONG, 0, myRank, communicator);
   }
+}
+
+void Simulation::printProgressOutput(size_t iteration,
+                                     size_t numParticlesLocal,
+                                     size_t totalConjunctionsLocal,
+                                     autopas::AutoPas_MPI_Comm const &comm) {
+  unsigned long numParticlesGlobal{};
+  unsigned long totalConjunctionsGlobal{};
+  autopas::AutoPas_MPI_Reduce(
+      &numParticlesLocal, &numParticlesGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, comm);
+  autopas::AutoPas_MPI_Reduce(
+      &totalConjunctionsLocal, &totalConjunctionsGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, comm);
+  SPDLOG_LOGGER_INFO(logger.get(),
+                     "It {} | Total particles: {} | Total conjunctions: {}",
+                     iteration,
+                     numParticlesGlobal,
+                     totalConjunctionsGlobal);
 }
 
 }  // namespace LADDS

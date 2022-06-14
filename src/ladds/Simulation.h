@@ -218,6 +218,18 @@ class Simulation {
                                 const DomainDecomposition &decomposition) const;
 
   /**
+   * Loggs global information about simulation progress to std::out from rank 1.
+   * @note Contains global communication to obtain full information.
+   * @param iteration
+   * @param numParticlesLocal
+   * @param totalConjunctionsLocal
+   * @param comm
+   */
+  void printProgressOutput(size_t iteration,
+                           size_t numParticlesLocal,
+                           size_t totalConjunctionsLocal,
+                           const autopas::AutoPas_MPI_Comm &comm);
+  /**
    * One logger to log them all.
    */
   Logger &logger;
