@@ -196,6 +196,15 @@ class Simulation {
    */
   size_t computeTimeout(ConfigReader &config);
 
+  /**
+   * Send the given list of leaving particles to all (up to) 26 logical surrounding ranks and receive their leaving
+   * particles which are relevant for the local rank.
+   * @param leavingParticles in/out parameter of leaving particles. If everything worked the vector should be empty
+   * after the function call.
+   * @param autopas
+   * @param decomposition
+   * @return Vector of incoming particles.
+   */
   std::vector<Particle> communicateParticles(std::vector<Particle> &leavingParticles,
                                              autopas::AutoPas<Particle> &autopas,
                                              const RegularGridDecomposition &decomposition);
@@ -205,7 +214,8 @@ class Simulation {
    * @param autopas
    * @param decomposition
    */
-  void printNumParticlesPerRank(const autopas::AutoPas<Particle> &autopas, const DomainDecomposition &decomposition) const;
+  void printNumParticlesPerRank(const autopas::AutoPas<Particle> &autopas,
+                                const DomainDecomposition &decomposition) const;
 
   /**
    * One logger to log them all.
