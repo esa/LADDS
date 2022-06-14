@@ -102,11 +102,11 @@ class Simulation {
                                                                               double minDetectionRadius);
 
   /**
-   * Interact all incoming particles with all particles which potentially crossed it's path since the last container
+   * Interact all incoming particles with all particles which potentially crossed its path since the last container
    * update.
    *
    * These particles are found in a box around the immigrant's position -deltaT time ago.
-   * The box has a side length of 2x the maximum cover able distance by any particle.
+   * The box has a side length of 2x the maximum coverable distance by any particle.
    *
    * @note The first pointers in the returned tuple collection point to particles in the immigrant vector!
    *
