@@ -13,11 +13,11 @@ autopas::AutoPas_MPI_Request LADDS::ParticleCommunicator::sendParticles(
     const std::vector<LADDS::Particle>::iterator &particlesEnd,
     const int receiver,
     autopas::AutoPas_MPI_Comm const &communicator) {
-  std::vector<char> serializedParticles;
-  Serialization::serializeParticles(particlesBegin, particlesEnd, serializedParticles);
-  autopas::AutoPas_MPI_Request sendRequest{};
-  autopas::AutoPas_MPI_Isend(serializedParticles.data(),
-                             static_cast<int>(serializedParticles.size()),
+  sendBuffers.emplace_back(std::pair<autopas::AutoPas_MPI_Request, std::vector<char>>());
+  auto &[sendRequest, particleBuffer] = sendBuffers.back();
+  Serialization::serializeParticles(particlesBegin, particlesEnd, particleBuffer);
+  autopas::AutoPas_MPI_Isend(particleBuffer.data(),
+                             static_cast<int>(particleBuffer.size()),
                              AUTOPAS_MPI_CHAR,
                              receiver,
                              0,
@@ -51,4 +51,13 @@ std::vector<LADDS::Particle> LADDS::ParticleCommunicator::receiveParticles(
     Serialization::deserializeParticles(serializedParticles, deserializedParticles);
   }
   return deserializedParticles;
+}
+
+void LADDS::ParticleCommunicator::waitAndFlushBuffers() {
+  std::for_each(
+      sendBuffers.begin(), sendBuffers.end(), [](std::pair<autopas::AutoPas_MPI_Request, std::vector<char>> &pair) {
+        auto &[request, buffer] = pair;
+        autopas::AutoPas_MPI_Wait(&request, AUTOPAS_MPI_STATUS_IGNORE);
+      });
+  sendBuffers.clear();
 }
