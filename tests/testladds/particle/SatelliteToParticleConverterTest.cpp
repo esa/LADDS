@@ -1,8 +1,7 @@
-#include "SatelliteToParticleConverterTest.h"
-
 #include <breakupModel/model/Satellite.h>
 #include <gmock/gmock-matchers.h>
 
+#include "SatelliteToParticleConverterTest.h"
 #include "ladds/particle/SatelliteToParticleConverter.h"
 /**
  * Sets up a particle and tries to convert it to a satellites.
@@ -11,7 +10,8 @@
 TEST(SatelliteToParticleConverterTest, SatelliteToParticle) {
   // Create a particle.
   const Satellite sat{"name", SatType::DEBRIS, {10., 10., 10.}};
-  const auto particle = LADDS::SatelliteToParticleConverter::convertSatelliteToParticle(sat, 2.2);
+  const auto particle =
+      LADDS::SatelliteToParticleConverter::convertSatelliteToParticle(sat, 2.2, std::numeric_limits<size_t>::max());
 
   const auto &expectedPosition = autopas::utils::ArrayMath::mulScalar(sat.getPosition(), 1. / 1000.0);
   const auto &expectedVelocity = autopas::utils::ArrayMath::mulScalar(sat.getVelocity(), 1. / 1000.0);
@@ -45,7 +45,8 @@ TEST(SatelliteToParticleConverterTest, ParticleToSatellite) {
   EXPECT_THAT(sat.getVelocity(), ::testing::ElementsAreArray(expectedVelocity));
   EXPECT_EQ(sat.getMass(), particle.getMass());
 
-  const auto particleConverted = LADDS::SatelliteToParticleConverter::convertSatelliteToParticle(sat, 2.2);
+  const auto particleConverted =
+      LADDS::SatelliteToParticleConverter::convertSatelliteToParticle(sat, 2.2, std::numeric_limits<size_t>::max());
   EXPECT_THAT(particleConverted.getPosition(), ::testing::ElementsAreArray(particle.getPosition()));
   EXPECT_THAT(particleConverted.getVelocity(), ::testing::ElementsAreArray(particle.getVelocity()));
   EXPECT_EQ(particleConverted.getMass(), particle.getMass());

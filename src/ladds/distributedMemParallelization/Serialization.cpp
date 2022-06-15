@@ -4,9 +4,9 @@
  * @date 31.05.22
  */
 
-#include "Serialization.h"
-
 #include <tuple>
+
+#include "Serialization.h"
 
 namespace LADDS {
 namespace {

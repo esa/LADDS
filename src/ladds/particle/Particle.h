@@ -66,14 +66,16 @@ class Particle final : public autopas::ParticleFP64 {
            ActivityState activityState,
            double mass,
            double radius,
-           double bcInv)
+           double bcInv,
+           size_t parentIdentifier)
       : autopas::ParticleFP64(pos, v, debrisId),
         _aom(M_PI * radius * radius * 1e-6 / mass),  // convert m^2 -> km^2
         _mass(mass),
         _radius(radius),
         _bc_inv(bcInv),
         _activityState(activityState),
-        _identifier(std::move(identifier)) {
+        _identifier(std::move(identifier)),
+        _parentIdentifier(parentIdentifier) {
     // to make serialization easier make sure COSPAR IDs are always padded with spaces to full length of 11
     _identifier.insert(_identifier.end(), 11 - _identifier.size(), ' ');
     // FIXME: remove this check as soon as we are confident that it works
@@ -125,6 +127,11 @@ class Particle final : public autopas::ParticleFP64 {
    */
   std::string _identifier;
 
+  /**
+   * Unique identifier of the particle whose collision created this one
+   */
+  size_t _parentIdentifier;
+
  public:
   /**
    * Enums used as ids for accessing and creating a dynamically sized SoA.
@@ -153,7 +160,8 @@ class Particle final : public autopas::ParticleFP64 {
     radius,
     bc_inv,
     activityState,
-    identifier
+    identifier,
+    parentIdentifier
   };
 
   /**
@@ -182,7 +190,8 @@ class Particle final : public autopas::ParticleFP64 {
                                                          decltype(_radius) /*_radius*/,
                                                          decltype(_bc_inv) /*_bc_inv*/,
                                                          decltype(_activityState) /*_activityState*/,
-                                                         decltype(_identifier) /*_identifier*/
+                                                         decltype(_identifier) /*_identifier*/,
+                                                         decltype(_parentIdentifier) /*_parentIdentifier*/
                                                          >::Type;
 
   /**
@@ -306,6 +315,8 @@ class Particle final : public autopas::ParticleFP64 {
       _activityState = value;
     } else if constexpr (attribute == AttributeNames::identifier) {
       _identifier = value;
+    } else if constexpr (attribute == AttributeNames::parentIdentifier) {
+      _parentIdentifier = value;
     } else {
       autopas::utils::ExceptionHandler::exception("Particle::set() unknown attribute {}", attribute);
     }
@@ -470,6 +481,18 @@ class Particle final : public autopas::ParticleFP64 {
    * @param
    */
   void setIdentifier(const std::string &identifier);
+
+  /**
+   * Getter for identifier.
+   * @return
+   */
+  [[nodiscard]] const size_t &getParentIdentifier() const;
+
+  /**
+   * Setter for identifier.
+   * @param
+   */
+  void setParentIdentifier(const size_t &parentIdentifier);
 
   /**
    * Stream operator

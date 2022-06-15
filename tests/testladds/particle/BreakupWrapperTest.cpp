@@ -4,9 +4,9 @@
  * @date 24.01.22
  */
 
-#include "BreakupWrapperTest.h"
-
 #include <gmock/gmock-matchers.h>
+
+#include "BreakupWrapperTest.h"
 
 /**
  * Crash two particles into each other and observe that new particles have higher IDs.
@@ -23,7 +23,8 @@ TEST_F(BreakupWrapperTest, testSimulationLoop) {
                                        LADDS::Particle::ActivityState::passive,
                                        1.,
                                        1.,
-                                       LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)));
+                                       LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                                       std::numeric_limits<size_t>::max()));
   autopas->addParticle(LADDS::Particle({Physics::R_EARTH + 1000., 0., -1.},
                                        {0., 0., 2.},
                                        highestIdBeforeCrash,
@@ -31,7 +32,8 @@ TEST_F(BreakupWrapperTest, testSimulationLoop) {
                                        LADDS::Particle::ActivityState::passive,
                                        1.,
                                        1.,
-                                       LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)));
+                                       LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                                       std::numeric_limits<size_t>::max()));
 
   // dummy
   std::vector<LADDS::Constellation> constellations;

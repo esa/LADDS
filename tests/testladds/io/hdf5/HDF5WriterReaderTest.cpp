@@ -4,10 +4,9 @@
  * @date 23.12.2021
  */
 
-#include "HDF5WriterReaderTest.h"
-
 #include <gmock/gmock-matchers.h>
 
+#include "HDF5WriterReaderTest.h"
 #include "ladds/io/hdf5/HDF5Reader.h"
 #include "ladds/io/hdf5/HDF5Writer.h"
 
@@ -59,7 +58,8 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestParticleData) {
                          LADDS::Particle::ActivityState::evasivePreserving,
                          1.,
                          1.,
-                         LADDS::Particle::calculateBcInv(0., 1., 1., 2.2));
+                         LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                         std::numeric_limits<size_t>::max());
   autopas.addParticle(particles.back());
 
   // 5. write data
@@ -145,7 +145,8 @@ TEST_F(HDF5WriterReaderTest, AppendCheckpointTest) {
                                              LADDS::Particle::ActivityState::passive,
                                              1.,
                                              1.,
-                                             LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)});
+                                             LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                                             std::numeric_limits<size_t>::max()});
     autopas.addParticle(particles.back());
   }
 
@@ -179,7 +180,8 @@ TEST_F(HDF5WriterReaderTest, AppendCheckpointTest) {
                                            LADDS::Particle::ActivityState::passive,
                                            1.,
                                            1.,
-                                           LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)});
+                                           LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                                           std::numeric_limits<size_t>::max()});
   autopas.addParticle(particles.back());
   {
     LADDS::HDF5Writer hdf5WriterAppend(filename, false, 4);

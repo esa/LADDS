@@ -4,12 +4,11 @@
  * @date 03.12.21
  */
 
-#include "SimulationTest.h"
-
 #include <autopas/AutoPasDecl.h>
 #include <satellitePropagator/io/FileOutput.h>
 #include <satellitePropagator/physics/AccelerationAccumulator.h>
 
+#include "SimulationTest.h"
 #include "ladds/particle/Particle.h"
 
 /**
@@ -44,7 +43,8 @@ TEST_F(SimulationTest, testInsertionOverlap) {
                       LADDS::Particle::ActivityState::passive,
                       1.,
                       1.,
-                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)),
+                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                      std::numeric_limits<size_t>::max()),
       LADDS::Particle({6870.99577848984, 4.89582991243564, 5.83462288687537},
                       {-0.00844301944979238, 4.89582790671436, 5.83462049654983},
                       2,
@@ -52,7 +52,8 @@ TEST_F(SimulationTest, testInsertionOverlap) {
                       LADDS::Particle::ActivityState::passive,
                       1.,
                       1.,
-                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2))};
+                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                      std::numeric_limits<size_t>::max())};
   for (const auto &s : initialSatellites) {
     autopas->addParticle(s);
   }
@@ -64,7 +65,8 @@ TEST_F(SimulationTest, testInsertionOverlap) {
                       LADDS::Particle::ActivityState::passive,
                       0,
                       0,
-                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)),
+                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                      std::numeric_limits<size_t>::max()),
       LADDS::Particle({6870.99577848984, 4.89582991243564, 5.83462288687537},
                       {-0.00844301944979238, 4.89582790671436, 5.83462049654983},
                       4,
@@ -72,7 +74,8 @@ TEST_F(SimulationTest, testInsertionOverlap) {
                       LADDS::Particle::ActivityState::passive,
                       1.,
                       1.,
-                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2))};
+                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                      std::numeric_limits<size_t>::max())};
 
   auto constellationCutoff = config["io"]["constellationCutoff"].as<double>();
 

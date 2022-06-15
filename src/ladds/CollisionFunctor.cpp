@@ -4,12 +4,12 @@
  * @date 28.06.21
  */
 
-#include "CollisionFunctor.h"
-
 #include <autopas/utils/ArrayMath.h>
 #include <autopas/utils/WrapOpenMP.h>
 
 #include <algorithm>
+
+#include "CollisionFunctor.h"
 
 namespace LADDS {
 CollisionFunctor::CollisionFunctor(double cutoff, double dt, double collisionDistanceFactor, double minDetectionRadius)
@@ -96,6 +96,7 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   const auto p2 = add(old_r_j, mulScalar(vj, t));
 
   const auto dr_lines = sub(p1, p2);
+
   const auto distanceSquare_lines = dot(dr_lines, dr_lines);
   // _collisionDistanceFactor also converts this to km
   const auto scaledObjectSeparation = (iRadius + jRadius) * _collisionDistanceFactor;
@@ -103,13 +104,20 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   // return if particles are far enough away (i.e. further than sum of their scaled sizes)
   if (distanceSquare_lines > (scaledObjectSeparation * scaledObjectSeparation)) return;
 
+  // if not compute collision point as middle between the two particles
+  const auto collision_point = add(p1, mulScalar(sub(p2, p1), 0.5));
+
   // store pointers to colliding pair
   if (i.getID() < j.getID()) {
-    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(
-        i.get<Particle::AttributeNames::ptr>(), j.get<Particle::AttributeNames::ptr>(), distanceSquare_lines);
+    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(i.get<Particle::AttributeNames::ptr>(),
+                                                                           j.get<Particle::AttributeNames::ptr>(),
+                                                                           distanceSquare_lines,
+                                                                           collision_point);
   } else {
-    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(
-        j.get<Particle::AttributeNames::ptr>(), i.get<Particle::AttributeNames::ptr>(), distanceSquare_lines);
+    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(j.get<Particle::AttributeNames::ptr>(),
+                                                                           i.get<Particle::AttributeNames::ptr>(),
+                                                                           distanceSquare_lines,
+                                                                           collision_point);
   }
 }
 

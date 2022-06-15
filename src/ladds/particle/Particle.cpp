@@ -3,10 +3,10 @@
  * @author F. Gratl
  * @date 28.06.21
  */
-#include "Particle.h"
-
 #include <satellitePropagator/physics/Constants.h>
 #include <satellitePropagator/utils/MathUtils.h>
+
+#include "Particle.h"
 
 namespace LADDS {
 
@@ -104,6 +104,14 @@ const std::string &Particle::getIdentifier() const {
 
 void Particle::setIdentifier(const std::string &identifier) {
   this->_identifier = identifier;
+}
+
+const size_t &Particle::getParentIdentifier() const {
+  return _parentIdentifier;
+}
+
+void Particle::setParentIdentifier(const size_t &parentIdentifier) {
+  this->_parentIdentifier = parentIdentifier;
 }
 
 std::ostream &operator<<(std::ostream &os, const Particle &particle) {
