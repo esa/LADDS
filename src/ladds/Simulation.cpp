@@ -554,6 +554,7 @@ std::vector<Particle> Simulation::communicateParticles(std::vector<Particle> &le
     return rankOther;
   };
 
+  ParticleCommunicator particleCommunicator;
   std::vector<Particle> incomingParticles;
   enum CommDir : int { X, Y, Z };
   for (CommDir commDir = X; commDir <= Z; commDir = static_cast<CommDir>(commDir + 1)) {
@@ -567,7 +568,7 @@ std::vector<Particle> Simulation::communicateParticles(std::vector<Particle> &le
             return p.getPosition()[commDir] > localBoxMin[commDir];
           });
       const int rankLeft = getNeighborRank(coords, commDir, std::minus<>());
-      ParticleCommunicator::sendParticles(leavingParticlesIter, leavingParticles.end(), rankLeft, comm);
+      particleCommunicator.sendParticles(leavingParticlesIter, leavingParticles.end(), rankLeft, comm);
       // clip sent particles
       leavingParticles.erase(leavingParticlesIter, leavingParticles.end());
     }
@@ -580,19 +581,19 @@ std::vector<Particle> Simulation::communicateParticles(std::vector<Particle> &le
             return p.getPosition()[commDir] < localBoxMax[commDir];
           });
       const int rankRight = getNeighborRank(coords, commDir, std::plus<>());
-      ParticleCommunicator::sendParticles(leavingParticlesIter, leavingParticles.end(), rankRight, comm);
+      particleCommunicator.sendParticles(leavingParticlesIter, leavingParticles.end(), rankRight, comm);
       // clip sent particles
       leavingParticles.erase(leavingParticlesIter, leavingParticles.end());
 
       // receive
-      auto incomingParticlesRight = ParticleCommunicator::receiveParticles(rankRight, comm);
+      auto incomingParticlesRight = particleCommunicator.receiveParticles(rankRight, comm);
       incomingParticles.insert(incomingParticles.end(), incomingParticlesRight.begin(), incomingParticlesRight.end());
     }
 
     // receive left (negative direction)
     if (coords[commDir] != 0) {
       const int rankLeft = getNeighborRank(coords, commDir, std::minus<>());
-      auto incomingParticlesLeft = ParticleCommunicator::receiveParticles(rankLeft, comm);
+      auto incomingParticlesLeft = particleCommunicator.receiveParticles(rankLeft, comm);
       incomingParticles.insert(incomingParticles.end(), incomingParticlesLeft.begin(), incomingParticlesLeft.end());
     }
 
@@ -606,6 +607,8 @@ std::vector<Particle> Simulation::communicateParticles(std::vector<Particle> &le
     // These pass-through particles are those changing ranks in more than one dimension.
     leavingParticles.insert(leavingParticles.end(), incomingParticlesIter, incomingParticles.end());
     incomingParticles.erase(incomingParticlesIter, incomingParticles.end());
+
+    particleCommunicator.waitAndFlushBuffers();
   }
   return incomingParticles;
 }
