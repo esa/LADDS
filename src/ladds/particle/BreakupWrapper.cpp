@@ -4,9 +4,9 @@
  * @date 24.01.22
  */
 
-#include <autopas/utils/ArrayMath.h>
-
 #include "BreakupWrapper.h"
+
+#include <autopas/utils/ArrayMath.h>
 
 namespace LADDS {
 

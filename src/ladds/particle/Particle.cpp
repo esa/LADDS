@@ -3,10 +3,10 @@
  * @author F. Gratl
  * @date 28.06.21
  */
+#include "Particle.h"
+
 #include <satellitePropagator/physics/Constants.h>
 #include <satellitePropagator/utils/MathUtils.h>
-
-#include "Particle.h"
 
 namespace LADDS {
 

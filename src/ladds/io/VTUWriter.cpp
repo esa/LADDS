@@ -4,9 +4,10 @@
  * @date 06.12.21
  */
 
+#include "VTUWriter.h"
+
 #include <breakupModel/output/VTKWriter.h>
 
-#include "VTUWriter.h"
 #include "ladds/particle/SatelliteToParticleConverter.h"
 
 namespace LADDS {

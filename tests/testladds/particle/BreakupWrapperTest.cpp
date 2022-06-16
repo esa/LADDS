@@ -4,9 +4,9 @@
  * @date 24.01.22
  */
 
-#include <gmock/gmock-matchers.h>
-
 #include "BreakupWrapperTest.h"
+
+#include <gmock/gmock-matchers.h>
 
 /**
  * Crash two particles into each other and observe that new particles have higher IDs.

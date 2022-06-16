@@ -4,13 +4,13 @@
  * @date 28.06.21
  */
 
+#include "CollisionFunctor.h"
+
 #include <autopas/utils/ArrayMath.h>
 #include <autopas/utils/WrapOpenMP.h>
 
 #include <algorithm>
 #include <limits>
-
-#include "CollisionFunctor.h"
 
 namespace LADDS {
 CollisionFunctor::CollisionFunctor(double cutoff, double dt, double collisionDistanceFactor, double minDetectionRadius)

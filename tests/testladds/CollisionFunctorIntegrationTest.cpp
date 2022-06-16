@@ -4,13 +4,13 @@
  * @date 05/07/2021
  */
 
+#include "CollisionFunctorIntegrationTest.h"
+
 #include <autopas/AutoPasDecl.h>
 #include <autopasTools/generators/RandomGenerator.h>
 #include <gmock/gmock-matchers.h>
 #include <gmock/gmock-more-matchers.h>
 #include <ladds/CollisionFunctor.h>
-
-#include "CollisionFunctorIntegrationTest.h"
 
 extern template class autopas::AutoPas<LADDS::Particle>;
 extern template bool autopas::AutoPas<LADDS::Particle>::iteratePairwise(LADDS::CollisionFunctor *);

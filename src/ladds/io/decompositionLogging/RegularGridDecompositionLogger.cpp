@@ -4,12 +4,12 @@
  * @date 24.05.22
  */
 
+#include "RegularGridDecompositionLogger.h"
+
 #include <autopas/utils/WrapMPI.h>
 
 #include <fstream>
 #include <iomanip>
-
-#include "RegularGridDecompositionLogger.h"
 
 LADDS::RegularGridDecompositionLogger::RegularGridDecompositionLogger(
     ConfigReader &config, const LADDS::RegularGridDecomposition &decomposition)

@@ -4,11 +4,12 @@
  * @date 03.12.21
  */
 
+#include "SimulationTest.h"
+
 #include <autopas/AutoPasDecl.h>
 #include <satellitePropagator/io/FileOutput.h>
 #include <satellitePropagator/physics/AccelerationAccumulator.h>
 
-#include "SimulationTest.h"
 #include "ladds/particle/Particle.h"
 
 /**

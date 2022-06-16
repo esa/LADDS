@@ -4,14 +4,14 @@
  * @date 12.11.21
  */
 
+#include "Constellation.h"
+
 #include <breakupModel/input/CSVReader.h>
 
 #include <cstdlib>
 #include <iostream>
 #include <limits>
 #include <string>
-
-#include "Constellation.h"
 
 namespace LADDS {
 

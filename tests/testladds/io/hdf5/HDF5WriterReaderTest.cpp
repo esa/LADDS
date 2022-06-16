@@ -4,9 +4,10 @@
  * @date 23.12.2021
  */
 
+#include "HDF5WriterReaderTest.h"
+
 #include <gmock/gmock-matchers.h>
 
-#include "HDF5WriterReaderTest.h"
 #include "ladds/io/hdf5/HDF5Reader.h"
 #include "ladds/io/hdf5/HDF5Writer.h"
 

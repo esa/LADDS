@@ -1,7 +1,8 @@
+#include "SatelliteToParticleConverterTest.h"
+
 #include <breakupModel/model/Satellite.h>
 #include <gmock/gmock-matchers.h>
 
-#include "SatelliteToParticleConverterTest.h"
 #include "ladds/particle/SatelliteToParticleConverter.h"
 /**
  * Sets up a particle and tries to convert it to a satellites.

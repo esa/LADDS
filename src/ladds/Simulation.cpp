@@ -3,9 +3,9 @@
  * @author F. Gratl
  * @date 30.11.21
  */
-#include <breakupModel/output/VTKWriter.h>
-
 #include "Simulation.h"
+
+#include <breakupModel/output/VTKWriter.h>
 
 // needed for autopas::AutoPas::getCurrentConfiguration()
 #include <autopas/AutoPasImpl.h>
