@@ -4,6 +4,8 @@
  * @date 24.01.22
  */
 
+#include <autopas/utils/ArrayMath.h>
+
 #include "BreakupWrapper.h"
 
 namespace LADDS {
@@ -16,15 +18,15 @@ void BreakupWrapper::simulateBreakup(const CollisionFunctor::CollisionCollection
         SatelliteToParticleConverter::convertParticleToSatellite(*p2),
     };
 
-    auto parentID = p1->getIdentifier();
+    auto parentID = p1->getID();
 
     // remove colliding particles from autopas. If the collision is non-fatal they will be reinserted further down
     autopas.deleteParticle(*p1);
     autopas.deleteParticle(*p2);
 
     // position satellites at collision point
-    satellites[0].setPosition(position);
-    satellites[1].setPosition(position);
+    satellites[0].setPosition(autopas::utils::ArrayMath::mulScalar(position, 1000.0));
+    satellites[1].setPosition(autopas::utils::ArrayMath::mulScalar(position, 1000.0));
 
     // Create and run the Breakup Simulation
     auto configSource = std::make_shared<RuntimeInputSource>(

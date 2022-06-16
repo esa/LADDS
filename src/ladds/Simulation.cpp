@@ -3,14 +3,15 @@
  * @author F. Gratl
  * @date 30.11.21
  */
-#include "Simulation.h"
-
 #include <breakupModel/output/VTKWriter.h>
+
+#include "Simulation.h"
 
 // needed for autopas::AutoPas::getCurrentConfiguration()
 #include <autopas/AutoPasImpl.h>
 
 #include <array>
+#include <limits>
 #include <tuple>
 #include <vector>
 
@@ -296,6 +297,13 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
   // in tuning mode ignore the iteration counter
   for (size_t iteration = startingIteration; iteration <= lastIteration or tuningMode; ++iteration) {
+    // in case we have completed 10 iterations without a collisions
+    // we set parentIDs to max to disable spawn protection for particles
+    // recently created through breakups
+    if (iterationsSinceLastCollision == 100) {
+      removeParticleSpawnProtection(autopas);
+    }
+
     // update positions
     timers.integrator.start();
     integrator.integrate(false);
@@ -333,11 +341,13 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       timers.collisionDetectionImmigrants.stop();
       totalConjunctions += collisions.size();
 
+      if (collisions.size() > 0) iterationsSinceLastCollision = 0;
+
       if (breakupWrapper) {
         // all particles which are part of a collision will be deleted in the breakup.
         // As we pass particle-pointers to the vector and not to autopas we have to mark the particles as deleted
         // manually
-        for (const auto &[p1, p2, _] : collisions) {
+        for (const auto &[p1, p2, _, __] : collisions) {
           p1->setOwnershipState(autopas::OwnershipState::dummy);
           p2->setOwnershipState(autopas::OwnershipState::dummy);
         }
@@ -370,6 +380,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                                                           minDetectionRadius);
       timers.collisionDetection.stop();
       totalConjunctions += collisions.size();
+      if (collisions.size() > 0) iterationsSinceLastCollision = 0;
 
       if (tuningMode and not stillTuning) {
         dumpCalibratedConfig(config, autopas);
@@ -400,6 +411,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     }
 
     timers.output.start();
+    iterationsSinceLastCollision++;
     if (iteration % progressOutputFrequency == 0 or iteration == lastIteration) {
       printProgressOutput(
           iteration, autopas.getNumberOfParticles(), totalConjunctions, domainDecomposition.getCommunicator());
@@ -426,6 +438,13 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
   printNumParticlesPerRank(autopas, domainDecomposition);
   SPDLOG_LOGGER_INFO(logger.get(), "Total conjunctions: {}", totalConjunctions);
   return totalConjunctions;
+}
+
+void Simulation::removeParticleSpawnProtection(autopas::AutoPas<Particle> &autopas) {
+  SPDLOG_LOGGER_INFO(logger.get(), "Removing spawn protection for all particles.");
+  for (auto &particle : autopas) {
+    particle.setParentIdentifier(std::numeric_limits<size_t>::max());
+  };
 }
 
 std::vector<Particle> Simulation::checkedInsert(autopas::AutoPas<Particle> &autopas,

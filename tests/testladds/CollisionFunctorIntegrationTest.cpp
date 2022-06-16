@@ -4,13 +4,13 @@
  * @date 05/07/2021
  */
 
-#include "CollisionFunctorIntegrationTest.h"
-
 #include <autopas/AutoPasDecl.h>
 #include <autopasTools/generators/RandomGenerator.h>
 #include <gmock/gmock-matchers.h>
 #include <gmock/gmock-more-matchers.h>
 #include <ladds/CollisionFunctor.h>
+
+#include "CollisionFunctorIntegrationTest.h"
 
 extern template class autopas::AutoPas<LADDS::Particle>;
 extern template bool autopas::AutoPas<LADDS::Particle>::iteratePairwise(LADDS::CollisionFunctor *);
@@ -33,7 +33,8 @@ void CollisionFunctorIntegrationTest::SetUpTestSuite() {
                                   LADDS::Particle::ActivityState::passive,
                                   1.,
                                   1.,
-                                  LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)};
+                                  LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                                  0};
   _debris.reserve(numDebris);
 
   // fix seed for randomPosition()
@@ -116,7 +117,7 @@ TEST_P(CollisionFunctorIntegrationTest, testAutoPasAlgorithm) {
   auto collisionPtrs = functor.getCollisions();
   std::vector<std::pair<size_t, size_t>> collisionIDs;
   collisionIDs.reserve(collisionPtrs.size());
-  for (const auto &[pi, pj, dist] : collisionPtrs) {
+  for (const auto &[pi, pj, dist, _] : collisionPtrs) {
     collisionIDs.emplace_back(pi->getID(), pj->getID());
   }
 

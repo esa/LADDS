@@ -257,6 +257,8 @@ class Particle final : public autopas::ParticleFP64 {
       return getActivityState();
     } else if constexpr (attribute == AttributeNames::identifier) {
       return getIdentifier();
+    } else if constexpr (attribute == AttributeNames::parentIdentifier) {
+      return getParentIdentifier();
     } else {
       autopas::utils::ExceptionHandler::exception("Particle::get() unknown attribute {}", attribute);
     }
@@ -492,7 +494,7 @@ class Particle final : public autopas::ParticleFP64 {
    * Setter for identifier.
    * @param
    */
-  void setParentIdentifier(const size_t &parentIdentifier);
+  void setParentIdentifier(size_t parentIdentifier);
 
   /**
    * Stream operator

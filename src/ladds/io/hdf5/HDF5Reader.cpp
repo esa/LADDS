@@ -4,9 +4,10 @@
  * @date 23.12.21
  */
 
-#include "HDF5Reader.h"
+#include <limits>
 
 #include "HDF5Definitions.h"
+#include "HDF5Reader.h"
 
 namespace LADDS {
 
@@ -55,7 +56,8 @@ std::vector<Particle> HDF5Reader::readParticles(size_t iteration, double coeffic
                            static_cast<Particle::ActivityState>(constantProperties.activityState),
                            constantProperties.mass,
                            constantProperties.radius,
-                           constantProperties.bcInv);
+                           constantProperties.bcInv,
+                           std::numeric_limits<size_t>::max());
   }
 #endif
   return particles;

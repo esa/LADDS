@@ -4,10 +4,9 @@
  * @date 06.12.21
  */
 
-#include "VTUWriter.h"
-
 #include <breakupModel/output/VTKWriter.h>
 
+#include "VTUWriter.h"
 #include "ladds/particle/SatelliteToParticleConverter.h"
 
 namespace LADDS {
@@ -168,8 +167,8 @@ std::string VTUWriter::filenamePayload(ConfigReader &config,
   autopas::AutoPas_MPI_Comm_size(decomposition.getCommunicator(), &numRanks);
   const auto maxDigitsIterations = std::to_string(config.getLastIterationNr()).size();
   std::stringstream ss;
-  ss << "Output_" << std::setfill('0') << std::setw(static_cast<int>(maxDigitsIterations)) << iteration << "_"
-     << std::setw(static_cast<int>(std::to_string(numRanks).size())) << rank << ".vtu";
+  ss << "Output_" << std::setw(static_cast<int>(std::to_string(numRanks).size())) << rank << "_" << std::setfill('0')
+     << std::setw(static_cast<int>(maxDigitsIterations)) << iteration << ".vtu";
   return ss.str();
 }
 

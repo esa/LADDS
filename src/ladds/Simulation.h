@@ -229,6 +229,8 @@ class Simulation {
                            size_t numParticlesLocal,
                            size_t totalConjunctionsLocal,
                            const autopas::AutoPas_MPI_Comm &comm);
+
+  void removeParticleSpawnProtection(autopas::AutoPas<Particle> &autopas);
   /**
    * One logger to log them all.
    */
@@ -238,6 +240,8 @@ class Simulation {
    * All timers used throughout the simulation.
    */
   Timers timers{};
+
+  size_t iterationsSinceLastCollision = 0;
 };
 
 }  // namespace LADDS

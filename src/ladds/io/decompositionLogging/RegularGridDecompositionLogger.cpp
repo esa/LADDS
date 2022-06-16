@@ -4,12 +4,12 @@
  * @date 24.05.22
  */
 
-#include "RegularGridDecompositionLogger.h"
-
 #include <autopas/utils/WrapMPI.h>
 
 #include <fstream>
 #include <iomanip>
+
+#include "RegularGridDecompositionLogger.h"
 
 LADDS::RegularGridDecompositionLogger::RegularGridDecompositionLogger(
     ConfigReader &config, const LADDS::RegularGridDecomposition &decomposition)
@@ -149,7 +149,7 @@ std::string LADDS::RegularGridDecompositionLogger::filenamePayload(size_t iterat
   int numRanks{};
   autopas::AutoPas_MPI_Comm_size(decomposition.getCommunicator(), &numRanks);
   std::stringstream ss;
-  ss << "Decomp_" << std::setfill('0') << std::setw(static_cast<int>(maxDigitsIterations)) << iteration << "_"
-     << std::setw(static_cast<int>(std::to_string(numRanks).size())) << rank << ".vts";
+  ss << "Decomp_" << std::setw(static_cast<int>(std::to_string(numRanks).size())) << rank << "_" << std::setfill('0')
+     << std::setw(static_cast<int>(maxDigitsIterations)) << iteration << ".vts";
   return ss.str();
 }

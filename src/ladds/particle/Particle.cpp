@@ -110,7 +110,7 @@ const size_t &Particle::getParentIdentifier() const {
   return _parentIdentifier;
 }
 
-void Particle::setParentIdentifier(const size_t &parentIdentifier) {
+void Particle::setParentIdentifier(size_t parentIdentifier) {
   this->_parentIdentifier = parentIdentifier;
 }
 
@@ -121,7 +121,8 @@ std::ostream &operator<<(std::ostream &os, const Particle &particle) {
      << "\nMass          : " << particle.getMass()
      << "\nRadius        : " << particle.getRadius()
      << "\nBcInv         : " << particle.getBcInv()
-     << "\nActivityState : " << static_cast<int>(particle.getActivityState());
+     << "\nActivityState : " << static_cast<int>(particle.getActivityState())
+     << "\nParentID :" << particle.getParentIdentifier();
   // clang-format on
   return os;
 }
