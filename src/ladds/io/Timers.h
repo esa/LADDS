@@ -22,12 +22,12 @@ class Timers {
   autopas::utils::Timer integrator{};
   autopas::utils::Timer burnUps{};
   autopas::utils::Timer constellationInsertion{};
+  autopas::utils::Timer particleCommunication{};
   autopas::utils::Timer collisionDetection{};
   autopas::utils::Timer collisionDetectionImmigrants{};
-  autopas::utils::Timer collisionSimulation{};
   autopas::utils::Timer collisionWriting{};
+  autopas::utils::Timer collisionSimulation{};
   autopas::utils::Timer containerUpdate{};
-  autopas::utils::Timer particleCommunication{};
   autopas::utils::Timer output{};
 
   /**
