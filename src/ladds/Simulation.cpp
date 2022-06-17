@@ -102,8 +102,10 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config, DomainD
   autopas->setTuningInterval(std::numeric_limits<unsigned int>::max());
   autopas->setSelectorStrategy(autopas::SelectorStrategyOption::fastestMean);
   autopas->setNumSamples(verletRebuildFrequency);
-  autopas::Logger::get()->set_level(spdlog::level::from_str(config.get<std::string>("autopas/logLevel", "off")));
-
+  autopas::Logger::get()->set_level(spdlog::level::from_str(config.get<std::string>("autopas/logLevel", "error")));
+  int rank{};
+  autopas::AutoPas_MPI_Comm_rank(AUTOPAS_MPI_COMM_WORLD, &rank);
+  autopas->setOutputSuffix("Rank" + std::to_string(rank) + "_");
   autopas->init();
 
   return autopas;
@@ -272,11 +274,11 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
   // set constellation particle IDs and fetch maxExistingParticleId
   setConstellationIDs(autopas, constellations);
-  const size_t maxExistingParticleId = autopas.getNumberOfParticles();
   // only add the breakup model if enabled via yaml
   const std::unique_ptr<BreakupWrapper> breakupWrapper =
-      config.get<bool>("sim/breakup/enabled") ? std::make_unique<BreakupWrapper>(config, autopas, maxExistingParticleId)
-                                              : nullptr;
+      config.get<bool>("sim/breakup/enabled")
+          ? std::make_unique<BreakupWrapper>(config, autopas, autopas.getNumberOfParticles())
+          : nullptr;
 
   const auto timeout = computeTimeout(config);
 
@@ -401,28 +403,8 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
     timers.output.start();
     if (iteration % progressOutputFrequency == 0 or iteration == lastIteration) {
-      unsigned long numParticlesLocal = autopas.getNumberOfParticles();
-      unsigned long numParticlesGlobal{};
-      unsigned long totalConjunctionsGlobal{};
-      autopas::AutoPas_MPI_Reduce(&numParticlesLocal,
-                                  &numParticlesGlobal,
-                                  1,
-                                  AUTOPAS_MPI_UNSIGNED_LONG,
-                                  AUTOPAS_MPI_SUM,
-                                  0,
-                                  domainDecomposition.getCommunicator());
-      autopas::AutoPas_MPI_Reduce(&totalConjunctions,
-                                  &totalConjunctionsGlobal,
-                                  1,
-                                  AUTOPAS_MPI_UNSIGNED_LONG,
-                                  AUTOPAS_MPI_SUM,
-                                  0,
-                                  domainDecomposition.getCommunicator());
-      SPDLOG_LOGGER_INFO(logger.get(),
-                         "It {} | Total particles: {} | Total conjunctions: {}",
-                         iteration,
-                         numParticlesGlobal,
-                         totalConjunctionsGlobal);
+      printProgressOutput(
+          iteration, autopas.getNumberOfParticles(), totalConjunctions, domainDecomposition.getCommunicator());
     }
     // Visualization:
     if (vtkWriteFrequency and (iteration % vtkWriteFrequency == 0 or iteration == lastIteration)) {
@@ -526,8 +508,25 @@ void Simulation::dumpCalibratedConfig(ConfigReader &config, const AutoPas_t &aut
 }
 
 void Simulation::deleteBurnUps(autopas::AutoPas<Particle> &autopas, double burnUpAltitude) const {
-  // FIXME: skip if rank does not contain burn-up zone
+  // helper function for applying comparison operators to arrays (taking OR of results)
+  // => True if op is true for at least one comparison
+  auto arrayComp = [](const auto &a, const auto &b, auto op) {
+    bool result = false;
+    for (size_t i = 0; i < a.size(); ++i) {
+      result |= op(a[i], b[i]);
+    }
+    return result;
+  };
+
+  // skip if local box does not contain burn-up zone
   const auto critAltitude = burnUpAltitude + Physics::R_EARTH;
+  const std::array<double, 3> critAltitudeBoxMin = {-critAltitude, -critAltitude, -critAltitude};
+  const std::array<double, 3> critAltitudeBoxMax = {critAltitude, critAltitude, critAltitude};
+  if (arrayComp(autopas.getBoxMax(), critAltitudeBoxMin, std::less()) or
+      arrayComp(autopas.getBoxMin(), critAltitudeBoxMax, std::greater())) {
+    return;
+  }
+
   const auto critAltitudeSquared = critAltitude * critAltitude;
 #pragma omp parallel
   for (auto particleIter = autopas.getRegionIterator({-critAltitude, -critAltitude, -critAltitude},
@@ -574,6 +573,7 @@ std::vector<Particle> Simulation::communicateParticles(std::vector<Particle> &le
     return rankOther;
   };
 
+  ParticleCommunicator particleCommunicator;
   std::vector<Particle> incomingParticles;
   enum CommDir : int { X, Y, Z };
   for (CommDir commDir = X; commDir <= Z; commDir = static_cast<CommDir>(commDir + 1)) {
@@ -587,7 +587,7 @@ std::vector<Particle> Simulation::communicateParticles(std::vector<Particle> &le
             return p.getPosition()[commDir] > localBoxMin[commDir];
           });
       const int rankLeft = getNeighborRank(coords, commDir, std::minus<>());
-      ParticleCommunicator::sendParticles(leavingParticlesIter, leavingParticles.end(), rankLeft, comm);
+      particleCommunicator.sendParticles(leavingParticlesIter, leavingParticles.end(), rankLeft, comm);
       // clip sent particles
       leavingParticles.erase(leavingParticlesIter, leavingParticles.end());
     }
@@ -600,19 +600,19 @@ std::vector<Particle> Simulation::communicateParticles(std::vector<Particle> &le
             return p.getPosition()[commDir] < localBoxMax[commDir];
           });
       const int rankRight = getNeighborRank(coords, commDir, std::plus<>());
-      ParticleCommunicator::sendParticles(leavingParticlesIter, leavingParticles.end(), rankRight, comm);
+      particleCommunicator.sendParticles(leavingParticlesIter, leavingParticles.end(), rankRight, comm);
       // clip sent particles
       leavingParticles.erase(leavingParticlesIter, leavingParticles.end());
 
       // receive
-      auto incomingParticlesRight = ParticleCommunicator::receiveParticles(rankRight, comm);
+      auto incomingParticlesRight = particleCommunicator.receiveParticles(rankRight, comm);
       incomingParticles.insert(incomingParticles.end(), incomingParticlesRight.begin(), incomingParticlesRight.end());
     }
 
     // receive left (negative direction)
     if (coords[commDir] != 0) {
       const int rankLeft = getNeighborRank(coords, commDir, std::minus<>());
-      auto incomingParticlesLeft = ParticleCommunicator::receiveParticles(rankLeft, comm);
+      auto incomingParticlesLeft = particleCommunicator.receiveParticles(rankLeft, comm);
       incomingParticles.insert(incomingParticles.end(), incomingParticlesLeft.begin(), incomingParticlesLeft.end());
     }
 
@@ -626,6 +626,8 @@ std::vector<Particle> Simulation::communicateParticles(std::vector<Particle> &le
     // These pass-through particles are those changing ranks in more than one dimension.
     leavingParticles.insert(leavingParticles.end(), incomingParticlesIter, incomingParticles.end());
     incomingParticles.erase(incomingParticlesIter, incomingParticles.end());
+
+    particleCommunicator.waitAndFlushBuffers();
   }
   return incomingParticles;
 }
@@ -676,6 +678,23 @@ void Simulation::printNumParticlesPerRank(const autopas::AutoPas<Particle> &auto
     const auto myNumParticles = autopas.getNumberOfParticles();
     autopas::AutoPas_MPI_Send(&myNumParticles, 1, AUTOPAS_MPI_UNSIGNED_LONG, 0, myRank, communicator);
   }
+}
+
+void Simulation::printProgressOutput(size_t iteration,
+                                     size_t numParticlesLocal,
+                                     size_t totalConjunctionsLocal,
+                                     autopas::AutoPas_MPI_Comm const &comm) {
+  unsigned long numParticlesGlobal{};
+  unsigned long totalConjunctionsGlobal{};
+  autopas::AutoPas_MPI_Reduce(
+      &numParticlesLocal, &numParticlesGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, comm);
+  autopas::AutoPas_MPI_Reduce(
+      &totalConjunctionsLocal, &totalConjunctionsGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, comm);
+  SPDLOG_LOGGER_INFO(logger.get(),
+                     "It {} | Total particles: {} | Total conjunctions: {}",
+                     iteration,
+                     numParticlesGlobal,
+                     totalConjunctionsGlobal);
 }
 
 }  // namespace LADDS

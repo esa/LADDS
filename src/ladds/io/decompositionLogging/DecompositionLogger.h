@@ -24,4 +24,4 @@ class DecompositionLogger {
    */
   virtual void writePayload(size_t iteration, const autopas::Configuration &autoPasConfig) const = 0;
 };
-}
+}  // namespace LADDS

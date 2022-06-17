@@ -14,7 +14,7 @@ namespace {
 /**
  * Stores the AttributeNames of the attributes of ParticleType which have to be communicated using MPI.
  */
-constexpr std::array<typename Particle::AttributeNames, 20> Attributes = {Particle::AttributeNames::id,
+constexpr std::array<typename Particle::AttributeNames, 14> Attributes = {Particle::AttributeNames::id,
                                                                           Particle::AttributeNames::posX,
                                                                           Particle::AttributeNames::posY,
                                                                           Particle::AttributeNames::posZ,
@@ -25,12 +25,12 @@ constexpr std::array<typename Particle::AttributeNames, 20> Attributes = {Partic
                                                                           Particle::AttributeNames::velocityY,
                                                                           Particle::AttributeNames::velocityZ,
                                                                           Particle::AttributeNames::ownershipState,
-                                                                          Particle::AttributeNames::acc_t0X,
-                                                                          Particle::AttributeNames::acc_t0Y,
-                                                                          Particle::AttributeNames::acc_t0Z,
-                                                                          Particle::AttributeNames::acc_t1X,
-                                                                          Particle::AttributeNames::acc_t1Y,
-                                                                          Particle::AttributeNames::acc_t1Z,
+                                                                          // Particle::AttributeNames::acc_t0X,
+                                                                          // Particle::AttributeNames::acc_t0Y,
+                                                                          // Particle::AttributeNames::acc_t0Z,
+                                                                          // Particle::AttributeNames::acc_t1X,
+                                                                          // Particle::AttributeNames::acc_t1Y,
+                                                                          // Particle::AttributeNames::acc_t1Z,
                                                                           Particle::AttributeNames::aom,
                                                                           Particle::AttributeNames::mass,
                                                                           Particle::AttributeNames::radius,
@@ -40,10 +40,9 @@ constexpr std::array<typename Particle::AttributeNames, 20> Attributes = {Partic
 
 /**
  * The combined size in byte of the attributes which need to be communicated using MPI.
- * Not really sure where the 4 extra bytes in the end come from but they are needed.
  */
-constexpr size_t AttributesSize =
-    1 * sizeof(size_t) /*id*/ + 16 * sizeof(double) + 2 * sizeof(int) /*enums*/ + 12 * sizeof(char) /*identifier*/ + 4;
+constexpr size_t AttributesSize = 1 * sizeof(size_t) /*id*/ + 10 * sizeof(double) + 1 * sizeof(int) /*activityState*/ +
+                                  sizeof(int64_t) /*ownershipState*/ + 12 * sizeof(char) /*identifier*/;
 
 /**
  * Serializes the attribute defined by I.

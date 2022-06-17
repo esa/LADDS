@@ -102,11 +102,11 @@ class Simulation {
                                                                               double minDetectionRadius);
 
   /**
-   * Interact all incoming particles with all particles which potentially crossed it's path since the last container
+   * Interact all incoming particles with all particles which potentially crossed its path since the last container
    * update.
    *
    * These particles are found in a box around the immigrant's position -deltaT time ago.
-   * The box has a side length of 2x the maximum cover able distance by any particle.
+   * The box has a side length of 2x the maximum coverable distance by any particle.
    *
    * @note The first pointers in the returned tuple collection point to particles in the immigrant vector!
    *
@@ -196,6 +196,15 @@ class Simulation {
    */
   size_t computeTimeout(ConfigReader &config);
 
+  /**
+   * Send the given list of leaving particles to all (up to) 26 logical surrounding ranks and receive their leaving
+   * particles which are relevant for the local rank.
+   * @param leavingParticles in/out parameter of leaving particles. If everything worked the vector should be empty
+   * after the function call.
+   * @param autopas
+   * @param decomposition
+   * @return Vector of incoming particles.
+   */
   std::vector<Particle> communicateParticles(std::vector<Particle> &leavingParticles,
                                              autopas::AutoPas<Particle> &autopas,
                                              const RegularGridDecomposition &decomposition);
@@ -205,8 +214,21 @@ class Simulation {
    * @param autopas
    * @param decomposition
    */
-  void printNumParticlesPerRank(const autopas::AutoPas<Particle> &autopas, const DomainDecomposition &decomposition) const;
+  void printNumParticlesPerRank(const autopas::AutoPas<Particle> &autopas,
+                                const DomainDecomposition &decomposition) const;
 
+  /**
+   * Loggs global information about simulation progress to std::out from rank 1.
+   * @note Contains global communication to obtain full information.
+   * @param iteration
+   * @param numParticlesLocal
+   * @param totalConjunctionsLocal
+   * @param comm
+   */
+  void printProgressOutput(size_t iteration,
+                           size_t numParticlesLocal,
+                           size_t totalConjunctionsLocal,
+                           const autopas::AutoPas_MPI_Comm &comm);
   /**
    * One logger to log them all.
    */

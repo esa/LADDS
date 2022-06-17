@@ -49,43 +49,35 @@ void Timers::printTimers(ConfigReader &config, const DomainDecomposition &decomp
   SPDLOG_LOGGER_INFO(
       config.getLogger().get(),
       "Runtime summary:\n{}",
+      // clang-format off
       timerToString("Total (ranks accumulated)          ", timeTotalAcc, maxNumberOfDigits) + printLB(total) +
-          timerToString(
-              "  Initialization                   ", accMPITimers(initialization), maxNumberOfDigits, timeTotalAcc) +
+      timerToString("  Initialization                   ", accMPITimers(initialization), maxNumberOfDigits, timeTotalAcc) +
           printLB(initialization) +
-          timerToString("  Simulation                       ", timeSimAcc, maxNumberOfDigits, timeTotalAcc) +
+      timerToString("  Simulation                       ", timeSimAcc, maxNumberOfDigits, timeTotalAcc) +
           printLB(simulation) +
-          timerToString(
-              "    Integrator                     ", accMPITimers(integrator), maxNumberOfDigits, timeSimAcc) +
+      timerToString("    Integrator                     ", accMPITimers(integrator), maxNumberOfDigits, timeSimAcc) +
           printLB(integrator) +
-          timerToString("    Resolving Burn ups             ", accMPITimers(burnUps), maxNumberOfDigits, timeSimAcc) +
+      timerToString("    Resolving Burn ups             ", accMPITimers(burnUps), maxNumberOfDigits, timeSimAcc) +
           printLB(burnUps) +
-          timerToString("    Constellation insertion        ",
-                        accMPITimers(constellationInsertion),
-                        maxNumberOfDigits,
-                        timeSimAcc) +
+      timerToString("    Constellation insertion        ", accMPITimers(constellationInsertion), maxNumberOfDigits, timeSimAcc) +
           printLB(constellationInsertion) +
-          timerToString(
-              "    Collision detection            ", accMPITimers(collisionDetection), maxNumberOfDigits, timeSimAcc) +
+      timerToString("    Communication                  ", accMPITimers(particleCommunication), maxNumberOfDigits, timeSimAcc) +
+          printLB(particleCommunication) +
+      timerToString("    Collision detection            ", accMPITimers(collisionDetection), maxNumberOfDigits, timeSimAcc) +
           printLB(collisionDetection) +
-          timerToString("    Collision detection immigrants ",
-                        accMPITimers(collisionDetectionImmigrants),
-                        maxNumberOfDigits,
-                        timeSimAcc) +
+      timerToString("    Collision detection immigrants ", accMPITimers(collisionDetectionImmigrants), maxNumberOfDigits, timeSimAcc) +
           printLB(collisionDetectionImmigrants) +
-          timerToString(
-              "    Collision writer               ", accMPITimers(collisionWriting), maxNumberOfDigits, timeSimAcc) +
+      timerToString("    Collision writer               ", accMPITimers(collisionWriting), maxNumberOfDigits, timeSimAcc) +
           printLB(collisionWriting) +
-          timerToString(
-              "    Collision simulation           ", accMPITimers(collisionSimulation), maxNumberOfDigits, timeSimAcc) +
+      timerToString("    Collision simulation           ", accMPITimers(collisionSimulation), maxNumberOfDigits, timeSimAcc) +
           printLB(collisionSimulation) +
-          timerToString(
-              "    Container update               ", accMPITimers(containerUpdate), maxNumberOfDigits, timeSimAcc) +
+      timerToString("    Container update               ", accMPITimers(containerUpdate), maxNumberOfDigits, timeSimAcc) +
           printLB(containerUpdate) +
-          timerToString("    Output                         ", accMPITimers(output), maxNumberOfDigits, timeTotalAcc) +
+      timerToString("    Output                         ", accMPITimers(output), maxNumberOfDigits, timeTotalAcc) +
           printLB(output /*offest for formatting*/) +
-          timerToString("Total (wall-time)                  ", timeTotal, maxNumberOfDigits) + "\n" +
-          timerToString("  One iteration                    ", timeSim / iterations, maxNumberOfDigits, timeTotal));
+      timerToString("Total (wall-time)                  ", timeTotal, maxNumberOfDigits) + "\n" +
+      timerToString("  One iteration                    ", timeSim / iterations, maxNumberOfDigits, timeTotal));
+      // clang-format om
 }
 
 /**
