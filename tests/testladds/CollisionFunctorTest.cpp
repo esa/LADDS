@@ -33,7 +33,8 @@ TEST(CollisionFunctorTest, ThreeParticles) {
                         LADDS::Particle::ActivityState::passive,
                         1.,
                         .6,
-                        LADDS::Particle::calculateBcInv(0., 1., 1., 2.2));
+                        LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                        std::numeric_limits<size_t>::max());
   }
 
   LADDS::CollisionFunctor collisionFunctor(cutoff, 10.0, 1., 0.01);
@@ -50,8 +51,8 @@ TEST(CollisionFunctorTest, ThreeParticles) {
   auto collisions = collisionFunctor.getCollisions();
 
   decltype(collisions) expected{
-      {&debris[0], &debris[1], 1.0 / (1000 * 1000)},  // convert distance to km^2
-      {&debris[1], &debris[2], 1.0 / (1000 * 1000)},  // convert distance to km^2
+      {&debris[0], &debris[1], 1.0 / (1000 * 1000), std::array<double,3>{0,0,0}},  // convert distance to km^2
+      {&debris[1], &debris[2], 1.0 / (1000 * 1000), std::array<double,3>{0,0,0}},  // convert distance to km^2
   };
 
   EXPECT_THAT(collisionFunctor.getCollisions(), ::testing::UnorderedElementsAreArray(expected));
@@ -170,7 +171,7 @@ TEST(CollisionFunctorTest, MixActivityStates) {
   std::vector<std::tuple<size_t, size_t>> collisionIdPairs;
   collisionIdPairs.reserve(collisions.size());
   std::transform(collisions.begin(), collisions.end(), std::back_inserter(collisionIdPairs), [](const auto &collision) {
-    const auto &[d1, d2, dist] = collision;
+    const auto &[d1, d2, dist, _] = collision;
     return std::make_tuple(d1->getID(), d2->getID());
   });
 
@@ -217,7 +218,8 @@ TEST(CollisionFunctorTest, CollisionDistanceFactorTest) {
                                        LADDS::Particle::ActivityState::passive,
                                        particleMass,
                                        particleRadius,
-                                       LADDS::Particle::calculateBcInv(0., particleMass, particleRadius, 2.2)},
+                                       LADDS::Particle::calculateBcInv(0., particleMass, particleRadius, 2.2),
+                                       std::numeric_limits<size_t>::max()},
                                       {{3. / 1000, 0., 0.},
                                        {-1., 0., 0.},
                                        2,
@@ -225,7 +227,8 @@ TEST(CollisionFunctorTest, CollisionDistanceFactorTest) {
                                        LADDS::Particle::ActivityState::passive,
                                        particleMass,
                                        particleRadius,
-                                       LADDS::Particle::calculateBcInv(0., particleMass, particleRadius, 2.2)}};
+                                       LADDS::Particle::calculateBcInv(0., particleMass, particleRadius, 2.2),
+                                       std::numeric_limits<size_t>::max()}};
 
   // test for different factors
   for (const double collisionDistanceFactor : {1., 2.}) {
@@ -289,13 +292,13 @@ TEST_P(CollisionFunctorTest, LinearInterpolationTest) {
 
   auto collisions = collisionFunctor.getCollisions();
 
-  decltype(collisions) expected{{&debris[0], &debris[1], squaredExpectedDist}};
+  decltype(collisions) expected{{&debris[0], &debris[1], squaredExpectedDist, std::array<double,3>{0,0,0}}};
 
   // helper function for debugging output
   auto getIDsStringFromPointers = [](const auto &collisions) {
     std::stringstream ss;
     std::vector<std::tuple<size_t, size_t>> ids;
-    for (const auto &[ptrA, ptrB, dist] : collisions) {
+    for (const auto &[ptrA, ptrB, dist, _] : collisions) {
       ss << "[" << ptrA->getID() << "|" << ptrB->getID() << "|" << dist << "]";
     }
     return ss.str();

@@ -111,7 +111,8 @@ TEST_F(SimulationTest, testBurnUp) {
                                        LADDS::Particle::ActivityState::passive,
                                        1.,
                                        1.,
-                                       LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)));
+                                       LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                                       std::numeric_limits<size_t>::max()));
   // initialize a particle 1km above burn up radius with a trajectory away from earth
   // different position to avoid any interferences
   autopas->addParticle(LADDS::Particle({0., minAltitude + 1., 0.},
@@ -121,7 +122,8 @@ TEST_F(SimulationTest, testBurnUp) {
                                        LADDS::Particle::ActivityState::passive,
                                        1.,
                                        1.,
-                                       LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)));
+                                       LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                                       std::numeric_limits<size_t>::max()));
   ASSERT_EQ(autopas->getNumberOfParticles(), 2) << "Initial particles not found!";
 
   // dummy because interface requires it
@@ -153,7 +155,8 @@ TEST_F(SimulationTest, testTimestepsPerCollisionDetection) {
                                          LADDS::Particle::ActivityState::passive,
                                          1.,
                                          1.,
-                                         LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)));
+                                         LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                                         std::numeric_limits<size_t>::max()));
     autopas->addParticle(LADDS::Particle({minAltitude + 100., -20, 0.},
                                          {0., 10., 0.},
                                          1,
@@ -161,7 +164,8 @@ TEST_F(SimulationTest, testTimestepsPerCollisionDetection) {
                                          LADDS::Particle::ActivityState::passive,
                                          1.,
                                          1.,
-                                         LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)));
+                                         LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                                         std::numeric_limits<size_t>::max()));
     ASSERT_EQ(autopas->getNumberOfParticles(), 2) << "Initial particles not found!";
 
     configReader->setValue("sim/iterations", iterations);
@@ -204,7 +208,8 @@ TEST_P(SimulationTest, testCheckedInsert) {
                                        LADDS::Particle::ActivityState::passive,
                                        1.,
                                        1.,
-                                       LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)));
+                                       LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                                       std::numeric_limits<size_t>::max()));
 
   // particle that will be inserted
   LADDS::Particle p1{posTestParticle,
@@ -214,7 +219,8 @@ TEST_P(SimulationTest, testCheckedInsert) {
                      LADDS::Particle::ActivityState::passive,
                      1.,
                      1.,
-                     LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)};
+                     LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                     std::numeric_limits<size_t>::max()};
 
   const auto escapedParticles = autopas->updateContainer();
   ASSERT_TRUE(escapedParticles.empty()) << "Test setup faulty!";
