@@ -31,7 +31,8 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestParticleData) {
                       LADDS::Particle::ActivityState::evasive,
                       1.,
                       1.,
-                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)};
+                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                      std::numeric_limits<size_t>::max()};
     autopas.addParticle(p);
     particles.push_back(p);
   }
@@ -87,7 +88,8 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestCollisionData) {
                                              LADDS::Particle::ActivityState::passive,
                                              1.,
                                              1.,
-                                             LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)});
+                                             LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                                             std::numeric_limits<size_t>::max()});
   }
 
   // These conjunctions are just randomly made up and have nothing to do with position data!
@@ -95,7 +97,7 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestCollisionData) {
   auto insertConjunction = [&](size_t idA, size_t idB) {
     const auto dr = autopas::utils::ArrayMath::sub(particles[idA].getR(), particles[idB].getR());
     const auto distanceSquare = autopas::utils::ArrayMath::dot(dr, dr);
-    conjunctions.emplace_back(&particles[idA], &particles[idB], distanceSquare);
+    conjunctions.emplace_back(&particles[idA], &particles[idB], distanceSquare, std::array<double, 3>{0, 0, 0});
   };
   insertConjunction(1, 2);
   insertConjunction(2, 3);
@@ -113,7 +115,7 @@ TEST_F(HDF5WriterReaderTest, WriteReadTestCollisionData) {
 
   // 4. check that read data is equal to generated data
   EXPECT_EQ(conjunctions.size(), conjunctionsHDF5.size());
-  for (const auto &[ptrARef, ptrBRef, distRef] : conjunctions) {
+  for (const auto &[ptrARef, ptrBRef, distRef, _] : conjunctions) {
     const auto idARef = static_cast<LADDS::HDF5Definitions::IntType>(ptrARef->getID());
     const auto idBRef = static_cast<LADDS::HDF5Definitions::IntType>(ptrBRef->getID());
 
@@ -155,7 +157,7 @@ TEST_F(HDF5WriterReaderTest, AppendCheckpointTest) {
   auto insertConjunction = [&](size_t idA, size_t idB, LADDS::CollisionFunctor::CollisionCollectionT &conjunctions) {
     const auto dr = autopas::utils::ArrayMath::sub(particles[idA].getR(), particles[idB].getR());
     const auto distanceSquare = autopas::utils::ArrayMath::dot(dr, dr);
-    conjunctions.emplace_back(&particles[idA], &particles[idB], distanceSquare);
+    conjunctions.emplace_back(&particles[idA], &particles[idB], distanceSquare, std::array<double, 3>{0, 0, 0});
   };
   LADDS::CollisionFunctor::CollisionCollectionT conjunctionsStepA;
   insertConjunction(1, 2, conjunctionsStepA);
@@ -197,7 +199,7 @@ TEST_F(HDF5WriterReaderTest, AppendCheckpointTest) {
 
   auto conjunctionsHDF5StepA = hdf5Reader.readCollisions(iterationStepA);
   EXPECT_EQ(conjunctionsStepA.size(), conjunctionsHDF5StepA.size());
-  for (const auto &[ptrARef, ptrBRef, distRef] : conjunctionsStepA) {
+  for (const auto &[ptrARef, ptrBRef, distRef, _] : conjunctionsStepA) {
     const auto idARef = static_cast<LADDS::HDF5Definitions::IntType>(ptrARef->getID());
     const auto idBRef = static_cast<LADDS::HDF5Definitions::IntType>(ptrBRef->getID());
 
@@ -207,7 +209,7 @@ TEST_F(HDF5WriterReaderTest, AppendCheckpointTest) {
   }
   auto conjunctionsHDF5StepB = hdf5Reader.readCollisions(iterationStepB);
   EXPECT_EQ(conjunctionsStepB.size(), conjunctionsHDF5StepB.size());
-  for (const auto &[ptrARef, ptrBRef, distRef] : conjunctionsStepB) {
+  for (const auto &[ptrARef, ptrBRef, distRef, _] : conjunctionsStepB) {
     const auto idARef = static_cast<LADDS::HDF5Definitions::IntType>(ptrARef->getID());
     const auto idBRef = static_cast<LADDS::HDF5Definitions::IntType>(ptrBRef->getID());
 

@@ -36,7 +36,8 @@ TEST(SatelliteToParticleConverterTest, ParticleToSatellite) {
                                  LADDS::Particle::ActivityState::passive,
                                  1.,
                                  1.,
-                                 LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)};
+                                 LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                                 std::numeric_limits<size_t>::max()};
   const auto sat = LADDS::SatelliteToParticleConverter::convertParticleToSatellite(particle);
 
   const auto &expectedPosition = autopas::utils::ArrayMath::mulScalar(particle.getPosition(), 1000.0);

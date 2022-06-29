@@ -51,8 +51,8 @@ TEST(CollisionFunctorTest, ThreeParticles) {
   auto collisions = collisionFunctor.getCollisions();
 
   decltype(collisions) expected{
-      {&debris[0], &debris[1], 1.0 / (1000 * 1000), std::array<double,3>{0,0,0}},  // convert distance to km^2
-      {&debris[1], &debris[2], 1.0 / (1000 * 1000), std::array<double,3>{0,0,0}},  // convert distance to km^2
+      {&debris[0], &debris[1], 1.0 / (1000 * 1000), std::array<double, 3>{0, 0, 0}},  // convert distance to km^2
+      {&debris[1], &debris[2], 1.0 / (1000 * 1000), std::array<double, 3>{0, 0, 0}},  // convert distance to km^2
   };
 
   EXPECT_THAT(collisionFunctor.getCollisions(), ::testing::UnorderedElementsAreArray(expected));
@@ -89,7 +89,8 @@ TEST(CollisionFunctorTest, MixActivityStates) {
                       LADDS::Particle::ActivityState::passive,
                       1.,
                       0.001,
-                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2));
+                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                      std::numeric_limits<size_t>::max());
   // passive small 2
   debris.emplace_back(std::array<double, 3>{0., 0., 0.1},
                       std::array<double, 3>{0., 0., 0.},
@@ -98,7 +99,8 @@ TEST(CollisionFunctorTest, MixActivityStates) {
                       LADDS::Particle::ActivityState::passive,
                       1.,
                       0.001,
-                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2));
+                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                      std::numeric_limits<size_t>::max());
   // passive large 1
   debris.emplace_back(std::array<double, 3>{0.1, 0., 0.},
                       std::array<double, 3>{0., 0., 0.},
@@ -107,7 +109,8 @@ TEST(CollisionFunctorTest, MixActivityStates) {
                       LADDS::Particle::ActivityState::passive,
                       1.,
                       1.,
-                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2));
+                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                      std::numeric_limits<size_t>::max());
   // passive large 2
   debris.emplace_back(std::array<double, 3>{0.1, 0., 0.1},
                       std::array<double, 3>{0., 0., 0.},
@@ -116,7 +119,8 @@ TEST(CollisionFunctorTest, MixActivityStates) {
                       LADDS::Particle::ActivityState::passive,
                       1.,
                       1.,
-                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2));
+                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                      std::numeric_limits<size_t>::max());
   // evasive 1
   debris.emplace_back(std::array<double, 3>{0., 0.1, 0.},
                       std::array<double, 3>{0., 0., 0.},
@@ -125,7 +129,8 @@ TEST(CollisionFunctorTest, MixActivityStates) {
                       LADDS::Particle::ActivityState::evasive,
                       1.,
                       1.,
-                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2));
+                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                      std::numeric_limits<size_t>::max());
   // evasive 2
   debris.emplace_back(std::array<double, 3>{0., 0.1, 0.1},
                       std::array<double, 3>{0., 0., 0.},
@@ -134,7 +139,8 @@ TEST(CollisionFunctorTest, MixActivityStates) {
                       LADDS::Particle::ActivityState::evasive,
                       1.,
                       1.,
-                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2));
+                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                      std::numeric_limits<size_t>::max());
   // evasivePreserving 1
   debris.emplace_back(std::array<double, 3>{0.1, 0.1, 0.},
                       std::array<double, 3>{0., 0., 0.},
@@ -143,7 +149,8 @@ TEST(CollisionFunctorTest, MixActivityStates) {
                       LADDS::Particle::ActivityState::evasivePreserving,
                       1.,
                       1.,
-                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2));
+                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                      std::numeric_limits<size_t>::max());
   // evasivePreserving 2
   debris.emplace_back(std::array<double, 3>{0.1, 0.1, 0.1},
                       std::array<double, 3>{0., 0., 0.},
@@ -152,7 +159,8 @@ TEST(CollisionFunctorTest, MixActivityStates) {
                       LADDS::Particle::ActivityState::evasivePreserving,
                       1.,
                       1.,
-                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2));
+                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                      std::numeric_limits<size_t>::max());
 
   LADDS::CollisionFunctor collisionFunctor(cutoff, 10.0, 1., 0.01);
 
@@ -271,7 +279,8 @@ TEST_P(CollisionFunctorTest, LinearInterpolationTest) {
                       LADDS::Particle::ActivityState::passive,
                       1.,
                       particleRadius,
-                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2));
+                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                      std::numeric_limits<size_t>::max());
   debris.emplace_back(x2,
                       v2,
                       1.,
@@ -279,7 +288,8 @@ TEST_P(CollisionFunctorTest, LinearInterpolationTest) {
                       LADDS::Particle::ActivityState::passive,
                       1.,
                       particleRadius,
-                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2));
+                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                      std::numeric_limits<size_t>::max());
 
   for (size_t i = 0; i < debris.size(); ++i) {
     for (size_t j = i + 1; j < debris.size(); ++j) {
@@ -292,7 +302,7 @@ TEST_P(CollisionFunctorTest, LinearInterpolationTest) {
 
   auto collisions = collisionFunctor.getCollisions();
 
-  decltype(collisions) expected{{&debris[0], &debris[1], squaredExpectedDist, std::array<double,3>{0,0,0}}};
+  decltype(collisions) expected{{&debris[0], &debris[1], squaredExpectedDist, std::array<double, 3>{0, 0, 0}}};
 
   // helper function for debugging output
   auto getIDsStringFromPointers = [](const auto &collisions) {
