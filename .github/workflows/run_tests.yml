@@ -21,7 +21,6 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get remove libopenmpi-dev
         sudo apt-get install \
             git \
             git-lfs \
@@ -30,12 +29,13 @@ jobs:
             libhdf5-dev \
             libomp-dev \
             libtbb-dev \
-            mpich \
-            libmpich-dev \
             doxygen \
             graphviz \
             python3-numpy \
             python3-vtk7
+        sudo apt-get remove libopenmpi-dev
+        sudo apt-get install -y \
+            libmpich-dev \
     - uses: actions/checkout@v2
       with:
         lfs: true
@@ -57,7 +57,6 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get remove libopenmpi-dev
           sudo apt-get install \
               git \
               git-lfs \
@@ -65,11 +64,12 @@ jobs:
               cmake \
               libhdf5-dev \
               libomp-dev \
-              mpich \
-              libmpich-dev \
               libtbb-dev \
               python3-numpy \
               python3-vtk7
+          sudo apt-get remove libopenmpi-dev
+          sudo apt-get install -y \
+              libmpich-dev \
       - uses: actions/checkout@v2
         with:
           lfs: true
@@ -97,15 +97,15 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update
-          apt-get remove libopenmpi-dev
           apt-get install -y \
               git-lfs \
               libhdf5-dev \
               libtbb-dev \
-              mpich \
-              libmpich-dev \
               python3-numpy \
               python3-vtk7
+          apt-get remove libopenmpi-dev
+          apt-get install -y \
+              libmpich-dev \
       - uses: actions/checkout@v2
         with:
           lfs: true
