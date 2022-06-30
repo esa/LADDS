@@ -29,6 +29,7 @@ jobs:
             libhdf5-dev \
             libomp-dev \
             libtbb-dev \
+            mpich \
             doxygen \
             graphviz \
             python3-numpy \
@@ -61,6 +62,7 @@ jobs:
               cmake \
               libhdf5-dev \
               libomp-dev \
+              mpich \
               libtbb-dev \
               python3-numpy \
               python3-vtk7
@@ -95,6 +97,7 @@ jobs:
               git-lfs \
               libhdf5-dev \
               libtbb-dev \
+              mpich \
               python3-numpy \
               python3-vtk7
       - uses: actions/checkout@v2
