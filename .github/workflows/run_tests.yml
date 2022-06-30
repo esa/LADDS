@@ -34,7 +34,7 @@ jobs:
             graphviz \
             python3-numpy \
             python3-vtk7
-        sudo apt-get remove libomp-dev
+        sudo apt-get remove libopenmpi-dev
     - uses: actions/checkout@v2
       with:
         lfs: true
@@ -67,7 +67,7 @@ jobs:
               libtbb-dev \
               python3-numpy \
               python3-vtk7
-          sudo apt-get remove libomp-dev
+          sudo apt-get remove libopenmpi-dev
       - uses: actions/checkout@v2
         with:
           lfs: true
@@ -102,7 +102,7 @@ jobs:
               libmpich-dev \
               python3-numpy \
               python3-vtk7
-          apt-get remove libomp-dev
+          apt-get remove libopenmpi-dev
       - uses: actions/checkout@v2
         with:
           lfs: true
