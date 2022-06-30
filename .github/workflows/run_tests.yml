@@ -29,7 +29,7 @@ jobs:
             libhdf5-dev \
             libomp-dev \
             libtbb-dev \
-            mpich \
+            libmpich-dev \
             doxygen \
             graphviz \
             python3-numpy \
@@ -63,7 +63,7 @@ jobs:
               cmake \
               libhdf5-dev \
               libomp-dev \
-              mpich \
+              libmpich-dev \
               libtbb-dev \
               python3-numpy \
               python3-vtk7
@@ -99,7 +99,7 @@ jobs:
               git-lfs \
               libhdf5-dev \
               libtbb-dev \
-              mpich \
+              libmpich-dev \
               python3-numpy \
               python3-vtk7
           apt-get remove openmpi
