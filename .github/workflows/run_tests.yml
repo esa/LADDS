@@ -13,7 +13,9 @@ on:
 concurrency:
   group: ${{ github.head_ref }}-tests
   cancel-in-progress: true
-
+env:
+  # enable OpenMPI oversubscription everywhere
+  OMPI_MCA_rmaps_base_oversubscribe: 1
 jobs:
   tests_default_release:
     runs-on: ubuntu-latest
