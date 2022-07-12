@@ -16,6 +16,9 @@ concurrency:
 env:
   # enable OpenMPI oversubscription everywhere
   OMPI_MCA_rmaps_base_oversubscribe: 1
+  # ignore cuda bindings
+  OMPI_MCA_opal_warn_on_missing_libcuda: 0
+  # allow running as root
   OMPI_ALLOW_RUN_AS_ROOT: 1
   OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
 jobs:
