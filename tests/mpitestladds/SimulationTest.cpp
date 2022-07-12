@@ -53,7 +53,6 @@ TEST_F(SimulationTest, testRankMigration) {
 
   int numRanks{};
   autopas::AutoPas_MPI_Comm_size(decomposition->getCommunicator(), &numRanks);
-  autopas::AutoPas_MPI_Comm_size(AUTOPAS_MPI_COMM_WORLD, &numRanks);
   if (numRanks != 8) {
     GTEST_FAIL() << "Test is expected to be launched with 8 ranks but only has " << numRanks;
   }
