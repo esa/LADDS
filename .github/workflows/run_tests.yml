@@ -16,6 +16,8 @@ concurrency:
 env:
   # enable OpenMPI oversubscription everywhere
   OMPI_MCA_rmaps_base_oversubscribe: 1
+  OMPI_ALLOW_RUN_AS_ROOT: 1
+  OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
 jobs:
   tests_default_release:
     runs-on: ubuntu-latest
