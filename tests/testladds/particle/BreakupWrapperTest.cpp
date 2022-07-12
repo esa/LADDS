@@ -15,10 +15,10 @@ TEST_F(BreakupWrapperTest, testSimulationLoop) {
   auto [csvWriter, accumulator, integrator] = simulation.initIntegrator(*autopas, *configReader);
 
   // two particles 1000km above earth whose paths cross exactly at [R+1000, 0, 0]
-  size_t highestIdBeforeCrash = 4;
+  size_t highestIdBeforeCrash = 0;
   autopas->addParticle(LADDS::Particle({Physics::R_EARTH + 1000., -1., 0.},
                                        {0., 2., 0.},
-                                       1,
+                                       highestIdBeforeCrash,
                                        "A",
                                        LADDS::Particle::ActivityState::passive,
                                        1.,
@@ -26,7 +26,7 @@ TEST_F(BreakupWrapperTest, testSimulationLoop) {
                                        LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)));
   autopas->addParticle(LADDS::Particle({Physics::R_EARTH + 1000., 0., -1.},
                                        {0., 0., 2.},
-                                       highestIdBeforeCrash,
+                                       ++highestIdBeforeCrash,
                                        "B",
                                        LADDS::Particle::ActivityState::passive,
                                        1.,
