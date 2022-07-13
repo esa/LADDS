@@ -16,7 +16,7 @@ if (LADDS_HDF5)
     FetchContent_Declare(
             h5pp
             GIT_REPOSITORY ${h5ppRepoPath}
-            GIT_TAG v1.9.0
+            GIT_TAG v1.10.0
     )
 
     if (LADDS_MPI)

@@ -110,7 +110,6 @@ std::vector<Constellation> SatelliteLoader::loadConstellations(ConfigReader &con
   std::vector<Constellation> constellations;
   auto constellationList = config.get<std::string>("io/constellationList", "", true);
   if (not constellationList.empty()) {
-    const auto insertionFrequency = config.get<int>("io/constellationFrequency", 1);
     auto constellationDataStr = config.get<std::string>("io/constellationList");
     // count constellation by counting ';'
     int nConstellations = std::count(constellationDataStr.begin(), constellationDataStr.end(), ';') + 1;

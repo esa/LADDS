@@ -74,7 +74,6 @@ void serializeAttribute(const Particle &particle, std::vector<char> &attributeVe
  */
 template <size_t I>
 void deserializeAttribute(char *&attributeVector, Particle &particle, size_t &startIndex) {
-  auto i = I;
   constexpr auto index = Attributes[I];
   auto attribute = particle.get<index>();
   if constexpr (index == LADDS::Particle::AttributeNames::identifier) {

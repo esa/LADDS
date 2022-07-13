@@ -69,24 +69,25 @@ TEST(SerializationTest, serializeAndDeserializeTest) {
     EXPECT_EQ(deserializedParticles[i].get<LADDS::Particle::AttributeNames::ownershipState>(),
               originalParticles[i].get<LADDS::Particle::AttributeNames::ownershipState>())
         << "for i=" << i;
-    EXPECT_EQ(deserializedParticles[i].get<LADDS::Particle::AttributeNames::acc_t0X>(),
-              originalParticles[i].get<LADDS::Particle::AttributeNames::acc_t0X>())
-        << "for i=" << i;
-    EXPECT_EQ(deserializedParticles[i].get<LADDS::Particle::AttributeNames::acc_t0Y>(),
-              originalParticles[i].get<LADDS::Particle::AttributeNames::acc_t0Y>())
-        << "for i=" << i;
-    EXPECT_EQ(deserializedParticles[i].get<LADDS::Particle::AttributeNames::acc_t0Z>(),
-              originalParticles[i].get<LADDS::Particle::AttributeNames::acc_t0Z>())
-        << "for i=" << i;
-    EXPECT_EQ(deserializedParticles[i].get<LADDS::Particle::AttributeNames::acc_t1X>(),
-              originalParticles[i].get<LADDS::Particle::AttributeNames::acc_t1X>())
-        << "for i=" << i;
-    EXPECT_EQ(deserializedParticles[i].get<LADDS::Particle::AttributeNames::acc_t1Y>(),
-              originalParticles[i].get<LADDS::Particle::AttributeNames::acc_t1Y>())
-        << "for i=" << i;
-    EXPECT_EQ(deserializedParticles[i].get<LADDS::Particle::AttributeNames::acc_t1Z>(),
-              originalParticles[i].get<LADDS::Particle::AttributeNames::acc_t1Z>())
-        << "for i=" << i;
+    // The following properties are not communicated
+    //    EXPECT_EQ(deserializedParticles[i].get<LADDS::Particle::AttributeNames::acc_t0X>(),
+    //              originalParticles[i].get<LADDS::Particle::AttributeNames::acc_t0X>())
+    //        << "for i=" << i;
+    //    EXPECT_EQ(deserializedParticles[i].get<LADDS::Particle::AttributeNames::acc_t0Y>(),
+    //              originalParticles[i].get<LADDS::Particle::AttributeNames::acc_t0Y>())
+    //        << "for i=" << i;
+    //    EXPECT_EQ(deserializedParticles[i].get<LADDS::Particle::AttributeNames::acc_t0Z>(),
+    //              originalParticles[i].get<LADDS::Particle::AttributeNames::acc_t0Z>())
+    //        << "for i=" << i;
+    //    EXPECT_EQ(deserializedParticles[i].get<LADDS::Particle::AttributeNames::acc_t1X>(),
+    //              originalParticles[i].get<LADDS::Particle::AttributeNames::acc_t1X>())
+    //        << "for i=" << i;
+    //    EXPECT_EQ(deserializedParticles[i].get<LADDS::Particle::AttributeNames::acc_t1Y>(),
+    //              originalParticles[i].get<LADDS::Particle::AttributeNames::acc_t1Y>())
+    //        << "for i=" << i;
+    //    EXPECT_EQ(deserializedParticles[i].get<LADDS::Particle::AttributeNames::acc_t1Z>(),
+    //              originalParticles[i].get<LADDS::Particle::AttributeNames::acc_t1Z>())
+    //        << "for i=" << i;
     EXPECT_EQ(deserializedParticles[i].get<LADDS::Particle::AttributeNames::aom>(),
               originalParticles[i].get<LADDS::Particle::AttributeNames::aom>())
         << "for i=" << i;

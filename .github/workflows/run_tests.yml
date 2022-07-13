@@ -13,7 +13,14 @@ on:
 concurrency:
   group: ${{ github.head_ref }}-tests
   cancel-in-progress: true
-
+env:
+  # enable OpenMPI oversubscription everywhere
+  OMPI_MCA_rmaps_base_oversubscribe: 1
+  # ignore cuda bindings
+  OMPI_MCA_opal_warn_on_missing_libcuda: 0
+  # allow running as root
+  OMPI_ALLOW_RUN_AS_ROOT: 1
+  OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
 jobs:
   tests_default_release:
     runs-on: ubuntu-latest
@@ -81,6 +88,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Debug \
             -DLADDS_DOXYGEN=OFF \
             -DLADDS_ENABLE_ADDRESS_SANITIZER=ON \
+            -DLADDS_MPI=OFF \
             ..
           make -j 4
       - name: Test with ctest

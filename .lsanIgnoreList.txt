@@ -1,5 +1,11 @@
 # Leak Sanitizer ignore list
 # libhf5 is leaky so ignore everything that comes from it
 leak:libhdf5
-# mpich is leaky so ignore everything that comes from it
-leak:mpich
+# MPI related libs are leaky so ignore everything that comes from it
+#leak:mpich
+leak:libmpi
+leak:openmpi
+#leak:libhwloc  only necessary if LSAN_OPTIONS=fast_unwind_on_malloc=0 is not set
+leak:libopen-pal
+#leak:libpmix   only necessary if LSAN_OPTIONS=fast_unwind_on_malloc=0 is not set
+leak:libopen-rte

@@ -29,11 +29,12 @@ target_compile_features(${TEST_EXECUTABLE_NAME} PUBLIC cxx_std_17)
 
 target_link_libraries(
     ${TEST_EXECUTABLE_NAME}
-    gmock_main
+    gmock
     autopas
     autopasTools
     debris_sim_lib
     breakupModel_lib
+    z
     "$<$<BOOL:${LADDS_HDF5}>:hdf5::hdf5_hl;hdf5::hdf5;h5pp::h5pp>"
 )
 

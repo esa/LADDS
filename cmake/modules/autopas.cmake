@@ -13,11 +13,8 @@ endif ()
 FetchContent_Declare(
         autopasfetch
         GIT_REPOSITORY ${autopasRepoPath}
-        # merge after AutoPas::deleteParticle(particle &) 03.02.22
-        # GIT_TAG 2b262a83a24311bdd9b50d8b4db468726a659758
-        # Temporary: diffuse LB branch (bc it has lots of MPI fixes)
-        #GIT_TAG 2db4f5b66980baaa495fa1d56cbcb980a50929e7
-        GIT_TAG md-flex/diffuse-loadbalancing # FIXME: reset to stable hash
+        # merge of md-flex/diffuse-loadbalancing 12.07.22
+        GIT_TAG 71fa505172bce4ee422556018f2dc444e04fca12
 )
 # Populate dependency
 FetchContent_MakeAvailable(autopasfetch)
