@@ -51,8 +51,8 @@ TEST(CollisionFunctorTest, ThreeParticles) {
   auto collisions = collisionFunctor.getCollisions();
 
   decltype(collisions) expected{
-      {&debris[0], &debris[1], 1.0 / (1000 * 1000), std::array<double, 3>{0, 0, 0}},  // convert distance to km^2
-      {&debris[1], &debris[2], 1.0 / (1000 * 1000), std::array<double, 3>{0, 0, 0}},  // convert distance to km^2
+      {&debris[0], &debris[1], 1.0 / (1000 * 1000), std::array<double, 3>{0.0005, 0, 0}},  // convert distance to km^2
+      {&debris[1], &debris[2], 1.0 / (1000 * 1000), std::array<double, 3>{0.0015, 0, 0}},  // convert distance to km^2
   };
 
   EXPECT_THAT(collisionFunctor.getCollisions(), ::testing::UnorderedElementsAreArray(expected));
@@ -302,7 +302,7 @@ TEST_P(CollisionFunctorTest, LinearInterpolationTest) {
 
   auto collisions = collisionFunctor.getCollisions();
 
-  decltype(collisions) expected{{&debris[0], &debris[1], squaredExpectedDist, std::array<double, 3>{0, 0, 0}}};
+  decltype(collisions) expected{{&debris[0], &debris[1], squaredExpectedDist, std::array<double, 3>{0.0, 0, 0.0}}};
 
   // helper function for debugging output
   auto getIDsStringFromPointers = [](const auto &collisions) {
@@ -314,7 +314,11 @@ TEST_P(CollisionFunctorTest, LinearInterpolationTest) {
     return ss.str();
   };
 
-  EXPECT_THAT(collisionFunctor.getCollisions(), ::testing::UnorderedElementsAreArray(expected))
+  // ignore collision points
+  auto collisions = collisionFunctor.getCollisions();
+  collisions[3] = std::array<double, 3>{0.0, 0, 0.0};
+
+  EXPECT_THAT(collisions, ::testing::UnorderedElementsAreArray(expected))
       << "Expected tuples: " << getIDsStringFromPointers(expected)
       << "\nFound    tuples: " << getIDsStringFromPointers(collisions);
 }
