@@ -230,7 +230,13 @@ class Simulation {
                            size_t totalConjunctionsLocal,
                            const autopas::AutoPas_MPI_Comm &comm);
 
+  /**
+   * Removes spawn protection from all particles in the container
+   * by setting the parent identifiers of all particles to false.
+   * @param  autopas
+   */
   void removeParticleSpawnProtection(autopas::AutoPas<Particle> &autopas);
+
   /**
    * One logger to log them all.
    */
@@ -241,6 +247,10 @@ class Simulation {
    */
   Timers timers{};
 
+  /**
+   * Tracks the number of iterations since the last collision detection.
+   * This is used to remove spawn protection after a certain number of iterations for new particles.
+   */
   size_t iterationsSinceLastCollision = 0;
 };
 
