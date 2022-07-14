@@ -263,7 +263,7 @@ TEST_P(CollisionFunctorTest, LinearInterpolationTest) {
   constexpr size_t numDebris{2};
   constexpr double particleRadius{1000.};
 
-  const auto &[x1, x2, v1, v2, dt, squaredExpectedDist] = GetParam();
+  const auto &[x1, x2, v1, v2, dt, squaredExpectedDist, collisionPoint] = GetParam();
 
   // collisionDistanceFactor > 1 to actually cover all conjunctions
   LADDS::CollisionFunctor collisionFunctor(cutoff, dt, 10., 0.1);
@@ -302,7 +302,7 @@ TEST_P(CollisionFunctorTest, LinearInterpolationTest) {
 
   auto collisions = collisionFunctor.getCollisions();
 
-  decltype(collisions) expected{{&debris[0], &debris[1], squaredExpectedDist, std::array<double, 3>{0.0, 0, 0.0}}};
+  decltype(collisions) expected{{&debris[0], &debris[1], squaredExpectedDist, collisionPoint}};
 
   // helper function for debugging output
   auto getIDsStringFromPointers = [](const auto &collisions) {
@@ -314,13 +314,9 @@ TEST_P(CollisionFunctorTest, LinearInterpolationTest) {
     return ss.str();
   };
 
-  // ignore collision points
-  auto collisions = collisionFunctor.getCollisions();
-  collisions[3] = std::array<double, 3>{0.0, 0, 0.0};
-
-  EXPECT_THAT(collisions, ::testing::UnorderedElementsAreArray(expected))
+  EXPECT_THAT(collisionFunctor.getCollisions(), ::testing::UnorderedElementsAreArray(expected))
       << "Expected tuples: " << getIDsStringFromPointers(expected)
-      << "\nFound    tuples: " << getIDsStringFromPointers(collisions);
+      << "\nFound    tuples: " << getIDsStringFromPointers(collisionFunctor.getCollisions());
 }
 
 // Generate tests for all configuration combinations
@@ -332,23 +328,27 @@ INSTANTIATE_TEST_SUITE_P(Generated,
                                                             std::array<double, 3>{0., 0., 0.},
                                                             std::array<double, 3>{1., 2., 3.},
                                                             1.,
-                                                            3.),
+                                                            3.,
+                                                            std::array<double, 3>{0.5, 1.5, 2.5}),
                                             std::make_tuple(std::array<double, 3>{5., 0., 0.},
                                                             std::array<double, 3>{1., 1., 1.},
                                                             std::array<double, 3>{-1., -1., -1.},
                                                             std::array<double, 3>{1., 1., 1.},
                                                             1.,
-                                                            18.),
+                                                            18.,
+                                                            std::array<double, 3>{3, 0.5, 0.5}),
                                             std::make_tuple(std::array<double, 3>{1.5, 0., 1.},
                                                             std::array<double, 3>{3., 0., 2.},
                                                             std::array<double, 3>{-3., 0., -2.},
                                                             std::array<double, 3>{3., 0., 2.},
                                                             2.,
-                                                            0.),
+                                                            0.,
+                                                            std::array<double, 3>{2.25, 0, 1.5}),
                                             std::make_tuple(std::array<double, 3>{0., 0., 0.},
                                                             std::array<double, 3>{0., 0.5, 0},
                                                             std::array<double, 3>{1., 0, 0},
                                                             std::array<double, 3>{0., 0, 1.},
                                                             42.,
-                                                            .25)}),
+                                                            .25,
+                                                            std::array<double, 3>{0, 0.25, 0})}),
                          CollisionFunctorTest::PrintToStringParamName());

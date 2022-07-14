@@ -43,6 +43,7 @@ void CollisionFunctorIntegrationTest::SetUpTestSuite() {
   for (int i = 0; i < numDebris; ++i) {
     defaultParticle.setR(autopasTools::generators::RandomGenerator::randomPosition(_boxMin, _boxMax));
     defaultParticle.setID(i);
+    defaultParticle.setParentIdentifier(i);
     _debris.push_back(defaultParticle);
   }
 
