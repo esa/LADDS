@@ -152,7 +152,8 @@ bool Particle::operator==(const Particle &rhs) const {
       (std::abs(_radius - rhs._radius) < 1e-7) and
       (std::abs(_bc_inv - rhs._bc_inv) < 1e-7) and
       _activityState == rhs._activityState and
-      _identifier == rhs._identifier;
+      _identifier == rhs._identifier and
+      _parentIdentifier == rhs._parentIdentifier;
   // clang-format on
 }
 bool Particle::operator!=(const Particle &rhs) const {
