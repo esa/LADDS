@@ -82,7 +82,8 @@ TEST_F(SimulationTest, testRankMigration) {
         LADDS::Particle::ActivityState::evasivePreserving,
         mass,
         radius,
-        LADDS::Particle::calculateBcInv(std::numeric_limits<double>::quiet_NaN(), mass, radius, 2.2)};
+        LADDS::Particle::calculateBcInv(std::numeric_limits<double>::quiet_NaN(), mass, radius, 2.2),
+        std::numeric_limits<size_t>::max()};
     autopas->addParticle(p);
   }
   // move the particles to other ranks

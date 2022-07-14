@@ -106,6 +106,14 @@ void Particle::setIdentifier(const std::string &identifier) {
   this->_identifier = identifier;
 }
 
+const size_t &Particle::getParentIdentifier() const {
+  return _parentIdentifier;
+}
+
+void Particle::setParentIdentifier(size_t parentIdentifier) {
+  this->_parentIdentifier = parentIdentifier;
+}
+
 std::ostream &operator<<(std::ostream &os, const Particle &particle) {
   // clang-format off
   os << particle.toString()
@@ -113,7 +121,8 @@ std::ostream &operator<<(std::ostream &os, const Particle &particle) {
      << "\nMass          : " << particle.getMass()
      << "\nRadius        : " << particle.getRadius()
      << "\nBcInv         : " << particle.getBcInv()
-     << "\nActivityState : " << static_cast<int>(particle.getActivityState());
+     << "\nActivityState : " << static_cast<int>(particle.getActivityState())
+     << "\nParentID      :" << particle.getParentIdentifier();
   // clang-format on
   return os;
 }
@@ -143,7 +152,8 @@ bool Particle::operator==(const Particle &rhs) const {
       (std::abs(_radius - rhs._radius) < 1e-7) and
       (std::abs(_bc_inv - rhs._bc_inv) < 1e-7) and
       _activityState == rhs._activityState and
-      _identifier == rhs._identifier;
+      _identifier == rhs._identifier and
+      _parentIdentifier == rhs._parentIdentifier;
   // clang-format on
 }
 bool Particle::operator!=(const Particle &rhs) const {

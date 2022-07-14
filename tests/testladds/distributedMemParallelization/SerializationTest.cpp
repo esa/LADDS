@@ -17,7 +17,8 @@ TEST(SerializationTest, serializeAndDeserializeTest) {
                                                   LADDS::Particle::ActivityState::evasivePreserving,
                                                   4.2,
                                                   13.37,
-                                                  0.5},
+                                                  0.5,
+                                                  std::numeric_limits<size_t>::max()},
                                                  {{10., 20., 30.},
                                                   {40., 50., 60.},
                                                   420ul,
@@ -25,7 +26,8 @@ TEST(SerializationTest, serializeAndDeserializeTest) {
                                                   LADDS::Particle::ActivityState::evasive,
                                                   40.2,
                                                   130.37,
-                                                  0.05}};
+                                                  0.05,
+                                                  std::numeric_limits<size_t>::max()}};
   originalParticles[0].setAccT0({7., 8., 9.});
   originalParticles[0].setAccT1({10., 11., 12.});
   originalParticles[1].setAccT0({70., 80., 90.});

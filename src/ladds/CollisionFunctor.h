@@ -65,7 +65,7 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
 
   void endTraversal(bool newton3) final;
 
-  using CollisionT = std::tuple<Particle *, Particle *, double>;
+  using CollisionT = std::tuple<Particle *, Particle *, double, std::array<double, 3>>;
   using CollisionCollectionT = std::vector<CollisionT>;
 
   [[nodiscard]] const CollisionCollectionT &getCollisions() const;

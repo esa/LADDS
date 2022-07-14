@@ -14,7 +14,7 @@ namespace {
 /**
  * Stores the AttributeNames of the attributes of ParticleType which have to be communicated using MPI.
  */
-constexpr std::array<typename Particle::AttributeNames, 14> Attributes = {Particle::AttributeNames::id,
+constexpr std::array<typename Particle::AttributeNames, 15> Attributes = {Particle::AttributeNames::id,
                                                                           Particle::AttributeNames::posX,
                                                                           Particle::AttributeNames::posY,
                                                                           Particle::AttributeNames::posZ,
@@ -36,12 +36,13 @@ constexpr std::array<typename Particle::AttributeNames, 14> Attributes = {Partic
                                                                           Particle::AttributeNames::radius,
                                                                           Particle::AttributeNames::bc_inv,
                                                                           Particle::AttributeNames::activityState,
-                                                                          Particle::AttributeNames::identifier};
+                                                                          Particle::AttributeNames::identifier,
+                                                                          Particle::AttributeNames::parentIdentifier};
 
 /**
  * The combined size in byte of the attributes which need to be communicated using MPI.
  */
-constexpr size_t AttributesSize = 1 * sizeof(size_t) /*id*/ + 10 * sizeof(double) + 1 * sizeof(int) /*activityState*/ +
+constexpr size_t AttributesSize = 2 * sizeof(size_t) /*id*/ + 10 * sizeof(double) + 1 * sizeof(int) /*activityState*/ +
                                   sizeof(int64_t) /*ownershipState*/ + 12 * sizeof(char) /*identifier*/;
 
 /**
@@ -128,7 +129,15 @@ void serializeParticles(const std::vector<Particle>::iterator &particlesBegin,
 void deserializeParticles(std::vector<char> &particlesData, std::vector<Particle> &particles) {
   particles.reserve(particles.size() + (particlesData.size() / AttributesSize));
   // initialize a dummy particle which will be filled with parsed values
-  Particle particle{{0., 0., 0.}, {0., 0., 0.}, 0, "0123-456abc", Particle::ActivityState::passive, 0., 0., 0.};
+  Particle particle{{0., 0., 0.},
+                    {0., 0., 0.},
+                    0,
+                    "0123-456abc",
+                    Particle::ActivityState::passive,
+                    0.,
+                    0.,
+                    0.,
+                    std::numeric_limits<size_t>::max()};
   for (size_t i = 0; i < particlesData.size(); i += AttributesSize) {
     deserializeParticleImpl(&particlesData[i], particle, std::make_index_sequence<Attributes.size()>{});
     particles.push_back(particle);

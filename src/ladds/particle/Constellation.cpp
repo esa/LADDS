@@ -10,6 +10,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <limits>
 #include <string>
 
 namespace LADDS {
@@ -202,7 +203,8 @@ std::vector<Particle> Constellation::readDatasetConstellation(const std::string 
                                    Particle::ActivityState::evasivePreserving,
                                    mass,
                                    radius,
-                                   Particle::calculateBcInv(0., mass, radius, coefficientOfDrag));
+                                   Particle::calculateBcInv(0., mass, radius, coefficientOfDrag),
+                                   std::numeric_limits<size_t>::max());
                  });
   return particleCollection;
 }

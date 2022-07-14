@@ -34,6 +34,7 @@ target_link_libraries(
         autopasTools
         debris_sim_lib
         breakupModel_lib
+        z
         "$<$<BOOL:${LADDS_HDF5}>:hdf5::hdf5_hl;hdf5::hdf5;h5pp::h5pp>"
 )
 

@@ -10,6 +10,7 @@
 #include <autopas/utils/WrapOpenMP.h>
 
 #include <algorithm>
+#include <limits>
 
 namespace LADDS {
 CollisionFunctor::CollisionFunctor(double cutoff, double dt, double collisionDistanceFactor, double minDetectionRadius)
@@ -47,6 +48,11 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
       (jActivity != Particle::ActivityState::passive and iRadius >= _minDetectionRadius)) {
     return;
   }
+
+  // skip if both particles have same parent, i.e. originate from same breakup
+  if ((i.getParentIdentifier() != std::numeric_limits<size_t>::max()) and
+      i.getParentIdentifier() == j.getParentIdentifier())
+    return;
 
   // calculate distance between particles
   const auto dr = sub(i.getR(), j.getR());
@@ -96,6 +102,7 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   const auto p2 = add(old_r_j, mulScalar(vj, t));
 
   const auto dr_lines = sub(p1, p2);
+
   const auto distanceSquare_lines = dot(dr_lines, dr_lines);
   // _collisionDistanceFactor also converts this to km
   const auto scaledObjectSeparation = (iRadius + jRadius) * _collisionDistanceFactor;
@@ -103,13 +110,20 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   // return if particles are far enough away (i.e. further than sum of their scaled sizes)
   if (distanceSquare_lines > (scaledObjectSeparation * scaledObjectSeparation)) return;
 
+  // if not compute collision point as middle between the two particles
+  const auto collision_point = add(p2, mulScalar(dr_lines, 0.5));
+
   // store pointers to colliding pair
   if (i.getID() < j.getID()) {
-    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(
-        i.get<Particle::AttributeNames::ptr>(), j.get<Particle::AttributeNames::ptr>(), distanceSquare_lines);
+    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(i.get<Particle::AttributeNames::ptr>(),
+                                                                           j.get<Particle::AttributeNames::ptr>(),
+                                                                           distanceSquare_lines,
+                                                                           collision_point);
   } else {
-    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(
-        j.get<Particle::AttributeNames::ptr>(), i.get<Particle::AttributeNames::ptr>(), distanceSquare_lines);
+    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(j.get<Particle::AttributeNames::ptr>(),
+                                                                           i.get<Particle::AttributeNames::ptr>(),
+                                                                           distanceSquare_lines,
+                                                                           collision_point);
   }
 }
 
@@ -166,7 +180,8 @@ void CollisionFunctor::SoAKernel(
   // TODO: as soon as this exception is removed / the SoAFunctor properly implemented
   // remove the GTEST_SKIP in CollisionFunctorIntegrationTest::testAutoPasAlgorithm!
   throw std::runtime_error(
-      "SoA kernel not up to date with AoS Kernel as it lacks the new linear interpolation distance.");
+      "SoA kernel not up to date with AoS Kernel as it lacks the new linear interpolation distance and correct "
+      "collision position.");
 
   // get pointers to the SoAs
   const auto *const __restrict x1ptr = soa1.template begin<Particle::AttributeNames::posX>();
@@ -204,9 +219,11 @@ void CollisionFunctor::SoAKernel(
 
   // store pointers to colliding pair
   if (id1ptr[i] < id2ptr[j]) {
-    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(ptr1ptr[i], ptr2ptr[j], dr2);
+    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(
+        ptr1ptr[i], ptr2ptr[j], dr2, ptr1ptr[i]->getPosition());
   } else {
-    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(ptr2ptr[j], ptr1ptr[i], dr2);
+    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(
+        ptr2ptr[j], ptr1ptr[i], dr2, ptr1ptr[i]->getPosition());
   }
 }
 void CollisionFunctor::initTraversal() {
