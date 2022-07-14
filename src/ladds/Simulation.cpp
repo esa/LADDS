@@ -15,6 +15,7 @@
 #include <tuple>
 #include <vector>
 
+#include "ladds/distributedMemParallelization/AltitudeBasedDecomposition.h"
 #include "ladds/distributedMemParallelization/ParticleCommunicator.h"
 #include "ladds/io/ConjunctionLogger.h"
 #include "ladds/io/SatelliteLoader.h"
@@ -285,13 +286,14 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
   size_t totalConjunctions{0ul};
 
-  std::unique_ptr<DecompositionLogger> decompositionLogger{};
+  // std::unique_ptr<DecompositionLogger> decompositionLogger{};
 
-  if (const auto *regularGridDecomp = dynamic_cast<const RegularGridDecomposition *>(&domainDecomposition)) {
-    decompositionLogger = std::make_unique<RegularGridDecompositionLogger>(config, *regularGridDecomp);
-  } else {
-    throw std::runtime_error("No decomposition logger associated with the chosen decomposition!");
-  }
+  const auto *gridDecomp = dynamic_cast<AltitudeBasedDecomposition *>(&domainDecomposition);
+  // if (const auto *regularGridDecomp = dynamic_cast<const RegularGridDecomposition *>(&domainDecomposition)) {
+  //   decompositionLogger = std::make_unique<RegularGridDecompositionLogger>(config, *regularGridDecomp);
+  // } else {
+  //   throw std::runtime_error("No decomposition logger associated with the chosen decomposition!");
+  // }
 
   // status output at start of the simulation
   config.printParsedValues();
@@ -430,11 +432,11 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       autopas::AutoPas_MPI_Comm_rank(domainDecomposition.getCommunicator(), &rank);
       if (rank == 0) {
         vtuWriter.writePVTU(config, iteration, domainDecomposition);
-        decompositionLogger->writeMetafile(iteration);
+        // decompositionLogger->writeMetafile(iteration);
       }
 
       vtuWriter.writeVTU(autopas);
-      decompositionLogger->writePayload(iteration, autopas.getCurrentConfig());
+      // decompositionLogger->writePayload(iteration, autopas.getCurrentConfig());
     }
     if (hdf5WriteFrequency and (iteration % hdf5WriteFrequency == 0 or iteration == lastIteration)) {
       hdf5Writer->writeParticles(iteration, autopas);
@@ -502,7 +504,8 @@ void Simulation::run(ConfigReader &config) {
   timers.total.start();
 
   timers.initialization.start();
-  auto domainDecomp = RegularGridDecomposition(config);
+  // auto domainDecomp = RegularGridDecomposition(config);
+  auto domainDecomp = AltitudeBasedDecomposition(config);
   auto autopas = initAutoPas(config, domainDecomp);
   // need to keep csvWriter and accumulator alive bc integrator relies on pointers to them but does not take ownership
   auto [csvWriter, accumulator, integrator] = initIntegrator(*autopas, config);

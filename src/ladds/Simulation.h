@@ -16,6 +16,7 @@
 
 #include "CollisionFunctor.h"
 #include "TypeDefinitions.h"
+#include "ladds/distributedMemParallelization/AltitudeBasedDecomposition.h"
 #include "ladds/distributedMemParallelization/DomainDecomposition.h"
 #include "ladds/distributedMemParallelization/RegularGridDecomposition.h"
 #include "ladds/io/ConfigReader.h"
