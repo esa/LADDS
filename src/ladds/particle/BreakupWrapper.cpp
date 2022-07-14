@@ -18,7 +18,7 @@ void BreakupWrapper::simulateBreakup(const CollisionFunctor::CollisionCollection
         SatelliteToParticleConverter::convertParticleToSatellite(*p2),
     };
 
-    auto parentID = p1->getID();
+    const auto parentID = p1->getID();
 
     // remove colliding particles from autopas. If the collision is non-fatal they will be reinserted further down
     autopas.deleteParticle(*p1);

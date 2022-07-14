@@ -168,7 +168,7 @@ std::string VTUWriter::filenamePayload(ConfigReader &config,
   autopas::AutoPas_MPI_Comm_size(decomposition.getCommunicator(), &numRanks);
   const auto maxDigitsIterations = std::to_string(config.getLastIterationNr()).size();
   std::stringstream ss;
-  ss << "Output_" << std::setw(static_cast<int>(std::to_string(numRanks).size())) << rank << "_" << std::setfill('0')
+  ss << "Output_" << std::setfill('0') << std::setw(static_cast<int>(std::to_string(numRanks).size())) << rank << "_" 
      << std::setw(static_cast<int>(maxDigitsIterations)) << iteration << ".vtu";
   return ss.str();
 }

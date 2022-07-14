@@ -299,7 +299,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
   // in tuning mode ignore the iteration counter
   for (size_t iteration = startingIteration; iteration <= lastIteration or tuningMode; ++iteration) {
-    // in case we have completed 10 iterations without a collisions
+    // in case we have completed some iterations without a collisions
     // we set parentIDs to max to disable spawn protection for particles
     // recently created through breakups
     if (iterationsSinceLastCollision == 100) {
@@ -343,7 +343,9 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       timers.collisionDetectionImmigrants.stop();
       totalConjunctions += collisions.size();
 
-      if (collisions.size() > 0) iterationsSinceLastCollision = 0;
+      if (collisions.size() > 0) {
+        iterationsSinceLastCollision = 0;
+      }
 
       if (breakupWrapper) {
         // all particles which are part of a collision will be deleted in the breakup.
@@ -382,7 +384,9 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                                                           minDetectionRadius);
       timers.collisionDetection.stop();
       totalConjunctions += collisions.size();
-      if (collisions.size() > 0) iterationsSinceLastCollision = 0;
+      if (collisions.size() > 0) {
+        iterationsSinceLastCollision = 0;
+      }
 
       if (tuningMode and not stillTuning) {
         dumpCalibratedConfig(config, autopas);
@@ -413,7 +417,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     }
 
     timers.output.start();
-    iterationsSinceLastCollision++;
+    ++iterationsSinceLastCollision;
     if (iteration % progressOutputFrequency == 0 or iteration == lastIteration) {
       printProgressOutput(
           iteration, autopas.getNumberOfParticles(), totalConjunctions, domainDecomposition.getCommunicator());
@@ -444,9 +448,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
 void Simulation::removeParticleSpawnProtection(autopas::AutoPas<Particle> &autopas) {
   SPDLOG_LOGGER_INFO(logger.get(), "Removing spawn protection for all particles.");
-  for (auto &particle : autopas) {
-    particle.setParentIdentifier(std::numeric_limits<size_t>::max());
-  };
+  autopas.forEach([](auto &particle) { particle.setParentIdentifier(std::numeric_limits<size_t>::max()); });
 }
 
 std::vector<Particle> Simulation::checkedInsert(autopas::AutoPas<Particle> &autopas,

@@ -122,7 +122,7 @@ std::ostream &operator<<(std::ostream &os, const Particle &particle) {
      << "\nRadius        : " << particle.getRadius()
      << "\nBcInv         : " << particle.getBcInv()
      << "\nActivityState : " << static_cast<int>(particle.getActivityState())
-     << "\nParentID :" << particle.getParentIdentifier();
+     << "\nParentID      :" << particle.getParentIdentifier();
   // clang-format on
   return os;
 }
