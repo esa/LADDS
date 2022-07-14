@@ -111,7 +111,7 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   if (distanceSquare_lines > (scaledObjectSeparation * scaledObjectSeparation)) return;
 
   // if not compute collision point as middle between the two particles
-  const auto collision_point = add(p1, mulScalar(sub(p2, p1), 0.5));
+  const auto collision_point = add(p2, mulScalar(dr_lines, 0.5));
 
   // store pointers to colliding pair
   if (i.getID() < j.getID()) {
