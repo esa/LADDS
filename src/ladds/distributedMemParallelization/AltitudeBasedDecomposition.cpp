@@ -34,7 +34,9 @@ LADDS::AltitudeBasedDecomposition::AltitudeBasedDecomposition(LADDS::ConfigReade
   globalBoxMax = {maxAltitude, maxAltitude, maxAltitude};
 
   // calculate local box extent
-  altitude_intervals = this->logspace(std::log10(minAltitude), std::log10(maxAltitude), numRanks);
+  // have to add 6371 to avoid ranks inside Earth
+  altitude_intervals = this->logspace(std::log10(6371.0 + minAltitude), std::log10(maxAltitude), numRanks);
+  altitude_intervals[0] = 0.0;
   altitude_intervals.push_back(maxAltitude);
   SPDLOG_LOGGER_DEBUG(config.getLogger().get(),
                       "Computed altitude intervals: {}",

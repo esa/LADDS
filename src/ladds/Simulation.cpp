@@ -297,44 +297,39 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     auto leavingParticles = autopas.updateContainer();
     timers.containerUpdate.stop();
 
-    if (const auto *regularGridDecomp = dynamic_cast<const RegularGridDecomposition *>(&domainDecomposition)) {
-      timers.particleCommunication.start();
-      auto incomingParticles = RankMigration::communicateParticles(leavingParticles, autopas, *regularGridDecomp);
-      timers.particleCommunication.stop();
+    timers.particleCommunication.start();
+    auto incomingParticles = RankMigration::communicateParticles(leavingParticles, autopas, domainDecomposition);
+    timers.particleCommunication.stop();
 
-      timers.collisionDetectionImmigrants.start();
-      auto collisions = RankMigration::collisionDetectionImmigrants(autopas,
-                                                                    incomingParticles,
-                                                                    deltaT * autopas.getVerletRebuildFrequency(),
-                                                                    8.,
-                                                                    collisionDistanceFactor,
-                                                                    minDetectionRadius);
-      timers.collisionDetectionImmigrants.stop();
-      totalConjunctions += collisions.size();
+    timers.collisionDetectionImmigrants.start();
+    auto collisions = RankMigration::collisionDetectionImmigrants(autopas,
+                                                                  incomingParticles,
+                                                                  deltaT * autopas.getVerletRebuildFrequency(),
+                                                                  8.,
+                                                                  collisionDistanceFactor,
+                                                                  minDetectionRadius);
+    timers.collisionDetectionImmigrants.stop();
+    totalConjunctions += collisions.size();
 
-      if (collisions.size() > 0) {
-        iterationsSinceLastCollision = 0;
-      }
-
-      if (breakupWrapper) {
-        // all particles which are part of a collision will be deleted in the breakup.
-        // As we pass particle-pointers to the vector and not to autopas we have to mark the particles as deleted
-        // manually
-        for (const auto &[p1, p2, _, __] : collisions) {
-          p1->setOwnershipState(autopas::OwnershipState::dummy);
-          p2->setOwnershipState(autopas::OwnershipState::dummy);
-        }
-      }
-      // all particles still need to be added, even if marked as deleted to not mess up autopas' internal counters.
-      for (const auto &p : incomingParticles) {
-        autopas.addParticle(p);
-      }
-
-      processCollisions(iteration, collisions, *conjuctionWriter, breakupWrapper.get());
-
-    } else {
-      throw std::runtime_error("No particle communication implemented for the chosen decomposition!");
+    if (collisions.size() > 0) {
+      iterationsSinceLastCollision = 0;
     }
+
+    if (breakupWrapper) {
+      // all particles which are part of a collision will be deleted in the breakup.
+      // As we pass particle-pointers to the vector and not to autopas we have to mark the particles as deleted
+      // manually
+      for (const auto &[p1, p2, _, __] : collisions) {
+        p1->setOwnershipState(autopas::OwnershipState::dummy);
+        p2->setOwnershipState(autopas::OwnershipState::dummy);
+      }
+    }
+    // all particles still need to be added, even if marked as deleted to not mess up autopas' internal counters.
+    for (const auto &p : incomingParticles) {
+      autopas.addParticle(p);
+    }
+
+    processCollisions(iteration, collisions, *conjuctionWriter, breakupWrapper.get());
 
     // sanity check: after communication there should be no leaving particles left
     if (not leavingParticles.empty()) {
