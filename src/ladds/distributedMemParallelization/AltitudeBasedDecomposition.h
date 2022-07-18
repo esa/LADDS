@@ -39,7 +39,6 @@ class AltitudeBasedDecomposition : public DomainDecomposition {
 
   /**
    * Creates a vector of logspaced numbers similar to np.logspace.
-   * https://stackoverflow.com/questions/57944012/how-to-write-a-fast-code-in-c-compared-to-numpy-logspace-function
    * @retval std::vector<double>: The vector of logspaced numbers.
    */
   [[nodiscard]] std::vector<double> logspace(const double a, const double b, const int k);

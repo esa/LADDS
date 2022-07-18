@@ -69,6 +69,8 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config, DomainD
 
   SPDLOG_LOGGER_DEBUG(logger.get(), "Verlet Skin: {}", verletSkin);
 
+  SPDLOG_LOGGER_DEBUG(
+      logger.get(), "Setting BoxMin / Max: {} {}", domainDecomp.getLocalBoxMin(), domainDecomp.getLocalBoxMax());
   autopas->setBoxMin(domainDecomp.getLocalBoxMin());
   autopas->setBoxMax(domainDecomp.getLocalBoxMax());
   autopas->setCutoff(cutoff);

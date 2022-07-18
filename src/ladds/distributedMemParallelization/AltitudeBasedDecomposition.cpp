@@ -27,14 +27,18 @@ LADDS::AltitudeBasedDecomposition::AltitudeBasedDecomposition(LADDS::ConfigReade
   autopas::AutoPas_MPI_Cart_coords(communicator, rank, dims.size(), coords.data());
 
   // initialize simulation specific data
-  const auto squaredMaxAltitude = config.get<double>("sim/maxAltitude") * config.get<double>("sim/maxAltitude");
-  const auto squaredMinAltitude = config.get<double>("sim/minAltitude") * config.get<double>("sim/minAltitude");
+  const auto maxAltitude = config.get<double>("sim/maxAltitude");
+  const auto minAltitude = config.get<double>("sim/minAltitude");
 
-  globalBoxMin = {-squaredMaxAltitude, -squaredMaxAltitude, -squaredMaxAltitude};
-  globalBoxMax = {squaredMaxAltitude, squaredMaxAltitude, squaredMaxAltitude};
+  globalBoxMin = {-maxAltitude, -maxAltitude, -maxAltitude};
+  globalBoxMax = {maxAltitude, maxAltitude, maxAltitude};
 
   // calculate local box extent
-  altitude_intervals = this->logspace(std::log10(squaredMinAltitude), std::log10(squaredMaxAltitude), numRanks + 1);
+  altitude_intervals = this->logspace(std::log10(minAltitude), std::log10(maxAltitude), numRanks);
+  altitude_intervals.push_back(maxAltitude);
+  SPDLOG_LOGGER_DEBUG(config.getLogger().get(),
+                      "Computed altitude intervals: {}",
+                      autopas::utils::ArrayUtils::to_string(altitude_intervals));
 
   localBoxMin = {-altitude_intervals[rank + 1], -altitude_intervals[rank + 1], -altitude_intervals[rank + 1]};
   localBoxMax = {altitude_intervals[rank + 1], altitude_intervals[rank + 1], altitude_intervals[rank + 1]};
@@ -49,13 +53,12 @@ LADDS::AltitudeBasedDecomposition::AltitudeBasedDecomposition(LADDS::ConfigReade
                        numRanks,
                        autopas::autopas_get_max_threads(),
                        autopas::utils::ArrayUtils::to_string(dims));
-    for (double i : altitude_intervals) {
-      SPDLOG_LOGGER_INFO(config.getLogger().get(), "Altitude border {}", std::sqrt(i));
-    }
   }
 }
 
 int LADDS::AltitudeBasedDecomposition::getRank(const std::array<double, 3> &coordinates) const {
+  std::cout << "Getting rank for coordinates " << autopas::utils::ArrayUtils::to_string(coordinates) << ::std::endl;
+
   using autopas::utils::ArrayMath::div;
   using autopas::utils::ArrayMath::sub;
 
@@ -63,7 +66,7 @@ int LADDS::AltitudeBasedDecomposition::getRank(const std::array<double, 3> &coor
 
   // all boxes are square
   const auto localBoxLength = localBoxMax[0] - localBoxMin[0];
-  const auto location = static_cast<int>(altitudeSquared / localBoxLength);
+  const auto location = static_cast<int>(altitudeSquared / (localBoxLength * localBoxLength));
   std::array<int, 1> rankGridCoords{location};
   int targetRank{};
   autopas::AutoPas_MPI_Cart_rank(communicator, rankGridCoords.data(), &targetRank);
@@ -80,9 +83,15 @@ std::tuple<std::array<int, 1>, std::array<int, 1>, std::array<int, 1>> LADDS::Al
 }
 
 std::vector<double> LADDS::AltitudeBasedDecomposition::logspace(const double a, const double b, const int k) {
-  std::vector<double> logspace;
+  double realStart = pow(10., a);
+  double realBase = pow(10., (b - a) / k);
+
+  std::vector<double> retval;
+  retval.reserve(k);
   for (int i = 0; i < k; i++) {
-    logspace.push_back(pow(10, i * (b - a) / (k - 1)));
+    retval.push_back(realStart);
+    realStart *= realBase;
   }
-  return logspace;
+
+  return retval;
 }
