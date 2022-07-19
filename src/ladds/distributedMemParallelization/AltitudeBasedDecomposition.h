@@ -8,6 +8,7 @@
 
 #include "DomainDecomposition.h"
 #include "ladds/io/ConfigReader.h"
+#include "ladds/particle/Particle.h"
 
 namespace LADDS {
 
@@ -24,7 +25,19 @@ class AltitudeBasedDecomposition : public DomainDecomposition {
    */
   ~AltitudeBasedDecomposition() override = default;
 
+  /**
+   * Get the rank id that contains the given simulation domain coordinates
+   * @param coordinates 3D
+   * @return rank id
+   */
   int getRank(const std::array<double, 3> &coordinates) const override;
+
+  /**
+   * Get the particles which are leaving the local domain.
+   * @param  autopas autopas container
+   * @retval vector of particles
+   */
+  std::vector<Particle> getLeavingParticles(const AutoPas_t &autopas) const override;
 
   /**
    * Get information about the grid structure

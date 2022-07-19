@@ -56,6 +56,7 @@ LADDS::RegularGridDecomposition::RegularGridDecomposition(LADDS::ConfigReader &c
 }
 
 int LADDS::RegularGridDecomposition::getRank(const std::array<double, 3> &coordinates) const {
+  throw std::runtime_error("This function is currently producing wrong results. To be fixed.");
   using autopas::utils::ArrayMath::div;
   using autopas::utils::ArrayMath::sub;
   using autopas::utils::ArrayUtils::static_cast_array;
@@ -74,4 +75,9 @@ std::tuple<std::array<int, 3>, std::array<int, 3>, std::array<int, 3>> LADDS::Re
   std::array<int, 3> coords{};
   autopas::AutoPas_MPI_Cart_get(communicator, dims.size(), dims.data(), periods.data(), coords.data());
   return {dims, periods, coords};
+}
+
+std::vector<LADDS::Particle> LADDS::RegularGridDecomposition::getLeavingParticles(const AutoPas_t &autopas) const {
+  throw std::runtime_error(
+      "This function is not implemeted. Leaving particles can be identified with autopas.updateContainer");
 }

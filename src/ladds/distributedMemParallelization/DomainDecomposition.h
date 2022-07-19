@@ -9,6 +9,10 @@
 #include <autopas/utils/WrapMPI.h>
 
 #include <array>
+#include <vector>
+
+#include "ladds/TypeDefinitions.h"
+#include "ladds/particle/Particle.h"
 
 namespace LADDS {
 
@@ -66,6 +70,13 @@ class DomainDecomposition {
    * @return rank id
    */
   [[nodiscard]] virtual int getRank(const std::array<double, 3> &coordinates) const = 0;
+
+  /**
+   * Get the particles which are leaving the local domain.
+   * @param  autopas autopas container
+   * @retval vector of particles
+   */
+  [[nodiscard]] virtual std::vector<Particle> getLeavingParticles(const AutoPas_t &autopas) const = 0;
 
   /**
    * Get the communicator used by this decomposition.

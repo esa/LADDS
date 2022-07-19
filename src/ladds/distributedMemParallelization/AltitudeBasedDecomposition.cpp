@@ -107,3 +107,15 @@ std::vector<double> LADDS::AltitudeBasedDecomposition::logspace(const double a, 
 double LADDS::AltitudeBasedDecomposition::getAltitudeOfRank(const int rank) const {
   return altitudeIntervals[rank + 1];
 }
+
+std::vector<LADDS::Particle> LADDS::AltitudeBasedDecomposition::getLeavingParticles(const AutoPas_t &autopas) const {
+  std::vector<LADDS::Particle> particles;
+  int rank{};
+  autopas::AutoPas_MPI_Comm_rank(communicator, &rank);
+  for (auto &particle : autopas) {
+    if (this->getRank(particle.getPosition()) != rank) {
+      particles.push_back(particle);
+    }
+  }
+  return particles;
+}

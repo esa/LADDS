@@ -71,7 +71,6 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
   for (auto &particle : satellites) {
     const auto &pos = particle.getPosition();
     const auto rankForParticle = decomp.getRank(pos);
-
     if (rankForParticle != rank) {
       continue;
     }

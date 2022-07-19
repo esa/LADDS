@@ -225,6 +225,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
   const auto deltaT = config.get<double>("sim/deltaT");
   const auto collisionDistanceFactor = config.get<double>("sim/collisionDistanceFactor", 1.);
   const auto timestepsPerCollisionDetection = config.get<size_t>("sim/timestepsPerCollisionDetection", 1);
+  const auto decompositionType = config.get<std::string>("sim/decompositionType", "Altitude");
   // if we start from a checkpoint we want to start at the checkpoint iteration +1
   // otherwise we start at iteration 0.
   const auto startingIteration = config.getFirstIterationNr();
@@ -253,14 +254,16 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
   size_t totalConjunctions{0ul};
 
-  // std::unique_ptr<DecompositionLogger> decompositionLogger{};
+  std::unique_ptr<DecompositionLogger> decompositionLogger{};
 
-  const auto *gridDecomp = dynamic_cast<AltitudeBasedDecomposition *>(&domainDecomposition);
-  // if (const auto *regularGridDecomp = dynamic_cast<const RegularGridDecomposition *>(&domainDecomposition)) {
-  //   decompositionLogger = std::make_unique<RegularGridDecompositionLogger>(config, *regularGridDecomp);
-  // } else {
-  //   throw std::runtime_error("No decomposition logger associated with the chosen decomposition!");
-  // }
+  if (decompositionType == "Altitude") {
+    const auto *gridDecomp = dynamic_cast<AltitudeBasedDecomposition *>(&domainDecomposition);
+  } else if (decompositionType == "RegularGrid") {
+    const auto *regularGridDecomp = dynamic_cast<const RegularGridDecomposition *>(&domainDecomposition);
+    decompositionLogger = std::make_unique<RegularGridDecompositionLogger>(config, *regularGridDecomp);
+  } else {
+    throw std::runtime_error("Unknown decomposition type: " + decompositionType);
+  }
 
   // status output at start of the simulation
   config.printParsedValues();
@@ -294,7 +297,14 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
     timers.containerUpdate.start();
     // (potentially) update the internal data structure and collect particles which are leaving the container.
+
     auto leavingParticles = autopas.updateContainer();
+    // for altitude decomp we cannot rely on autopas square boxes, thus
+    // we need to update the leaving particles manually
+    if (decompositionType == "Altitude") {
+      leavingParticles = domainDecomposition.getLeavingParticles(autopas);
+      SPDLOG_LOGGER_INFO(logger.get(), "It {} | {} Particles are migrating!", iteration, leavingParticles.size());
+    }
     timers.containerUpdate.stop();
 
     timers.particleCommunication.start();
@@ -394,11 +404,11 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       autopas::AutoPas_MPI_Comm_rank(domainDecomposition.getCommunicator(), &rank);
       if (rank == 0) {
         vtuWriter.writePVTU(config, iteration, domainDecomposition);
-        // decompositionLogger->writeMetafile(iteration);
+        decompositionLogger->writeMetafile(iteration);
       }
 
       vtuWriter.writeVTU(autopas);
-      // decompositionLogger->writePayload(iteration, autopas.getCurrentConfig());
+      decompositionLogger->writePayload(iteration, autopas.getCurrentConfig());
     }
     if (hdf5WriteFrequency and (iteration % hdf5WriteFrequency == 0 or iteration == lastIteration)) {
       hdf5Writer->writeParticles(iteration, autopas);
@@ -466,21 +476,29 @@ void Simulation::run(ConfigReader &config) {
   timers.total.start();
 
   timers.initialization.start();
-  // auto domainDecomp = RegularGridDecomposition(config);
-  auto domainDecomp = AltitudeBasedDecomposition(config);
-  auto autopas = initAutoPas(config, domainDecomp);
+  const auto decompositionType = config.get<std::string>("sim/decompositionType", "Altitude");
+  std::unique_ptr<DomainDecomposition> domainDecomp{};
+  if (decompositionType == "Altitude") {
+    domainDecomp = std::make_unique<AltitudeBasedDecomposition>(config);
+  } else if (decompositionType == "RegularGrid") {
+    domainDecomp = std::make_unique<RegularGridDecomposition>(config);
+  } else {
+    throw std::runtime_error("Unknown decomposition type: " + decompositionType);
+  }
+
+  auto autopas = initAutoPas(config, *domainDecomp);
   // need to keep csvWriter and accumulator alive bc integrator relies on pointers to them but does not take ownership
   auto [csvWriter, accumulator, integrator] = initIntegrator(*autopas, config);
-  SatelliteLoader::loadSatellites(*autopas, config, domainDecomp);
+  SatelliteLoader::loadSatellites(*autopas, config, *domainDecomp);
   auto constellations = SatelliteLoader::loadConstellations(config, logger);
   timers.initialization.stop();
 
   timers.simulation.start();
-  simulationLoop(*autopas, *integrator, constellations, config, domainDecomp);
+  simulationLoop(*autopas, *integrator, constellations, config, *domainDecomp);
   timers.simulation.stop();
 
   timers.total.stop();
-  timers.printTimers(config, domainDecomp);
+  timers.printTimers(config, *domainDecomp);
 }
 
 void Simulation::dumpCalibratedConfig(ConfigReader &config, const AutoPas_t &autopas) const {
