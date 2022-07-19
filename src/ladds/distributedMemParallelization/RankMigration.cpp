@@ -90,8 +90,8 @@ std::vector<LADDS::Particle> LADDS::RankMigration::communicateParticles(std::vec
     // trigger both non-blocking sends before doing both blocking receives
     // send left (negative direction)
     const int commDir = 0;
-    const auto altBoxMin = altitudeBasedDecomposition->altitude_intervals[coords[commDir]];
-    const auto altBoxMax = altitudeBasedDecomposition->altitude_intervals[coords[commDir] + 1];
+    const auto altBoxMin = altitudeBasedDecomposition->getAltitudeOfRank(coords[commDir]);
+    const auto altBoxMax = altitudeBasedDecomposition->getAltitudeOfRank(coords[commDir] + 1);
     if (coords[commDir] != 0) {
       // sort particles that are leaving in the negative direction to the end of leavingParticles
       auto leavingParticlesIter =

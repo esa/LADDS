@@ -35,7 +35,14 @@ class AltitudeBasedDecomposition : public DomainDecomposition {
   /**
    * Altitude bucket boundaries for all ranks.
    */
-  std::vector<double> altitude_intervals;
+  std::vector<double> altitudeIntervals;
+
+  /**
+   * Returns the altitude of the rank with the given index.
+   * @param rank: The rank index
+   * @return The altitude of the rank with the given index.
+   */
+  double getAltitudeOfRank(const int rank) const;
 
   /**
    * Creates a vector of logspaced numbers similar to np.logspace.

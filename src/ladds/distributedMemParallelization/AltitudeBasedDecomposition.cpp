@@ -9,6 +9,8 @@
 #include <autopas/utils/ArrayMath.h>
 #include <autopas/utils/WrapOpenMP.h>
 
+#include "satellitePropagator/physics/Constants.h"
+
 LADDS::AltitudeBasedDecomposition::AltitudeBasedDecomposition(LADDS::ConfigReader &config) {
   // initialize a one-dimensional MPI world in which split the altitudes
   int numRanks{};
@@ -34,16 +36,21 @@ LADDS::AltitudeBasedDecomposition::AltitudeBasedDecomposition(LADDS::ConfigReade
   globalBoxMax = {maxAltitude, maxAltitude, maxAltitude};
 
   // calculate local box extent
-  // have to add 6371 to avoid ranks inside Earth
-  altitude_intervals = this->logspace(std::log10(6371.0 + minAltitude), std::log10(maxAltitude), numRanks);
-  altitude_intervals[0] = 0.0;
-  altitude_intervals.push_back(maxAltitude);
-  SPDLOG_LOGGER_DEBUG(config.getLogger().get(),
-                      "Computed altitude intervals: {}",
-                      autopas::utils::ArrayUtils::to_string(altitude_intervals));
+  // we have to account for the fact that there won't be anything between 0, Physics::R_EARTH  + minAltitude, so
+  // shifting the interval a bit
+  // TODO: find a more even distribution of the particles
+  altitudeIntervals = this->logspace(std::log10(minAltitude), std::log10(maxAltitude - Physics::R_EARTH), numRanks);
+  for (int i = 0; i < numRanks; i++) {
+    altitudeIntervals[i] += Physics::R_EARTH;
+  }
+  altitudeIntervals[0] = 0.0;
+  altitudeIntervals.push_back(maxAltitude);
+  SPDLOG_LOGGER_INFO(config.getLogger().get(),
+                     "Computed altitude intervals fo ranks: {}",
+                     autopas::utils::ArrayUtils::to_string(altitudeIntervals));
 
-  localBoxMin = {-altitude_intervals[rank + 1], -altitude_intervals[rank + 1], -altitude_intervals[rank + 1]};
-  localBoxMax = {altitude_intervals[rank + 1], altitude_intervals[rank + 1], altitude_intervals[rank + 1]};
+  localBoxMin = {-altitudeIntervals[rank + 1], -altitudeIntervals[rank + 1], -altitudeIntervals[rank + 1]};
+  localBoxMax = {altitudeIntervals[rank + 1], altitudeIntervals[rank + 1], altitudeIntervals[rank + 1]};
 
   // print parallelization info
   if (rank == 0) {
@@ -59,20 +66,19 @@ LADDS::AltitudeBasedDecomposition::AltitudeBasedDecomposition(LADDS::ConfigReade
 }
 
 int LADDS::AltitudeBasedDecomposition::getRank(const std::array<double, 3> &coordinates) const {
-  std::cout << "Getting rank for coordinates " << autopas::utils::ArrayUtils::to_string(coordinates) << ::std::endl;
+  // std::cout << "Getting rank for coordinates " << autopas::utils::ArrayUtils::to_string(coordinates) << ::std::endl;
 
   using autopas::utils::ArrayMath::div;
   using autopas::utils::ArrayMath::sub;
 
   const auto altitudeSquared = autopas::utils::ArrayMath::dot(coordinates, coordinates);
-
-  // all boxes are square
-  const auto localBoxLength = localBoxMax[0] - localBoxMin[0];
-  const auto location = static_cast<int>(altitudeSquared / (localBoxLength * localBoxLength));
-  std::array<int, 1> rankGridCoords{location};
-  int targetRank{};
-  autopas::AutoPas_MPI_Cart_rank(communicator, rankGridCoords.data(), &targetRank);
-  return targetRank;
+  for (size_t i = 0; i < altitudeIntervals.size() - 1; i++) {
+    if (altitudeSquared >= altitudeIntervals[i] * altitudeIntervals[i] &&
+        altitudeSquared < altitudeIntervals[i + 1] * altitudeIntervals[i + 1]) {
+      return i;
+    }
+  }
+  throw std::runtime_error("Could not find rank for coordinates " + autopas::utils::ArrayUtils::to_string(coordinates));
 }
 
 std::tuple<std::array<int, 1>, std::array<int, 1>, std::array<int, 1>> LADDS::AltitudeBasedDecomposition::getGridInfo()
@@ -96,4 +102,8 @@ std::vector<double> LADDS::AltitudeBasedDecomposition::logspace(const double a, 
   }
 
   return retval;
+}
+
+double LADDS::AltitudeBasedDecomposition::getAltitudeOfRank(const int rank) const {
+  return altitudeIntervals[rank + 1];
 }

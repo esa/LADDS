@@ -9,6 +9,7 @@
 #include "ConfigReader.h"
 #include "DatasetReader.h"
 #include "Logger.h"
+#include "ladds/distributedMemParallelization/AltitudeBasedDecomposition.h"
 #include "ladds/io/hdf5/HDF5Reader.h"
 
 namespace LADDS {
@@ -64,27 +65,34 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
   double maxAltitudeFound{0.};
   const auto &boxMin = autopas.getBoxMin();
   const auto &boxMax = autopas.getBoxMax();
+
+  SPDLOG_LOGGER_INFO(config.getLogger().get(), "BoxMin: {}, BoxMax: {}", boxMin, boxMax);
+
   for (auto &particle : satellites) {
     const auto &pos = particle.getPosition();
-    // check if this particle is relevant for the current rank
-    if (autopas::utils::inBox(pos, boxMin, boxMax)) {
-      const double altitudeSquared = autopas::utils::ArrayMath::dot(pos, pos);
-      minAltitudeFound = std::min(minAltitudeFound, altitudeSquared);
-      maxAltitudeFound = std::max(maxAltitudeFound, altitudeSquared);
-      if (altitudeSquared < maxAltitudeSquared) {
-        // set the id to the next free particle id of this rank
-        particle.setID(config.newParticleID());
-        autopas.addParticle(particle);
-      } else {
-        SPDLOG_LOGGER_WARN(config.getLogger().get(),
-                           "Particle NOT added because its altitudeSquared was too high!\n"
-                           "Max allowed: {}\n"
-                           "Actual: {}\n"
-                           "{})",
-                           maxAltitude,
-                           sqrt(altitudeSquared),
-                           particle.toString());
-      }
+    const auto rankForParticle = decomp.getRank(pos);
+
+    if (rankForParticle != rank) {
+      continue;
+    }
+
+    const double altitudeSquared = autopas::utils::ArrayMath::dot(pos, pos);
+    minAltitudeFound = std::min(minAltitudeFound, altitudeSquared);
+    maxAltitudeFound = std::max(maxAltitudeFound, altitudeSquared);
+
+    if (altitudeSquared < maxAltitudeSquared) {
+      // set the id to the next free particle id of this rank
+      particle.setID(config.newParticleID());
+      autopas.addParticle(particle);
+    } else {
+      SPDLOG_LOGGER_WARN(config.getLogger().get(),
+                         "Particle NOT added because its altitudeSquared was too high!\n"
+                         "Max allowed: {}\n"
+                         "Actual: {}\n"
+                         "{})",
+                         maxAltitude,
+                         sqrt(altitudeSquared),
+                         particle.toString());
     }
   }
 
@@ -104,7 +112,7 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
   autopas::AutoPas_MPI_Reduce(
       &numParticles, &numParticlesGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, decomp.getCommunicator());
   SPDLOG_LOGGER_INFO(config.getLogger().get(), "Number of particles: {}", numParticlesGlobal);
-}
+}  // namespace LADDS
 
 std::vector<Constellation> SatelliteLoader::loadConstellations(ConfigReader &config, const Logger &logger) {
   std::vector<Constellation> constellations;
