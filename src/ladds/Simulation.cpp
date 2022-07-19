@@ -303,7 +303,6 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     // we need to update the leaving particles manually
     if (decompositionType == "Altitude") {
       leavingParticles = domainDecomposition.getLeavingParticles(autopas);
-      SPDLOG_LOGGER_INFO(logger.get(), "It {} | {} Particles are migrating!", iteration, leavingParticles.size());
     }
     timers.containerUpdate.stop();
 
