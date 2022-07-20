@@ -242,6 +242,9 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
   const auto [hdf5WriteFrequency, hdf5Writer, conjuctionWriter] = initWriter(config);
 
+  int rank{};
+  autopas::AutoPas_MPI_Comm_rank(AUTOPAS_MPI_COMM_WORLD, &rank);
+
   // set constellation particle IDs and fetch maxExistingParticleId
   setConstellationIDs(autopas, constellations);
   // only add the breakup model if enabled via yaml
@@ -332,7 +335,8 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     }
     // all particles still need to be added, even if marked as deleted to not mess up autopas' internal counters.
     for (const auto &p : incomingParticles) {
-      // std::cout << "Adding particle {}" << p.toString() << std::endl;
+      std::cout << "Rank " << rank << " - Adding particle " << p.getID() << " at "
+                << autopas::utils::ArrayUtils::to_string(p.getPosition()) << std::endl;
       autopas.addParticle(p);
     }
 
@@ -397,7 +401,6 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     if (vtkWriteFrequency and (iteration % vtkWriteFrequency == 0 or iteration == lastIteration)) {
       VTUWriter vtuWriter(config, iteration, domainDecomposition);
       // one rank has to produce the meta files
-      int rank{};
       autopas::AutoPas_MPI_Comm_rank(domainDecomposition.getCommunicator(), &rank);
       if (rank == 0) {
         vtuWriter.writePVTU(config, iteration, domainDecomposition);
@@ -570,8 +573,12 @@ void Simulation::processCollisions(size_t iteration,
     std::cout << collisions.size() << " collisions found" << std::endl;
     SPDLOG_LOGGER_TRACE(logger.get(), "The following particles collided between ranks:");
     for (const auto &[p1, p2, _, __] : collisions) {
-      std::cout << "Collision between " << p1->toString() << " and " << p2->toString() << std::endl;
-      SPDLOG_LOGGER_TRACE(logger.get(), "({}, {})", p1->toString(), p2->toString());
+      std::cout << "Collision between " << autopas::utils::ArrayUtils::to_string(p1->getPosition()) << " and "
+                << autopas::utils::ArrayUtils::to_string(p2->getPosition()) << std::endl;
+      SPDLOG_LOGGER_TRACE(logger.get(),
+                          "({}, {})",
+                          autopas::utils::ArrayUtils::to_string(p1->getPosition()),
+                          autopas::utils::ArrayUtils::to_string(p2->getPosition()));
     }
     iterationsSinceLastCollision = 0;
   }

@@ -120,11 +120,11 @@ std::vector<LADDS::Particle> LADDS::AltitudeBasedDecomposition::getLeavingPartic
     }
   }
 
-  // std::cout << "Leaving particles: " << particles.size() << std::endl;
-  // for (auto &particle : particles) {
-  //   std::cout << "Leaving particle: " << particle.getID() << " "
-  //             << autopas::utils::ArrayUtils::to_string(particle.getPosition()) << std::endl;
-  // }
+  std::cout << "Rank:" << rank << " Leaving particles: " << particles.size() << std::endl;
+  for (auto &particle : particles) {
+    std::cout << "Rank:" << rank << " Leaving particle: " << particle.getID() << " "
+              << autopas::utils::ArrayUtils::to_string(particle.getPosition()) << std::endl;
+  }
 
   return particles;
 }
