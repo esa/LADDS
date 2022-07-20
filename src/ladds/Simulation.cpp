@@ -317,12 +317,9 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                                                                   8.,
                                                                   collisionDistanceFactor,
                                                                   minDetectionRadius);
+
     timers.collisionDetectionImmigrants.stop();
     totalConjunctions += collisions.size();
-
-    if (collisions.size() > 0) {
-      iterationsSinceLastCollision = 0;
-    }
 
     if (breakupWrapper) {
       // all particles which are part of a collision will be deleted in the breakup.
@@ -413,6 +410,10 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       hdf5Writer->writeParticles(iteration, autopas);
     }
     timers.output.stop();
+    if (config.get<std::string>("autopas/logLevel").compare("debug") or
+        config.get<std::string>("autopas/logLevel").compare("trace")) {
+      printNumParticlesPerRank(autopas, domainDecomposition);
+    }
   }
   printNumParticlesPerRank(autopas, domainDecomposition);
   SPDLOG_LOGGER_INFO(logger.get(), "Total conjunctions: {}", totalConjunctions);
@@ -563,6 +564,16 @@ void Simulation::processCollisions(size_t iteration,
                                    const CollisionFunctor::CollisionCollectionT &collisions,
                                    ConjuctionWriterInterface &conjunctionWriter,
                                    BreakupWrapper *breakupWrapper) {
+  std::cout << "Processing collisions in " << iteration << std::endl;
+  if (not collisions.empty()) {
+    std::cout << collisions.size() << " collisions found" << std::endl;
+    SPDLOG_LOGGER_TRACE(logger.get(), "The following particles collided between ranks:");
+    for (const auto &[p1, p2, _, __] : collisions) {
+      std::cout << "Collision between " << p1->toString() << " and " << p2->toString() << std::endl;
+      SPDLOG_LOGGER_TRACE(logger.get(), "({}, {})", p1->toString(), p2->toString());
+    }
+    iterationsSinceLastCollision = 0;
+  }
   timers.collisionWriting.start();
   conjunctionWriter.writeConjunctions(iteration, collisions);
   timers.collisionWriting.stop();
