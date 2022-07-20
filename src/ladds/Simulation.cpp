@@ -332,6 +332,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     }
     // all particles still need to be added, even if marked as deleted to not mess up autopas' internal counters.
     for (const auto &p : incomingParticles) {
+      // std::cout << "Adding particle {}" << p.toString() << std::endl;
       autopas.addParticle(p);
     }
 
@@ -410,10 +411,10 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       hdf5Writer->writeParticles(iteration, autopas);
     }
     timers.output.stop();
-    if (config.get<std::string>("autopas/logLevel").compare("debug") or
-        config.get<std::string>("autopas/logLevel").compare("trace")) {
-      printNumParticlesPerRank(autopas, domainDecomposition);
-    }
+    // Somehow below line is always printed?
+    // if (config.get<std::string>("sim/logLevel").compare("trace")) {
+    //   printNumParticlesPerRank(autopas, domainDecomposition);
+    // }
   }
   printNumParticlesPerRank(autopas, domainDecomposition);
   SPDLOG_LOGGER_INFO(logger.get(), "Total conjunctions: {}", totalConjunctions);

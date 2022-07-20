@@ -44,7 +44,9 @@ LADDS::AltitudeBasedDecomposition::AltitudeBasedDecomposition(LADDS::ConfigReade
     altitudeIntervals[i] += Physics::R_EARTH;
   }
   altitudeIntervals[0] = 0.0;
-  altitudeIntervals.push_back(maxAltitude);
+  // note that actual max altitude is the corner of the box, so higher than maxaltitude in the config but there should
+  // be very satellites between maxAltitude and this
+  altitudeIntervals.push_back(std::sqrt(3 * std::pow(maxAltitude, 2.0)));
   SPDLOG_LOGGER_INFO(config.getLogger().get(),
                      "Computed altitude intervals fo ranks: {}",
                      autopas::utils::ArrayUtils::to_string(altitudeIntervals));
@@ -117,5 +119,12 @@ std::vector<LADDS::Particle> LADDS::AltitudeBasedDecomposition::getLeavingPartic
       particles.push_back(particle);
     }
   }
+
+  // std::cout << "Leaving particles: " << particles.size() << std::endl;
+  // for (auto &particle : particles) {
+  //   std::cout << "Leaving particle: " << particle.getID() << " "
+  //             << autopas::utils::ArrayUtils::to_string(particle.getPosition()) << std::endl;
+  // }
+
   return particles;
 }

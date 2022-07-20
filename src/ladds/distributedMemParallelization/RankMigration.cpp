@@ -92,17 +92,15 @@ std::vector<LADDS::Particle> LADDS::RankMigration::communicateParticles(std::vec
     // trigger both non-blocking sends before doing both blocking receives
     // send left (negative direction)
     const int commDir = 0;
-    const auto altBoxMin = altitudeBasedDecomposition->getAltitudeOfRank(coords[commDir]);
-    const auto altBoxMax = altitudeBasedDecomposition->getAltitudeOfRank(coords[commDir] + 1);
+    const auto altBoxMinSquared = std::pow(altitudeBasedDecomposition->getAltitudeOfRank(coords[commDir]), 2);
+    const auto altBoxMaxSquared = std::pow(altitudeBasedDecomposition->getAltitudeOfRank(coords[commDir] + 1), 2);
     if (coords[commDir] != 0) {
       // sort particles that are leaving in the negative direction to the end of leavingParticles
       auto leavingParticlesIter =
           std::partition(leavingParticles.begin(), leavingParticles.end(), [&](const Particle &p) {
-            return p.getPosition()[commDir] < altBoxMin;
+            return autopas::utils::ArrayMath::dot(p.getPosition(), p.getPosition()) > altBoxMinSquared;
           });
       const int rankLeft = getNeighborRank(coords, commDir, std::minus<>());
-      // std::cout << "rank: " << coords[commDir] << " sending "
-      // << std::distance(leavingParticlesIter, leavingParticles.end()) << " to: " << rankLeft << std::endl;
       particleCommunicator.sendParticles(leavingParticlesIter, leavingParticles.end(), rankLeft, comm);
 
       // remove them from this container
@@ -122,11 +120,9 @@ std::vector<LADDS::Particle> LADDS::RankMigration::communicateParticles(std::vec
       // sort particles that are leaving in the positive direction to the end of leavingParticles
       auto leavingParticlesIter =
           std::partition(leavingParticles.begin(), leavingParticles.end(), [&](const Particle &p) {
-            return p.getPosition()[commDir] > altBoxMax;
+            return autopas::utils::ArrayMath::dot(p.getPosition(), p.getPosition()) > altBoxMaxSquared;
           });
       const int rankRight = getNeighborRank(coords, commDir, std::plus<>());
-      // std::cout << "rank: " << coords[commDir] << " sending "
-      // << std::distance(leavingParticlesIter, leavingParticles.end()) << " to: " << rankRight << std::endl;
       particleCommunicator.sendParticles(leavingParticlesIter, leavingParticles.end(), rankRight, comm);
 
       // remove them from this container
