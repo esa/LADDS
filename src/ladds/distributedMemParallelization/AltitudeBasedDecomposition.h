@@ -37,7 +37,7 @@ class AltitudeBasedDecomposition : public DomainDecomposition {
    * @param  autopas autopas container
    * @retval vector of particles
    */
-  std::vector<Particle> getLeavingParticles(const AutoPas_t &autopas) const override;
+  std::vector<Particle> getAndRemoveLeavingParticles(AutoPas_t &autopas) const override;
 
   /**
    * Get information about the grid structure

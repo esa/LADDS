@@ -103,16 +103,7 @@ std::vector<LADDS::Particle> LADDS::RankMigration::communicateParticles(std::vec
       const int rankLeft = getNeighborRank(coords, commDir, std::minus<>());
       particleCommunicator.sendParticles(leavingParticlesIter, leavingParticles.end(), rankLeft, comm);
 
-      // remove them from this container
-      // std::cout << "Autopas size: " << autopas.getNumberOfParticles() << std::endl;
-      for (auto particleIter = leavingParticlesIter; particleIter < leavingParticles.end(); ++particleIter) {
-        // std::cout << "Removing particle: " << particleIter->getID() << " "
-        // << autopas::utils::ArrayUtils::to_string(particleIter->getPosition()) << std::endl;
-        autopas.deleteParticle(*particleIter);
-      }
-      // std::cout << "Autopas size: " << autopas.getNumberOfParticles() << std::endl;
       // clip sent particles
-
       leavingParticles.erase(leavingParticlesIter, leavingParticles.end());
     }
 
@@ -125,15 +116,6 @@ std::vector<LADDS::Particle> LADDS::RankMigration::communicateParticles(std::vec
           });
       const int rankRight = getNeighborRank(coords, commDir, std::plus<>());
       particleCommunicator.sendParticles(leavingParticlesIter, leavingParticles.end(), rankRight, comm);
-
-      // remove them from this container
-      // std::cout << "Autopas size: " << autopas.getNumberOfParticles() << std::endl;
-      for (auto particleIter = leavingParticlesIter; particleIter < leavingParticles.end(); ++particleIter) {
-        // std::cout << "Removing particle: " << particleIter->getID() << " "
-        // << autopas::utils::ArrayUtils::to_string(particleIter->getPosition()) << std::endl;
-        autopas.deleteParticle(*particleIter);
-      }
-      // std::cout << "Autopas size: " << autopas.getNumberOfParticles() << std::endl;
 
       // clip sent particles
       leavingParticles.erase(leavingParticlesIter, leavingParticles.end());

@@ -77,7 +77,7 @@ std::tuple<std::array<int, 3>, std::array<int, 3>, std::array<int, 3>> LADDS::Re
   return {dims, periods, coords};
 }
 
-std::vector<LADDS::Particle> LADDS::RegularGridDecomposition::getLeavingParticles(const AutoPas_t &autopas) const {
+std::vector<LADDS::Particle> LADDS::RegularGridDecomposition::getAndRemoveLeavingParticles(AutoPas_t &autopas) const {
   throw std::runtime_error(
       "This function is not implemeted. Leaving particles can be identified with autopas.updateContainer");
 }

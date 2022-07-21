@@ -76,7 +76,7 @@ class DomainDecomposition {
    * @param  autopas autopas container
    * @retval vector of particles
    */
-  [[nodiscard]] virtual std::vector<Particle> getLeavingParticles(const AutoPas_t &autopas) const = 0;
+  [[nodiscard]] virtual std::vector<Particle> getAndRemoveLeavingParticles(AutoPas_t &autopas) const = 0;
 
   /**
    * Get the communicator used by this decomposition.

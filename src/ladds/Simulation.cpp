@@ -274,6 +274,11 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
   // in tuning mode ignore the iteration counter
   for (size_t iteration = startingIteration; iteration <= lastIteration or tuningMode; ++iteration) {
+    // print all particles in autopas container
+    // for (auto &p : autopas) {
+    //   std::cout << "Rank " << rank << " has particle " << p.getID() << " at "
+    //             << autopas::utils::ArrayUtils::to_string(p.getPosition()) << std::endl;
+    // }
     // in case we have completed some iterations without a collisions
     // we set parentIDs to max to disable spawn protection for particles
     // recently created through breakups
@@ -299,13 +304,18 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     timers.constellationInsertion.stop();
 
     timers.containerUpdate.start();
-    // (potentially) update the internal data structure and collect particles which are leaving the container.
 
+    // (potentially) update the internal data structure and collect particles which are leaving the container.
     auto leavingParticles = autopas.updateContainer();
+
     // for altitude decomp we cannot rely on autopas square boxes, thus
-    // we need to update the leaving particles manually
+    // we need to update the leaving particles manually as well
     if (decompositionType == "Altitude") {
-      leavingParticles = domainDecomposition.getLeavingParticles(autopas);
+      auto manuallyLeavingParticles = domainDecomposition.getAndRemoveLeavingParticles(autopas);
+      // add them to already leaving particles
+      leavingParticles.insert(leavingParticles.end(), manuallyLeavingParticles.begin(), manuallyLeavingParticles.end());
+      // avoid duplicates if they leave the box and the altitude is too high/low
+      leavingParticles.erase(unique(leavingParticles.begin(), leavingParticles.end()), leavingParticles.end());
     }
     timers.containerUpdate.stop();
 
@@ -335,8 +345,8 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     }
     // all particles still need to be added, even if marked as deleted to not mess up autopas' internal counters.
     for (const auto &p : incomingParticles) {
-      std::cout << "Rank " << rank << " - Adding particle " << p.getID() << " at "
-                << autopas::utils::ArrayUtils::to_string(p.getPosition()) << std::endl;
+      // std::cout << "Rank " << rank << " - Adding particle " << p.getID() << " at "
+      // << autopas::utils::ArrayUtils::to_string(p.getPosition()) << std::endl;
       autopas.addParticle(p);
     }
 
@@ -568,7 +578,6 @@ void Simulation::processCollisions(size_t iteration,
                                    const CollisionFunctor::CollisionCollectionT &collisions,
                                    ConjuctionWriterInterface &conjunctionWriter,
                                    BreakupWrapper *breakupWrapper) {
-  std::cout << "Processing collisions in " << iteration << std::endl;
   if (not collisions.empty()) {
     std::cout << collisions.size() << " collisions found" << std::endl;
     SPDLOG_LOGGER_TRACE(logger.get(), "The following particles collided between ranks:");

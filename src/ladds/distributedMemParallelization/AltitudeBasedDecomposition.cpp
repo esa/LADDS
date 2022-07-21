@@ -110,21 +110,24 @@ double LADDS::AltitudeBasedDecomposition::getAltitudeOfRank(const int rank) cons
   return altitudeIntervals[rank + 1];
 }
 
-std::vector<LADDS::Particle> LADDS::AltitudeBasedDecomposition::getLeavingParticles(const AutoPas_t &autopas) const {
+std::vector<LADDS::Particle> LADDS::AltitudeBasedDecomposition::getAndRemoveLeavingParticles(AutoPas_t &autopas) const {
   std::vector<LADDS::Particle> particles;
   int rank{};
   autopas::AutoPas_MPI_Comm_rank(communicator, &rank);
   for (auto &particle : autopas) {
+    // std::cout << "Rank " << rank << " checking for leaving " << particle.getID() << " at "
+    //           << autopas::utils::ArrayUtils::to_string(particle.getPosition()) << " supposed to be in "
+    //           << getRank(particle.getPosition()) << std::endl;
     if (this->getRank(particle.getPosition()) != rank) {
       particles.push_back(particle);
+      autopas.deleteParticle(particle);
     }
   }
 
-  std::cout << "Rank:" << rank << " Leaving particles: " << particles.size() << std::endl;
-  for (auto &particle : particles) {
-    std::cout << "Rank:" << rank << " Leaving particle: " << particle.getID() << " "
-              << autopas::utils::ArrayUtils::to_string(particle.getPosition()) << std::endl;
-  }
-
+  // std::cout << "Rank:" << rank << " Leaving particles: " << particles.size() << std::endl;
+  // for (auto &particle : particles) {
+  //   std::cout << "Rank:" << rank << " Leaving particle: " << particle.getID() << " "
+  //             << autopas::utils::ArrayUtils::to_string(particle.getPosition()) << std::endl;
+  // }
   return particles;
 }
