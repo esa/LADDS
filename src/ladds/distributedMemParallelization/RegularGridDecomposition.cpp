@@ -57,13 +57,17 @@ LADDS::RegularGridDecomposition::RegularGridDecomposition(LADDS::ConfigReader &c
 
 int LADDS::RegularGridDecomposition::getRank(const std::array<double, 3> &coordinates) const {
   // throw std::runtime_error("This function is currently producing wrong results. To be fixed.");
+  int rank{};
+  autopas::AutoPas_MPI_Comm_rank(communicator, &rank);
   using autopas::utils::ArrayMath::abs;
   using autopas::utils::ArrayMath::div;
   using autopas::utils::ArrayMath::sub;
   using autopas::utils::ArrayUtils::static_cast_array;
 
+  // we need to translate to 0 avoid problems with negative coordinates
+  const auto translatedCoords = sub(coordinates, globalBoxMin);
   const auto localBoxLength = abs(sub(localBoxMax, localBoxMin));
-  const auto rankGridCoords = static_cast_array<int>(div(coordinates, localBoxLength));
+  const auto rankGridCoords = static_cast_array<int>(div(translatedCoords, localBoxLength));
   int targetRank{};
   autopas::AutoPas_MPI_Cart_rank(communicator, rankGridCoords.data(), &targetRank);
   return targetRank;
