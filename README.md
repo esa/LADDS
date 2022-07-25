@@ -17,6 +17,7 @@ Codebase for the ARIADNA Study between TU Munich and ESA's Advanced Concepts Tea
 ### Optional
 * Doxygen
 * clang-format-9
+* MPI
 
 ## Important Dependencies
 The following codes play an important role in this project. They are downloaded and managed via CMake at configure time:
@@ -44,6 +45,11 @@ The simulation requires one `yaml` file as argument which specifies the necessar
 ```bash
 ./ladds myInput.yaml
 ```
+or with MPI and e.g. 42 ranks:
+```bash
+mpiexec -n 42 ./ladds myInput.yaml
+```
+
 For an overview of all possible options see [`cfg/default_cfg.yaml`](cfg/default_cfg.yaml). Most parameters have
 a default value which is used when they are left unspecified. The full configuration, including defaulted
 values, is shown in the console output when executing the simulation.
@@ -140,7 +146,13 @@ defining the following fields:
 LADDS has multiple options for output that can be (de)activated mostly independent of each other via YAML. See [`cfg/default_cfg.yaml`](cfg/default_cfg.yaml) for relevant options.
 
 ### VTK
-`.vtu` files in XML/ASCII layout that can be loaded into [Paraview](https://www.paraview.org/) for visualization.
+#### Particles
+`.vtu` files in XML/ASCII layout that can be loaded into [Paraview](https://www.paraview.org/) for visualization. They contain all particles positions and (most of) their properties.
+There will be one `vtu` file per rank and visualization step, as well as one `pvtu` file per step, which links to all files of the same step.
+
+#### MPI Decomposition
+If the selected MPI decomposition supports it, `vts` and `pvts` files are created similar to those for particles.
+These however, contain information to visualize the spacial MPI decomposition in [Paraview](https://www.paraview.org/).
 
 ### HDF5
 A single `.h5` containing particle and conjunction data from a full simulation run with the following structure:
@@ -166,6 +178,10 @@ Collision data is tracked every iteration, particle data only in intervals that 
 `ConstantProperties` contains properties of all particles that existed over the course of the simulation. 
 Due to burn ups or breakups the number of particles in any iteration might differ but `id`s are unique! 
 To keep file size reasonable compression is supported.
+
+If MPI is used one HDF5 file per rank is written.
+`ParticleData` contains the information of all particles that at any point passed through this rank.
+`CollisionData` contains all collisions that happened in this rank.
 
 ### CSV
 If HDF5 output is disabled entirely, collision data is written in a `.csv` file in ASCII layout.
