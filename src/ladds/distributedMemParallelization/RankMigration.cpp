@@ -94,6 +94,7 @@ std::vector<LADDS::Particle> LADDS::RankMigration::communicateParticles(std::vec
     const int commDir = 0;
     const auto altBoxMinSquared = std::pow(altitudeBasedDecomposition->getAltitudeOfRank(coords[commDir]), 2);
     const auto altBoxMaxSquared = std::pow(altitudeBasedDecomposition->getAltitudeOfRank(coords[commDir] + 1), 2);
+
     if (coords[commDir] != 0) {
       // sort particles that are leaving in the negative direction to the end of leavingParticles
       auto leavingParticlesIter =

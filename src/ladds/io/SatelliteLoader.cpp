@@ -14,7 +14,7 @@
 
 namespace LADDS {
 
-void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, const DomainDecomposition &decomp) {
+void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, DomainDecomposition &decomp) {
   std::vector<Particle> satellites;
 
   // if the value is not set this is the only place that should define the default value as it is the first to access it
@@ -57,6 +57,9 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
 
   int rank{};
   autopas::AutoPas_MPI_Comm_rank(AUTOPAS_MPI_COMM_WORLD, &rank);
+
+  // We rebalance our domain decomposition based on particle positions.
+  decomp.rebalanceDecomposition(satellites, autopas);
 
   // load particle vector into autopas while checking that they are within the desired altitude
   const auto maxAltitude = config.get<double>("sim/maxAltitude");

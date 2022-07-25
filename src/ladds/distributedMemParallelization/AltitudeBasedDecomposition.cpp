@@ -131,3 +131,42 @@ std::vector<LADDS::Particle> LADDS::AltitudeBasedDecomposition::getAndRemoveLeav
   // }
   return particles;
 }
+
+void LADDS::AltitudeBasedDecomposition::rebalanceDecomposition(const std::vector<LADDS::Particle> &particles,
+                                                               AutoPas_t &autopas) {
+  std::vector<double> squaredAltitudes;
+  squaredAltitudes.reserve(particles.size());
+
+  int numberOfBins{};
+  int numberOfParticles = particles.size();
+  autopas::AutoPas_MPI_Comm_size(AUTOPAS_MPI_COMM_WORLD, &numberOfBins);
+  int particlesPerRank = std::ceil(numberOfParticles / numberOfBins);
+
+  // Collect all altitudes
+  for (auto &particle : particles) {
+    squaredAltitudes.push_back(autopas::utils::ArrayMath::dot(particle.getPosition(), particle.getPosition()));
+  }
+
+  // Sort the array, then we can just get the equal partitions based on altitude from that
+  std::sort(squaredAltitudes.begin(), squaredAltitudes.end());
+
+  // Now store the altitudes as boundaries, first entry will always be 0, last always remains maxAltitude
+  for (int i = 1; i < numberOfBins; i++) {
+    // include particle at that position as well
+    double altitude = std::sqrt(squaredAltitudes[(i * particlesPerRank) - 1]);
+
+    altitudeIntervals[i] = altitude;
+  }
+
+  // get coordinates of this rank within the decomposition grid
+  const auto communicator = this->getCommunicator();
+  int rank{};
+  autopas::AutoPas_MPI_Comm_rank(communicator, &rank);
+  localBoxMin = {-altitudeIntervals[rank + 1], -altitudeIntervals[rank + 1], -altitudeIntervals[rank + 1]};
+  localBoxMax = {altitudeIntervals[rank + 1], altitudeIntervals[rank + 1], altitudeIntervals[rank + 1]};
+
+  autopas.resizeBox(localBoxMin, localBoxMax);
+
+  std::cout << "Recomputed altitude intervals: " << autopas::utils::ArrayUtils::to_string(altitudeIntervals)
+            << std::endl;
+}

@@ -256,7 +256,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
   const auto timeout = computeTimeout(config);
 
   size_t totalConjunctions{0ul};
-
+  size_t migratedParticlesLocal{0ul};
   std::unique_ptr<DecompositionLogger> decompositionLogger{};
 
   if (decompositionType == "Altitude") {
@@ -317,6 +317,9 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       // avoid duplicates if they leave the box and the altitude is too high/low
       leavingParticles.erase(unique(leavingParticles.begin(), leavingParticles.end()), leavingParticles.end());
     }
+
+    migratedParticlesLocal = leavingParticles.size();
+
     timers.containerUpdate.stop();
 
     timers.particleCommunication.start();
@@ -404,8 +407,11 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     timers.output.start();
     ++iterationsSinceLastCollision;
     if (iteration % progressOutputFrequency == 0 or iteration == lastIteration) {
-      printProgressOutput(
-          iteration, autopas.getNumberOfParticles(), totalConjunctions, domainDecomposition.getCommunicator());
+      printProgressOutput(iteration,
+                          autopas.getNumberOfParticles(),
+                          totalConjunctions,
+                          migratedParticlesLocal,
+                          domainDecomposition.getCommunicator());
     }
     // Visualization:
     if (vtkWriteFrequency and (iteration % vtkWriteFrequency == 0 or iteration == lastIteration)) {
@@ -638,18 +644,24 @@ void Simulation::printNumParticlesPerRank(const autopas::AutoPas<Particle> &auto
 void Simulation::printProgressOutput(size_t iteration,
                                      size_t numParticlesLocal,
                                      size_t totalConjunctionsLocal,
+                                     size_t localMigrations,
                                      autopas::AutoPas_MPI_Comm const &comm) {
   unsigned long numParticlesGlobal{};
   unsigned long totalConjunctionsGlobal{};
+  unsigned long migratedParticlesGlobal{};
+  autopas::AutoPas_MPI_Reduce(
+      &localMigrations, &migratedParticlesGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, comm);
+
   autopas::AutoPas_MPI_Reduce(
       &numParticlesLocal, &numParticlesGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, comm);
   autopas::AutoPas_MPI_Reduce(
       &totalConjunctionsLocal, &totalConjunctionsGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, comm);
   SPDLOG_LOGGER_INFO(logger.get(),
-                     "It {} | Total particles: {} | Total conjunctions: {}",
+                     "It {} | Total particles: {} | Total conjunctions: {} | Migrated particles: {}",
                      iteration,
                      numParticlesGlobal,
-                     totalConjunctionsGlobal);
+                     totalConjunctionsGlobal,
+                     migratedParticlesGlobal);
 }
 
 }  // namespace LADDS

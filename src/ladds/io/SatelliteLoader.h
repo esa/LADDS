@@ -23,7 +23,7 @@ namespace LADDS::SatelliteLoader {
  * @param config
  * @param decomp Needed for the communicator
  */
-void loadSatellites(AutoPas_t &autopas, ConfigReader &config, const DomainDecomposition &decomp);
+void loadSatellites(AutoPas_t &autopas, ConfigReader &config, DomainDecomposition &decomp);
 
 /**
  * Parse constellation information and prepare satellites for insertion.

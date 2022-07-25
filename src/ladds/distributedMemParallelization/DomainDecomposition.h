@@ -76,13 +76,24 @@ class DomainDecomposition {
    * @param  autopas autopas container
    * @retval vector of particles
    */
-  [[nodiscard]] virtual std::vector<Particle> getAndRemoveLeavingParticles(AutoPas_t &autopas) const = 0;
+  virtual std::vector<Particle> getAndRemoveLeavingParticles(AutoPas_t &autopas) const {
+    throw std::runtime_error(
+        "This function is not implemeted. Leaving particles can be identified with autopas.updateContainer");
+  }
 
   /**
    * Get the communicator used by this decomposition.
    * @return
    */
   autopas::AutoPas_MPI_Comm getCommunicator() const;
+
+  /**
+   * Balances the domain decomposition based on particle locations.
+   * @param  &particles: vector of all particles in all ranks
+   */
+  virtual void rebalanceDecomposition(const std::vector<LADDS::Particle> &particles, AutoPas_t &autopas) {
+    // This function is currently not implemented.
+  }
 
  protected:
   std::array<double, 3> globalBoxMin{};

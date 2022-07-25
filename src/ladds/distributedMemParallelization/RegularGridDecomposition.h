@@ -30,12 +30,5 @@ class RegularGridDecomposition : public DomainDecomposition {
    * @return tuple{dimensions, periods, grid coordinates of current rank}
    */
   std::tuple<std::array<int, 3>, std::array<int, 3>, std::array<int, 3>> getGridInfo() const;
-
-  /**
-   * Get the particles which are leaving the local domain.
-   * @param  autopas autopas container
-   * @retval vector of particles
-   */
-  std::vector<Particle> getAndRemoveLeavingParticles(AutoPas_t &autopas) const override;
 };
 }  // namespace LADDS

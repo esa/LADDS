@@ -62,5 +62,11 @@ class AltitudeBasedDecomposition : public DomainDecomposition {
    * @retval std::vector<double>: The vector of logspaced numbers.
    */
   [[nodiscard]] std::vector<double> logspace(const double a, const double b, const int k);
+
+  /**
+   * Balances the domain decomposition based on particle locations.
+   * @param  &particles: vector of all particles in all ranks
+   */
+  void rebalanceDecomposition(const std::vector<LADDS::Particle> &particles, AutoPas_t &autopas) override;
 };
 }  // namespace LADDS
