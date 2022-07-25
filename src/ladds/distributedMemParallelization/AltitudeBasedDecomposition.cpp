@@ -8,10 +8,13 @@
 
 #include <autopas/utils/ArrayMath.h>
 #include <autopas/utils/WrapOpenMP.h>
+#include <spdlog/spdlog.h>
 
+#include "ladds/TypeDefinitions.h"
 #include "satellitePropagator/physics/Constants.h"
 
 LADDS::AltitudeBasedDecomposition::AltitudeBasedDecomposition(LADDS::ConfigReader &config) {
+  auto logger = spdlog::get(LADDS_SPD_LOGGER_NAME);
   // initialize a one-dimensional MPI world in which split the altitudes
   int numRanks{};
   autopas::AutoPas_MPI_Comm_size(AUTOPAS_MPI_COMM_WORLD, &numRanks);
@@ -68,7 +71,9 @@ LADDS::AltitudeBasedDecomposition::AltitudeBasedDecomposition(LADDS::ConfigReade
 }
 
 int LADDS::AltitudeBasedDecomposition::getRank(const std::array<double, 3> &coordinates) const {
-  // std::cout << "Getting rank for coordinates " << autopas::utils::ArrayUtils::to_string(coordinates) << ::std::endl;
+  auto logger = spdlog::get(LADDS_SPD_LOGGER_NAME);
+  SPDLOG_LOGGER_TRACE(
+      logger.get(), "Getting rank for coordinates {}", autopas::utils::ArrayUtils::to_string(coordinates));
 
   using autopas::utils::ArrayMath::div;
   using autopas::utils::ArrayMath::sub;
@@ -115,20 +120,18 @@ std::vector<LADDS::Particle> LADDS::AltitudeBasedDecomposition::getAndRemoveLeav
   int rank{};
   autopas::AutoPas_MPI_Comm_rank(communicator, &rank);
   for (auto &particle : autopas) {
-    // std::cout << "Rank " << rank << " checking for leaving " << particle.getID() << " at "
-    //           << autopas::utils::ArrayUtils::to_string(particle.getPosition()) << " supposed to be in "
-    //           << getRank(particle.getPosition()) << std::endl;
+    auto logger = spdlog::get(LADDS_SPD_LOGGER_NAME);
+    SPDLOG_LOGGER_TRACE(logger.get(),
+                        "Checking particle {} at Position {} - supposed to be in rank {}",
+                        particle.getId(),
+                        autopas::utils::ArrayUtils::to_string(particle.getPosition),
+                        getRank(particle.getPosition()));
     if (this->getRank(particle.getPosition()) != rank) {
       particles.push_back(particle);
       autopas.deleteParticle(particle);
     }
   }
 
-  // std::cout << "Rank:" << rank << " Leaving particles: " << particles.size() << std::endl;
-  // for (auto &particle : particles) {
-  //   std::cout << "Rank:" << rank << " Leaving particle: " << particle.getID() << " "
-  //             << autopas::utils::ArrayUtils::to_string(particle.getPosition()) << std::endl;
-  // }
   return particles;
 }
 
@@ -167,6 +170,7 @@ void LADDS::AltitudeBasedDecomposition::rebalanceDecomposition(const std::vector
 
   autopas.resizeBox(localBoxMin, localBoxMax);
 
-  std::cout << "Recomputed altitude intervals: " << autopas::utils::ArrayUtils::to_string(altitudeIntervals)
-            << std::endl;
+  auto logger = spdlog::get(LADDS_SPD_LOGGER_NAME);
+  SPDLOG_LOGGER_INFO(
+      logger.get(), "Recomputed altitude intervals: {}", autopas::utils::ArrayUtils::to_string(altitudeIntervals));
 }

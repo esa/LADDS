@@ -15,6 +15,7 @@ std::vector<LADDS::Particle> LADDS::RankMigration::communicateParticles(std::vec
   const auto &comm = decomposition.getCommunicator();
   const auto &localBoxMin = autopas.getBoxMin();
   const auto &localBoxMax = autopas.getBoxMax();
+  auto logger = spdlog::get(LADDS_SPD_LOGGER_NAME);
 
   ParticleCommunicator particleCommunicator;
   std::vector<LADDS::Particle> incomingParticles;
@@ -88,7 +89,6 @@ std::vector<LADDS::Particle> LADDS::RankMigration::communicateParticles(std::vec
                  dynamic_cast<const AltitudeBasedDecomposition *>(&decomposition)) {
     const auto &[coordsMax, periods, coords] = altitudeBasedDecomposition->getGridInfo();
 
-    // std::cout << "Rank" << coords[0] << "leavingParticles.size() =" << leavingParticles.size() << std::endl;
     // trigger both non-blocking sends before doing both blocking receives
     // send left (negative direction)
     const int commDir = 0;
@@ -102,6 +102,15 @@ std::vector<LADDS::Particle> LADDS::RankMigration::communicateParticles(std::vec
             return autopas::utils::ArrayMath::dot(p.getPosition(), p.getPosition()) > altBoxMinSquared;
           });
       const int rankLeft = getNeighborRank(coords, commDir, std::minus<>());
+
+      // get left neighbors lower limit to check particle is not skipping right through it
+      const auto leftNeighboraltBoxMinSquared = std::pow(altitudeBasedDecomposition->getAltitudeOfRank(rankLeft), 2);
+      for (auto &p : leavingParticles) {
+        if (autopas::utils::ArrayMath::dot(p.getPosition(), p.getPosition()) < leftNeighboraltBoxMinSquared) {
+          SPDLOG_LOGGER_WARN(
+              logger.get(), "Particle {} skipping through left neighbor {}  while migrating.", p.getID(), rankLeft);
+        }
+      }
       particleCommunicator.sendParticles(leavingParticlesIter, leavingParticles.end(), rankLeft, comm);
 
       // clip sent particles
@@ -116,6 +125,16 @@ std::vector<LADDS::Particle> LADDS::RankMigration::communicateParticles(std::vec
             return autopas::utils::ArrayMath::dot(p.getPosition(), p.getPosition()) > altBoxMaxSquared;
           });
       const int rankRight = getNeighborRank(coords, commDir, std::plus<>());
+
+      // get right neighbors upper limit to check particle is not skipping right through it
+      const auto leftNeighboraltBoxMaxSquared = std::pow(altitudeBasedDecomposition->getAltitudeOfRank(rankRight), 2);
+      for (auto &p : leavingParticles) {
+        if (autopas::utils::ArrayMath::dot(p.getPosition(), p.getPosition()) > leftNeighboraltBoxMaxSquared) {
+          SPDLOG_LOGGER_WARN(
+              logger.get(), "Particle {} skipping through right neighbor {}  while migrating.", p.getID(), rankRight);
+        }
+      }
+
       particleCommunicator.sendParticles(leavingParticlesIter, leavingParticles.end(), rankRight, comm);
 
       // clip sent particles
@@ -136,7 +155,7 @@ std::vector<LADDS::Particle> LADDS::RankMigration::communicateParticles(std::vec
     leavingParticles.erase(leavingParticles.begin(), leavingParticles.end());
     particleCommunicator.waitAndFlushBuffers();
 
-    // std::cout << "Rank " << coords[commDir] << " received " << incomingParticles.size() << " particles" << std::endl;
+    SPDLOG_LOGGER_DEBUG(logger.get(), "Rank {} received {} particles", coords[commDir], incomingParticles.size());
     return incomingParticles;
   } else {
     throw std::runtime_error("No particle communication implemented for the chosen decomposition!");

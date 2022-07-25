@@ -260,7 +260,8 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
   std::unique_ptr<DecompositionLogger> decompositionLogger{};
 
   if (decompositionType == "Altitude") {
-    const auto *gridDecomp = dynamic_cast<AltitudeBasedDecomposition *>(&domainDecomposition);
+    // const auto *gridDecomp = dynamic_cast<AltitudeBasedDecomposition *>(&domainDecomposition);
+    SPDLOG_LOGGER_INFO(logger.get(), "Currently no logger for AltitudeBasedDecomposition, skipping.");
   } else if (decompositionType == "RegularGrid") {
     const auto *regularGridDecomp = dynamic_cast<const RegularGridDecomposition *>(&domainDecomposition);
     decompositionLogger = std::make_unique<RegularGridDecompositionLogger>(config, *regularGridDecomp);
@@ -274,11 +275,6 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
   // in tuning mode ignore the iteration counter
   for (size_t iteration = startingIteration; iteration <= lastIteration or tuningMode; ++iteration) {
-    // print all particles in autopas container
-    // for (auto &p : autopas) {
-    //   std::cout << "Rank " << rank << " has particle " << p.getID() << " at "
-    //             << autopas::utils::ArrayUtils::to_string(p.getPosition()) << std::endl;
-    // }
     // in case we have completed some iterations without a collisions
     // we set parentIDs to max to disable spawn protection for particles
     // recently created through breakups
@@ -302,7 +298,6 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       updateConstellation(autopas, constellations, delayedInsertion, constellationCutoff);
     }
     timers.constellationInsertion.stop();
-
     timers.containerUpdate.start();
 
     // (potentially) update the internal data structure and collect particles which are leaving the container.
@@ -319,7 +314,6 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     }
 
     migratedParticlesLocal = leavingParticles.size();
-
     timers.containerUpdate.stop();
 
     timers.particleCommunication.start();
@@ -333,7 +327,6 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                                                                   8.,
                                                                   collisionDistanceFactor,
                                                                   minDetectionRadius);
-
     timers.collisionDetectionImmigrants.stop();
     totalConjunctions += collisions.size();
 
@@ -348,8 +341,6 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     }
     // all particles still need to be added, even if marked as deleted to not mess up autopas' internal counters.
     for (const auto &p : incomingParticles) {
-      // std::cout << "Rank " << rank << " - Adding particle " << p.getID() << " at "
-      // << autopas::utils::ArrayUtils::to_string(p.getPosition()) << std::endl;
       autopas.addParticle(p);
     }
 
@@ -430,10 +421,6 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       hdf5Writer->writeParticles(iteration, autopas);
     }
     timers.output.stop();
-    // Somehow below line is always printed?
-    // if (config.get<std::string>("sim/logLevel").compare("trace")) {
-    //   printNumParticlesPerRank(autopas, domainDecomposition);
-    // }
   }
   printNumParticlesPerRank(autopas, domainDecomposition);
   SPDLOG_LOGGER_INFO(logger.get(), "Total conjunctions: {}", totalConjunctions);
@@ -585,11 +572,8 @@ void Simulation::processCollisions(size_t iteration,
                                    ConjuctionWriterInterface &conjunctionWriter,
                                    BreakupWrapper *breakupWrapper) {
   if (not collisions.empty()) {
-    std::cout << collisions.size() << " collisions found" << std::endl;
     SPDLOG_LOGGER_TRACE(logger.get(), "The following particles collided between ranks:");
     for (const auto &[p1, p2, _, __] : collisions) {
-      std::cout << "Collision between " << autopas::utils::ArrayUtils::to_string(p1->getPosition()) << " and "
-                << autopas::utils::ArrayUtils::to_string(p2->getPosition()) << std::endl;
       SPDLOG_LOGGER_TRACE(logger.get(),
                           "({}, {})",
                           autopas::utils::ArrayUtils::to_string(p1->getPosition()),

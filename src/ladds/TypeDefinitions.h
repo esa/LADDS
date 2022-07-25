@@ -11,3 +11,5 @@
 #include "ladds/particle/Particle.h"
 
 using AutoPas_t = autopas::AutoPas<LADDS::Particle>;
+
+const std::string LADDS_SPD_LOGGER_NAME = "laddsLog";
