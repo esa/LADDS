@@ -309,8 +309,6 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       auto manuallyLeavingParticles = domainDecomposition.getAndRemoveLeavingParticles(autopas);
       // add them to already leaving particles
       leavingParticles.insert(leavingParticles.end(), manuallyLeavingParticles.begin(), manuallyLeavingParticles.end());
-      // avoid duplicates if they leave the box and the altitude is too high/low
-      leavingParticles.erase(unique(leavingParticles.begin(), leavingParticles.end()), leavingParticles.end());
     }
 
     migratedParticlesLocal = leavingParticles.size();
@@ -572,9 +570,9 @@ void Simulation::processCollisions(size_t iteration,
                                    ConjuctionWriterInterface &conjunctionWriter,
                                    BreakupWrapper *breakupWrapper) {
   if (not collisions.empty()) {
-    SPDLOG_LOGGER_TRACE(logger.get(), "The following particles collided between ranks:");
+    SPDLOG_LOGGER_DEBUG(logger.get(), "The following particles collided between ranks:");
     for (const auto &[p1, p2, _, __] : collisions) {
-      SPDLOG_LOGGER_TRACE(logger.get(),
+      SPDLOG_LOGGER_DEBUG(logger.get(),
                           "({}, {})",
                           autopas::utils::ArrayUtils::to_string(p1->getPosition()),
                           autopas::utils::ArrayUtils::to_string(p2->getPosition()));
