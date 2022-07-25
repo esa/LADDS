@@ -37,6 +37,7 @@ class SimulationTest : public testing::TestWithParam<ParameterTuple> {
     config["sim"]["iterations"] = 1;
     config["sim"]["minAltitude"] = 150.;
     config["sim"]["prop"]["useKEPComponent"] = true;
+    config["sim"]["decompositionType"] = "RegularGrid";
 
     configReader = std::make_unique<LADDS::ConfigReader>(config, logger);
 

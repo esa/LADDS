@@ -29,6 +29,9 @@ class BreakupWrapperTest : public testing::Test {
     config["sim"]["iterations"] = 1;
     config["sim"]["breakup"]["enabled"] = true;
 
+    // init decomp in cfg file correctly
+    config["sim"]["decompositionType"] = "RegularGrid";
+
     configReader = std::make_unique<LADDS::ConfigReader>(config, logger);
     decomposition = std::make_unique<LADDS::RegularGridDecomposition>(*configReader);
     autopas = simulation.initAutoPas(*configReader, *decomposition);
