@@ -141,7 +141,7 @@ void HDF5Writer::writeConjunctions(size_t iteration, const CollisionFunctor::Col
   std::vector<HDF5Definitions::CollisionInfo> data;
   data.reserve(collisions.size());
 
-  for (const auto &[p1, p2, distanceSquare] : collisions) {
+  for (const auto &[p1, p2, distanceSquare, _] : collisions) {
     data.emplace_back<HDF5Definitions::CollisionInfo>(
         {static_cast<decltype(HDF5Definitions::CollisionInfo::idA)>(p1->getID()),
          static_cast<decltype(HDF5Definitions::CollisionInfo::idB)>(p2->getID()),

@@ -29,11 +29,12 @@ target_compile_features(${TEST_EXECUTABLE_NAME} PUBLIC cxx_std_17)
 
 target_link_libraries(
     ${TEST_EXECUTABLE_NAME}
-    gmock_main
+    gmock
     autopas
     autopasTools
     debris_sim_lib
     breakupModel_lib
+    z
     "$<$<BOOL:${LADDS_HDF5}>:hdf5::hdf5_hl;hdf5::hdf5;h5pp::h5pp>"
 )
 
@@ -51,9 +52,6 @@ target_compile_definitions(${TEST_EXECUTABLE_NAME}
     CFGDIRTEST=\"${PROJECT_SOURCE_DIR}/cfg/\"
     $<$<BOOL:${LADDS_HDF5}>:LADDS_HDF5=1>
 )
-
-set(TSAN_OPTIONS_STR "TSAN_OPTIONS=suppressions=${LADDS_SOURCE_DIR}/.tsanIgnoreList.txt ignore_noninstrumented_modules=1")
-set(LSAN_OPTIONS_STR "LSAN_OPTIONS=suppressions=${LADDS_SOURCE_DIR}/.lsanIgnoreList.txt ignore_noninstrumented_modules=1")
 
 gtest_discover_tests(${TEST_EXECUTABLE_NAME}
     PROPERTIES

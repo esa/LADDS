@@ -32,7 +32,7 @@ void ConjunctionLogger::log(size_t iteration, const Particle &p1, const Particle
 }
 
 void ConjunctionLogger::writeConjunctions(size_t iteration, const CollisionFunctor::CollisionCollectionT &collisions) {
-  for (const auto &[p1, p2, distanceSquare] : collisions) {
+  for (const auto &[p1, p2, distanceSquare, _] : collisions) {
     log(iteration, *p1, *p2, distanceSquare);
   }
 }

@@ -10,6 +10,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <limits>
 #include <string>
 
 namespace LADDS {
@@ -62,7 +63,7 @@ Constellation::Constellation(ConfigReader &constellationConfig, ConfigReader &co
 
   // calculate schedule with launch times for each plane in constellation
   schedule.resize(nShells);
-  for (int i = 0ul; i < timestamps.size() - 1; ++i) {
+  for (size_t i = 0ul; i < timestamps.size() - 1; ++i) {
     int nPlanes = static_cast<int>(shells[i][2]);
     double timeStepSize = (timestamps[i + 1] - timestamps[i]) / nPlanes;
 
@@ -116,7 +117,7 @@ std::vector<Particle> Constellation::tick() {
       while (static_cast<double>(timeActive) >= schedule[currentShellIndex][planesDeployed]) {
         auto planeSize = static_cast<size_t>(shells[currentShellIndex][3]);
         particles.reserve(particles.capacity() + planeSize);
-        for (int i = 0; i < planeSize; i++) {
+        for (size_t i = 0; i < planeSize; i++) {
           particles.push_back(satellites[0]);
           satellites.pop_front();
         }
@@ -176,7 +177,7 @@ std::vector<Particle> Constellation::readDatasetConstellation(const std::string 
   auto velocities = vel_csvReader.getLines();
 
   if (positions.size() != velocities.size()) {
-    std::cout << "Error: Position and velocity file have different number of lines." << std::endl;
+    throw std::runtime_error("Error: Position and velocity file have different number of lines.");
     return particleCollection;
   }
 
@@ -202,7 +203,8 @@ std::vector<Particle> Constellation::readDatasetConstellation(const std::string 
                                    Particle::ActivityState::evasivePreserving,
                                    mass,
                                    radius,
-                                   Particle::calculateBcInv(0., mass, radius, coefficientOfDrag));
+                                   Particle::calculateBcInv(0., mass, radius, coefficientOfDrag),
+                                   std::numeric_limits<size_t>::max());
                  });
   return particleCollection;
 }

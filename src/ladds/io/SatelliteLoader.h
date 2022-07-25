@@ -9,6 +9,7 @@
 #include "ConfigReader.h"
 #include "Logger.h"
 #include "ladds/TypeDefinitions.h"
+#include "ladds/distributedMemParallelization/DomainDecomposition.h"
 #include "ladds/particle/Constellation.h"
 #include "yaml-cpp/yaml.h"
 
@@ -20,8 +21,9 @@ namespace LADDS::SatelliteLoader {
  *
  * @param autopas
  * @param config
+ * @param decomp Needed for the communicator
  */
-void loadSatellites(AutoPas_t &autopas, ConfigReader &config, const Logger &logger);
+void loadSatellites(AutoPas_t &autopas, ConfigReader &config, const DomainDecomposition &decomp);
 
 /**
  * Parse constellation information and prepare satellites for insertion.

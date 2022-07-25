@@ -1,0 +1,3 @@
+,COSPAR_ID,NAME,BSTAR[1 / Earth Radius],M[kg],RADIUS[m],TYPE,r_x[km],r_y[km],r_z[km],v_x[km],v_y[km],v_z[km]
+0,BREAKUP_1,BREAKUP_1,0.01,10.0,0.5,passive,-6751.0,0.0001,0.0,0.0,-7.68,0.0
+1,BREAKUP_2,BREAKUP_2,0.01,10.0,0.5,passive,-6751.0,-0.0001,0.0,0.0,7.68,0.0

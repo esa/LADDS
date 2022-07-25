@@ -16,10 +16,13 @@
 
 #include "CollisionFunctor.h"
 #include "TypeDefinitions.h"
+#include "ladds/distributedMemParallelization/DomainDecomposition.h"
+#include "ladds/distributedMemParallelization/RegularGridDecomposition.h"
 #include "ladds/io/ConfigReader.h"
 #include "ladds/io/ConjunctionLogger.h"
 #include "ladds/io/Timers.h"
 #include "ladds/io/hdf5/HDF5Writer.h"
+#include "ladds/particle/BreakupWrapper.h"
 #include "ladds/particle/Constellation.h"
 #include "ladds/particle/Particle.h"
 
@@ -47,7 +50,7 @@ class Simulation {
    * @param config
    * @return
    */
-  [[nodiscard]] std::unique_ptr<AutoPas_t> initAutoPas(ConfigReader &config);
+  [[nodiscard]] std::unique_ptr<AutoPas_t> initAutoPas(ConfigReader &config, DomainDecomposition &domainDecomp);
 
   /**
    * Create and initialize the integrator.
@@ -99,6 +102,43 @@ class Simulation {
                                                                               double minDetectionRadius);
 
   /**
+   * Interact all incoming particles with all particles which potentially crossed its path since the last container
+   * update.
+   *
+   * These particles are found in a box around the immigrant's position -deltaT time ago.
+   * The box has a side length of 2x the maximum coverable distance by any particle.
+   *
+   * @note The first pointers in the returned tuple collection point to particles in the immigrant vector!
+   *
+   * @param autopas
+   * @param incomingParticles
+   * @param deltaT Time since the last container update.
+   * @param maxV Maximal velocity a particle is assumed to have. Has to be positive.
+   * @param collisionDistanceFactor See CollisionFunctor::_collisionDistanceFactor
+   * @param minDetectionRadius
+   * @return Collection of collision partners
+   */
+  CollisionFunctor::CollisionCollectionT collisionDetectionImmigrants(AutoPas_t &autopas,
+                                                                      std::vector<Particle> &incomingParticles,
+                                                                      double deltaT,
+                                                                      double maxV,
+                                                                      double collisionDistanceFactor,
+                                                                      double minDetectionRadius);
+
+  /**
+   * Auxiliary function to avoid code duplication. Triggers the writing of collisions and if necessary the breakup
+   * simulation. Also invokes the relevant timers.
+   * @param iteration
+   * @param collisions
+   * @param conjuctionWriter
+   * @param breakupWrapper
+   */
+  void processCollisions(size_t iteration,
+                         const CollisionFunctor::CollisionCollectionT &collisions,
+                         ConjuctionWriterInterface &conjunctionWriter,
+                         BreakupWrapper *breakupWrapper);
+
+  /**
    * Updates the configuration with the latest AutoPas configuration and writes it to a new YAML file.
    * @param config
    * @param autopas
@@ -109,13 +149,16 @@ class Simulation {
    * The main loop.
    * @param autopas
    * @param integrator
+   * @param constellations
    * @param config
+   * @param domainDecomposition
    * @return Number of observed collisions.
    */
   [[maybe_unused]] size_t simulationLoop(AutoPas_t &autopas,
                                          YoshidaIntegrator<AutoPas_t> &integrator,
                                          std::vector<Constellation> &constellations,
-                                         ConfigReader &config);
+                                         ConfigReader &config,
+                                         DomainDecomposition &domainDecomposition);
 
   /**
    * Inserts particles into autopas if they have a safe distance to existing particles.
@@ -133,9 +176,9 @@ class Simulation {
    * Distributes global IDs for all constellation particles and returns the resulting maxExistingParticleId.
    * @param autopas
    * @param constellations
-   * @return size_t maxExistingParticleId
+   * @return
    */
-  size_t setConstellationIDs(autopas::AutoPas<Particle> &autopas, std::vector<Constellation> &constellations);
+  void setConstellationIDs(autopas::AutoPas<Particle> &autopas, std::vector<Constellation> &constellations);
 
   /**
    * Remove all particles below a certain altitude from the particle container.
@@ -152,6 +195,48 @@ class Simulation {
    * @return timeout in seconds.
    */
   size_t computeTimeout(ConfigReader &config);
+
+  /**
+   * Send the given list of leaving particles to all (up to) 26 logical surrounding ranks and receive their leaving
+   * particles which are relevant for the local rank.
+   * @param leavingParticles in/out parameter of leaving particles. If everything worked the vector should be empty
+   * after the function call.
+   * @param autopas
+   * @param decomposition
+   * @return Vector of incoming particles.
+   */
+  std::vector<Particle> communicateParticles(std::vector<Particle> &leavingParticles,
+                                             autopas::AutoPas<Particle> &autopas,
+                                             const RegularGridDecomposition &decomposition);
+
+  /**
+   * Prints one line on the info log level stating every rank's number of particles, sorted by rank number.
+   * @param autopas
+   * @param decomposition
+   */
+  void printNumParticlesPerRank(const autopas::AutoPas<Particle> &autopas,
+                                const DomainDecomposition &decomposition) const;
+
+  /**
+   * Loggs global information about simulation progress to std::out from rank 1.
+   * @note Contains global communication to obtain full information.
+   * @param iteration
+   * @param numParticlesLocal
+   * @param totalConjunctionsLocal
+   * @param comm
+   */
+  void printProgressOutput(size_t iteration,
+                           size_t numParticlesLocal,
+                           size_t totalConjunctionsLocal,
+                           const autopas::AutoPas_MPI_Comm &comm);
+
+  /**
+   * Removes spawn protection from all particles in the container
+   * by setting the parent identifiers of all particles to false.
+   * @param  autopas
+   */
+  void removeParticleSpawnProtection(autopas::AutoPas<Particle> &autopas);
+
   /**
    * One logger to log them all.
    */
@@ -161,6 +246,12 @@ class Simulation {
    * All timers used throughout the simulation.
    */
   Timers timers{};
+
+  /**
+   * Tracks the number of iterations since the last collision detection.
+   * This is used to remove spawn protection after a certain number of iterations for new particles.
+   */
+  size_t iterationsSinceLastCollision = 0;
 };
 
 }  // namespace LADDS
