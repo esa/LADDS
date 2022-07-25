@@ -34,7 +34,7 @@ class Logger {
    * @param args
    */
   template <class... Args>
-  void log(const Level &lvl, spdlog::string_view_t fmt, const Args &...args) const {
+  void log(const Level &lvl, spdlog::string_view_t fmt, const Args &... args) const {
     spdlog::get(_name)->log(lvl, fmt, args...);
   }
 
