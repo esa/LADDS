@@ -186,7 +186,8 @@ std::tuple<size_t, std::shared_ptr<HDF5Writer>, std::shared_ptr<ConjuctionWriter
 void Simulation::updateConstellation(AutoPas_t &autopas,
                                      std::vector<Constellation> &constellations,
                                      std::vector<Particle> &delayedInsertionTotal,
-                                     double constellationCutoff) {
+                                     double constellationCutoff,
+                                     DomainDecomposition &domainDecomposition) {
   // first insert delayed particles from previous insertion and collect the repeatedly delayed
   delayedInsertionTotal = checkedInsert(autopas, delayedInsertionTotal, constellationCutoff);
   // container collecting delayed particles from one constellation at a time in order to append them to
@@ -194,7 +195,7 @@ void Simulation::updateConstellation(AutoPas_t &autopas,
   std::vector<Particle> delayedInsertion;
   for (auto &constellation : constellations) {
     // new satellites are gradually added to the simulation according to their starting time and operation duration
-    auto newSatellites = constellation.tick();
+    auto newSatellites = constellation.tick(domainDecomposition);
     delayedInsertion = checkedInsert(autopas, newSatellites, constellationCutoff);
     delayedInsertionTotal.insert(delayedInsertionTotal.end(), delayedInsertion.begin(), delayedInsertion.end());
   }
@@ -319,7 +320,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     timers.constellationInsertion.start();
     // new satellites from constellations inserted over time
     if (iteration % constellationInsertionFrequency == 0) {
-      updateConstellation(autopas, constellations, delayedInsertion, constellationCutoff);
+      updateConstellation(autopas, constellations, delayedInsertion, constellationCutoff, domainDecomposition);
     }
     timers.constellationInsertion.stop();
 

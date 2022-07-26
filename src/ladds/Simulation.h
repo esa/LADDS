@@ -78,15 +78,17 @@ class Simulation {
    * launch phase.
    * @param autopas
    * @param constellations
-   * @param delayedInsertion Vector of satellites that could not be inserted in the last phase. This is an in/out
+   * @param delayedInsertionTotal Vector of satellites that could not be inserted in the last phase. This is an in/out
    * parameter!
    * @param constellationCutoff range parameter for checked insertion: if the insertion would be within a distance
+   * @param domainDecomposition
    * of constellationCutoff to any other object the insertion is delayed instead
    */
   void updateConstellation(AutoPas_t &autopas,
                            std::vector<Constellation> &constellations,
-                           std::vector<Particle> &delayedInsertion,
-                           double constellationCutoff);
+                           std::vector<Particle> &delayedInsertionTotal,
+                           double constellationCutoff,
+                           DomainDecomposition &domainDecomposition);
 
   /**
    * Check for collisions / conjunctions and write statistics about them.

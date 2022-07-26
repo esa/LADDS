@@ -98,7 +98,7 @@ void Constellation::setDuration(const std::string &durationStr) {
   }
 }
 
-std::vector<Particle> Constellation::tick() {
+std::vector<Particle> Constellation::tick(DomainDecomposition &domainDecomposition) {
   std::vector<Particle> particles{};
   switch (status) {
     case Status::deployed:
@@ -113,18 +113,23 @@ std::vector<Particle> Constellation::tick() {
         break;
       }
     case Status::active:
+      const auto [shellAltitude, shellInclination, planeNumber, planeSize] = shells[currentShellIndex];
+      int myRank{};
+      autopas::AutoPas_MPI_Comm_rank(domainDecomposition.getCommunicator(), &myRank);
       // inserting scheduled particles
       while (static_cast<double>(timeActive) >= schedule[currentShellIndex][planesDeployed]) {
-        auto planeSize = static_cast<size_t>(shells[currentShellIndex][3]);
-        particles.reserve(particles.capacity() + planeSize);
+        particles.reserve(particles.capacity() + static_cast<size_t>(planeSize));
         for (size_t i = 0; i < planeSize; i++) {
-          particles.push_back(satellites[0]);
+          // make sure only satellites that are on this rank are added.
+          if (domainDecomposition.getRank(satellites.front().getPosition()) == myRank) {
+            particles.push_back(satellites.front());
+          }
           satellites.pop_front();
         }
         planesDeployed++;
 
         // if all planes of the shell are done increment currentShell and set planesDeployed to 0
-        if (planesDeployed >= shells[currentShellIndex][2]) {
+        if (planesDeployed >= planeNumber) {
           currentShellIndex++;
           // end the operation, if every shell has been deployed = set constellation to 'd' = deployed
           if (currentShellIndex >= shells.size()) {
