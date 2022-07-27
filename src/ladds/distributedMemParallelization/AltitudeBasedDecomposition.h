@@ -15,8 +15,11 @@ namespace LADDS {
 class AltitudeBasedDecomposition : public DomainDecomposition {
  public:
   /**
-   * Constructor.
-   * @param config: The configuration for definig the decomposition properties
+   * Constructor. Creates an altitude-based decomposition of particles.
+   * Initially uses log-spaced intervals. A call to rebalanceDecomposition is recommended after
+   * to balance the decomposition such that the number of particles per rank is approximately
+   * equal.
+   * @param config: The configuration for defining the decomposition properties.
    */
   explicit AltitudeBasedDecomposition(ConfigReader &config);
 
@@ -42,10 +45,10 @@ class AltitudeBasedDecomposition : public DomainDecomposition {
   std::vector<Particle> getAndRemoveLeavingParticles(AutoPas_t &autopas) const override;
 
   /**
-   * Get information about the grid structure
-   * @return tuple{dimensions, periods, grid coordinates of current rank}
+   * Get information about the this rank
+   * @return index of current rank
    */
-  std::tuple<std::array<int, 1>, std::array<int, 1>, std::array<int, 1>> getGridInfo() const;
+  int getRank() const;
 
   /**
    * Altitude bucket boundaries for all ranks.
@@ -66,7 +69,7 @@ class AltitudeBasedDecomposition : public DomainDecomposition {
   [[nodiscard]] std::vector<double> logspace(const double a, const double b, const int k);
 
   /**
-   * Balances the domain decomposition based on particle locations, 
+   * Balances the domain decomposition based on particle locations,
    * aiming for a similar number of particles per rank.
    * @param particles vector of all particles in all ranks
    * @param autopas

@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "ladds/distributedMemParallelization/AltitudeBasedDecomposition.h"
-#include "ladds/distributedMemParallelization/RankMigration.h"
+#include "ladds/distributedMemParallelization/ParticleMigrationHandler.h"
 #include "ladds/io/ConjunctionLogger.h"
 #include "ladds/io/SatelliteLoader.h"
 #include "ladds/io/VTUWriter.h"
@@ -315,16 +315,18 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     timers.containerUpdate.stop();
 
     timers.particleCommunication.start();
-    auto incomingParticles = RankMigration::communicateParticles(leavingParticles, autopas, domainDecomposition);
+    auto incomingParticles =
+        ParticleMigrationHandler::communicateParticles(leavingParticles, autopas, domainDecomposition);
     timers.particleCommunication.stop();
 
     timers.collisionDetectionImmigrants.start();
-    auto collisions = RankMigration::collisionDetectionImmigrants(autopas,
-                                                                  incomingParticles,
-                                                                  deltaT * autopas.getVerletRebuildFrequency(),
-                                                                  8.,
-                                                                  collisionDistanceFactor,
-                                                                  minDetectionRadius);
+    auto collisions =
+        ParticleMigrationHandler::collisionDetectionImmigrants(autopas,
+                                                               incomingParticles,
+                                                               deltaT * autopas.getVerletRebuildFrequency(),
+                                                               8.,
+                                                               collisionDistanceFactor,
+                                                               minDetectionRadius);
     timers.collisionDetectionImmigrants.stop();
     totalConjunctions += collisions.size();
 

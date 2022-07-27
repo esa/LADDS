@@ -7,6 +7,7 @@
 #pragma once
 
 #include <autopas/utils/WrapMPI.h>
+#include <spdlog/spdlog.h>
 
 #include <array>
 #include <vector>
@@ -78,7 +79,8 @@ class DomainDecomposition {
    */
   virtual std::vector<Particle> getAndRemoveLeavingParticles(AutoPas_t &autopas) const {
     throw std::runtime_error(
-        "This function is not implemented. Particles leaving the rank box can be identified with autopas.updateContainer()");
+        "This function is not implemented. Particles leaving the rank box can be identified with "
+        "autopas.updateContainer()");
   }
 
   /**
@@ -92,7 +94,10 @@ class DomainDecomposition {
    * @param  &particles: vector of all particles in all ranks
    */
   virtual void rebalanceDecomposition(const std::vector<LADDS::Particle> &particles, AutoPas_t &autopas) {
-    // This function is currently not implemented.
+    auto logger = spdlog::get(LADDS_SPD_LOGGER_NAME);
+    SPDLOG_LOGGER_WARN(
+        logger,
+        "Decomposition balancing is not implemented for this type of decomposition. No rebalancing is performed.");
   }
 
  protected:

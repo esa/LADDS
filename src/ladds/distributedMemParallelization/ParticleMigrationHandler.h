@@ -1,5 +1,5 @@
 /**
- * @file RankMigration.h
+ * @file ParticleMigrationHandler.h
  * @author P. Gomez
  * @date 18.07.22
  */
@@ -20,7 +20,7 @@
  * Provides tools for sending particles between ranks and
  * detecting conjunctions at the boundaries of the domain.
  */
-namespace LADDS::RankMigration {
+namespace LADDS::ParticleMigrationHandler {
 
 /**
  * Send the given list of leaving particles to all (up to) 26 logical surrounding ranks and receive their leaving
@@ -60,4 +60,4 @@ LADDS::CollisionFunctor::CollisionCollectionT collisionDetectionImmigrants(
     double collisionDistanceFactor,
     double minDetectionRadius);
 
-}  // namespace LADDS::RankMigration
+}  // namespace LADDS::ParticleMigrationHandler

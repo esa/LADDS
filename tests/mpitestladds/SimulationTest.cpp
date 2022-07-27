@@ -7,7 +7,7 @@
 #include "SimulationTest.h"
 
 #include "autopas/utils/WrapOpenMP.h"
-#include "ladds/distributedMemParallelization/RankMigration.h"
+#include "ladds/distributedMemParallelization/ParticleMigrationHandler.h"
 
 SimulationTest::SimulationTest()
     : maxThreadsBefore(autopas::autopas_get_max_threads()), logger("SimulationTestLogger"), simulation(logger) {
@@ -46,7 +46,7 @@ SimulationTest::~SimulationTest() {
 /**
  * This test is expected to run on 8 MPI ranks
  */
-TEST_F(SimulationTest, testRankMigration) {
+TEST_F(SimulationTest, testParticleMigrationHandler) {
   using autopas::utils::ArrayMath::add;
   using autopas::utils::ArrayMath::mul;
   using autopas::utils::ArrayMath::mulScalar;
@@ -114,7 +114,8 @@ TEST_F(SimulationTest, testRankMigration) {
   auto leavingParticles = autopas->updateContainer();
   EXPECT_EQ(leavingParticles.size(), 7) << "Expected all except one particle to have left.";
   ASSERT_EQ(autopas->getNumberOfParticles(), 1) << "Expected exactly one particle to remain.";
-  const auto incomingParticles = LADDS::RankMigration::communicateParticles(leavingParticles, *autopas, *decomposition);
+  const auto incomingParticles =
+      LADDS::ParticleMigrationHandler::communicateParticles(leavingParticles, *autopas, *decomposition);
   EXPECT_EQ(incomingParticles.size(), numRanks - 1);
   for (const auto &p : incomingParticles) {
     autopas->addParticle(p);

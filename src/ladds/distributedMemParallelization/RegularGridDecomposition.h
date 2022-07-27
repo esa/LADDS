@@ -14,7 +14,7 @@ class RegularGridDecomposition : public DomainDecomposition {
  public:
   /**
    * Constructor.
-   * @param config: The configuration for definig the decomposition properties
+   * @param config: The configuration for defining the decomposition properties
    */
   explicit RegularGridDecomposition(ConfigReader &config);
 

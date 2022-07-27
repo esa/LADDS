@@ -14,7 +14,6 @@
 #include "satellitePropagator/physics/Constants.h"
 
 LADDS::AltitudeBasedDecomposition::AltitudeBasedDecomposition(LADDS::ConfigReader &config) {
-  auto logger = spdlog::get(LADDS_SPD_LOGGER_NAME);
   // initialize a one-dimensional MPI world in which split the altitudes
   int numRanks{};
   autopas::AutoPas_MPI_Comm_size(AUTOPAS_MPI_COMM_WORLD, &numRanks);
@@ -49,7 +48,8 @@ LADDS::AltitudeBasedDecomposition::AltitudeBasedDecomposition(LADDS::ConfigReade
   altitudeIntervals[0] = 0.0;
   // note that actual max altitude is the corner of the box, so higher than maxaltitude in the config but there should
   // be very few satellites between maxAltitude and this
-  altitudeIntervals.push_back(std::sqrt(3 * std::pow(maxAltitude, 2.0)));
+  // maximumAltitude = sqrt(maxAltitude**2 + maxAltitude**2 + maxAltitude**2)
+  altitudeIntervals.push_back(std::sqrt(3. * std::pow(maxAltitude, 2.0)));
   SPDLOG_LOGGER_INFO(config.getLogger().get(),
                      "Computed altitude intervals fo ranks: {}",
                      autopas::utils::ArrayUtils::to_string(altitudeIntervals));
@@ -72,31 +72,33 @@ LADDS::AltitudeBasedDecomposition::AltitudeBasedDecomposition(LADDS::ConfigReade
 
 int LADDS::AltitudeBasedDecomposition::getRank(const std::array<double, 3> &coordinates) const {
   auto logger = spdlog::get(LADDS_SPD_LOGGER_NAME);
-  SPDLOG_LOGGER_TRACE(
-      logger.get(), "Getting rank for coordinates {}", autopas::utils::ArrayUtils::to_string(coordinates));
 
   using autopas::utils::ArrayMath::div;
   using autopas::utils::ArrayMath::sub;
 
   const auto altitudeSquared = autopas::utils::ArrayMath::dot(coordinates, coordinates);
+  size_t rank{};
   for (size_t i = 0; i < altitudeIntervals.size() - 1; i++) {
     if (altitudeSquared >= altitudeIntervals[i] * altitudeIntervals[i] and
         altitudeSquared < altitudeIntervals[i + 1] * altitudeIntervals[i + 1]) {
-      return i;
+      rank = i;
+      break;
     }
   }
+  SPDLOG_LOGGER_TRACE(logger.get(),
+                      "Getting rank for coordinates {} result was {}",
+                      autopas::utils::ArrayUtils::to_string(coordinates),
+                      rank);
   throw std::runtime_error("Could not find rank for coordinates " + autopas::utils::ArrayUtils::to_string(coordinates));
 }
 
-std::tuple<std::array<int, 1>, std::array<int, 1>, std::array<int, 1>> LADDS::AltitudeBasedDecomposition::getGridInfo()
-    const {
-  std::array<int, 1> dims{};
-  std::array<int, 1> periods{};
+int LADDS::AltitudeBasedDecomposition::getRank() const {
+  std::array<int, 1> _{};
+  std::array<int, 1> __{};
   std::array<int, 1> coords{};
-  autopas::AutoPas_MPI_Cart_get(communicator, dims.size(), dims.data(), periods.data(), coords.data());
-  return {dims, periods, coords};
+  autopas::AutoPas_MPI_Cart_get(communicator, _.size(), _.data(), __.data(), coords.data());
+  return coords[0];
 }
-
 std::vector<double> LADDS::AltitudeBasedDecomposition::logspace(const double a, const double b, const int k) {
   double realStart = pow(10., a);
   double realBase = pow(10., (b - a) / k);
@@ -117,10 +119,11 @@ double LADDS::AltitudeBasedDecomposition::getAltitudeOfRank(const int rank) cons
 
 std::vector<LADDS::Particle> LADDS::AltitudeBasedDecomposition::getAndRemoveLeavingParticles(AutoPas_t &autopas) const {
   std::vector<LADDS::Particle> particles;
+  particles.reserve(autopas.getNumberOfParticles());
   int rank{};
   autopas::AutoPas_MPI_Comm_rank(communicator, &rank);
+  auto logger = spdlog::get(LADDS_SPD_LOGGER_NAME);
   for (auto &particle : autopas) {
-    auto logger = spdlog::get(LADDS_SPD_LOGGER_NAME);
     SPDLOG_LOGGER_TRACE(logger.get(),
                         "Checking particle {} at Position {} - supposed to be in rank {}",
                         particle.getId(),

@@ -1,16 +1,17 @@
 /**
- * @file RankMigration.cpp
+ * @file ParticleMigrationHandler.cpp
  * @author P. Gomez
  * @date 2022-07-18
  */
-#include "RankMigration.h"
+#include "ParticleMigrationHandler.h"
 
 #include "ladds/distributedMemParallelization/ParticleCommunicator.h"
 #include "ladds/particle/Particle.h"
 
-std::vector<LADDS::Particle> LADDS::RankMigration::communicateParticles(std::vector<LADDS::Particle> &leavingParticles,
-                                                                        autopas::AutoPas<LADDS::Particle> &autopas,
-                                                                        const DomainDecomposition &decomposition) {
+std::vector<LADDS::Particle> LADDS::ParticleMigrationHandler::communicateParticles(
+    std::vector<LADDS::Particle> &leavingParticles,
+    autopas::AutoPas<LADDS::Particle> &autopas,
+    const DomainDecomposition &decomposition) {
   // Set up the communicator
   const auto &comm = decomposition.getCommunicator();
   const auto &localBoxMin = autopas.getBoxMin();
@@ -87,15 +88,17 @@ std::vector<LADDS::Particle> LADDS::RankMigration::communicateParticles(std::vec
     return incomingParticles;
   } else if (const auto *altitudeBasedDecomposition =
                  dynamic_cast<const AltitudeBasedDecomposition *>(&decomposition)) {
-    const auto &[coordsMax, periods, coords] = altitudeBasedDecomposition->getGridInfo();
-
+    const auto rank = altitudeBasedDecomposition->getRank();
+    int numRanks{};
+    autopas::AutoPas_MPI_Comm_size(decomposition.getCommunicator(), &numRanks);
+    const auto coords = std::array<int, 1>{rank};
     // trigger both non-blocking sends before doing both blocking receives
-    // send left (negative direction)
+    // send left (negative direction), commDir is only x for this decomp, thus 0
     const int commDir = 0;
-    const auto altBoxMinSquared = std::pow(altitudeBasedDecomposition->getAltitudeOfRank(coords[commDir]), 2.);
-    const auto altBoxMaxSquared = std::pow(altitudeBasedDecomposition->getAltitudeOfRank(coords[commDir] + 1), 2.);
+    const auto altBoxMinSquared = std::pow(altitudeBasedDecomposition->getAltitudeOfRank(rank), 2.);
+    const auto altBoxMaxSquared = std::pow(altitudeBasedDecomposition->getAltitudeOfRank(rank + 1), 2.);
 
-    if (coords[commDir] != 0) {
+    if (rank != 0) {
       // sort particles that are leaving in the negative direction to the end of leavingParticles
       auto leavingParticlesIter =
           std::partition(leavingParticles.begin(), leavingParticles.end(), [&](const Particle &p) {
@@ -119,7 +122,7 @@ std::vector<LADDS::Particle> LADDS::RankMigration::communicateParticles(std::vec
     }
 
     // communication right (positive direction)
-    if (coords[commDir] != coordsMax[commDir] - 1) {
+    if (rank != numRanks - 1) {
       // sort particles that are leaving in the positive direction to the end of leavingParticles
       auto leavingParticlesIter =
           std::partition(leavingParticles.begin(), leavingParticles.end(), [&](const Particle &p) {
@@ -147,7 +150,7 @@ std::vector<LADDS::Particle> LADDS::RankMigration::communicateParticles(std::vec
     }
 
     // receive left (negative direction)
-    if (coords[commDir] != 0) {
+    if (rank != 0) {
       const int rankLeft = getNeighborRank(coords, commDir, std::minus<>());
       auto incomingParticlesLeft = particleCommunicator.receiveParticles(rankLeft, comm);
       incomingParticles.insert(incomingParticles.end(), incomingParticlesLeft.begin(), incomingParticlesLeft.end());
@@ -156,14 +159,14 @@ std::vector<LADDS::Particle> LADDS::RankMigration::communicateParticles(std::vec
     leavingParticles.erase(leavingParticles.begin(), leavingParticles.end());
     particleCommunicator.waitAndFlushBuffers();
 
-    SPDLOG_LOGGER_DEBUG(logger.get(), "Rank {} received {} particles", coords[commDir], incomingParticles.size());
+    SPDLOG_LOGGER_DEBUG(logger.get(), "Rank {} received {} particles", rank, incomingParticles.size());
     return incomingParticles;
   } else {
     throw std::runtime_error("No particle communication implemented for the chosen decomposition!");
   }
 }
 
-LADDS::CollisionFunctor::CollisionCollectionT LADDS::RankMigration::collisionDetectionImmigrants(
+LADDS::CollisionFunctor::CollisionCollectionT LADDS::ParticleMigrationHandler::collisionDetectionImmigrants(
     AutoPas_t &autopas,
     std::vector<LADDS::Particle> &incomingParticles,
     double deltaT,
