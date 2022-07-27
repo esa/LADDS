@@ -14,11 +14,13 @@
 #include <string>
 #include <utility>
 
+#include "ladds/TypeDefinitions.h"
+
 namespace LADDS {
 
 class Logger {
  public:
-  explicit Logger(std::string name = "laddsLog", std::ostream &ostream = std::cout);
+  explicit Logger(std::string name = LADDS_SPD_LOGGER_NAME, std::ostream &ostream = std::cout);
 
   ~Logger();
 
