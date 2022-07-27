@@ -56,9 +56,6 @@ LADDS::RegularGridDecomposition::RegularGridDecomposition(LADDS::ConfigReader &c
 }
 
 int LADDS::RegularGridDecomposition::getRank(const std::array<double, 3> &coordinates) const {
-  // throw std::runtime_error("This function is currently producing wrong results. To be fixed.");
-  int rank{};
-  autopas::AutoPas_MPI_Comm_rank(communicator, &rank);
   using autopas::utils::ArrayMath::abs;
   using autopas::utils::ArrayMath::div;
   using autopas::utils::ArrayMath::sub;

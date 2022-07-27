@@ -92,8 +92,8 @@ std::vector<LADDS::Particle> LADDS::RankMigration::communicateParticles(std::vec
     // trigger both non-blocking sends before doing both blocking receives
     // send left (negative direction)
     const int commDir = 0;
-    const auto altBoxMinSquared = std::pow(altitudeBasedDecomposition->getAltitudeOfRank(coords[commDir]), 2);
-    const auto altBoxMaxSquared = std::pow(altitudeBasedDecomposition->getAltitudeOfRank(coords[commDir] + 1), 2);
+    const auto altBoxMinSquared = std::pow(altitudeBasedDecomposition->getAltitudeOfRank(coords[commDir]), 2.);
+    const auto altBoxMaxSquared = std::pow(altitudeBasedDecomposition->getAltitudeOfRank(coords[commDir] + 1), 2.);
 
     if (coords[commDir] != 0) {
       // sort particles that are leaving in the negative direction to the end of leavingParticles
@@ -105,7 +105,8 @@ std::vector<LADDS::Particle> LADDS::RankMigration::communicateParticles(std::vec
 
       // get left neighbors lower limit to check particle is not skipping right through it
       const auto leftNeighboraltBoxMinSquared = std::pow(altitudeBasedDecomposition->getAltitudeOfRank(rankLeft), 2);
-      for (auto &p : leavingParticles) {
+      // sanity check
+      for (const auto &p : leavingParticles) {
         if (autopas::utils::ArrayMath::dot(p.getPosition(), p.getPosition()) < leftNeighboraltBoxMinSquared) {
           SPDLOG_LOGGER_WARN(
               logger.get(), "Particle {} skipping through left neighbor {}  while migrating.", p.getID(), rankLeft);

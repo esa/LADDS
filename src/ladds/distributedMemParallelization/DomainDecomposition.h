@@ -78,7 +78,7 @@ class DomainDecomposition {
    */
   virtual std::vector<Particle> getAndRemoveLeavingParticles(AutoPas_t &autopas) const {
     throw std::runtime_error(
-        "This function is not implemented. Leaving particles can be identified with autopas.updateContainer");
+        "This function is not implemented. Particles leaving the rank box can be identified with autopas.updateContainer()");
   }
 
   /**

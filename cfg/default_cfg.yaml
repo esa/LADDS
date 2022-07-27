@@ -12,7 +12,7 @@ sim:
   deltaT: 10.0 # [s]
   collisionDistanceFactor: 1.0 # Factor multiplied with the sum of radii to over approximate collision distances.
   timestepsPerCollisionDetection: 1
-  # decompositionType: "Altitude,RegularGrid" # Determines the MPI decomposition type. Altitude are spherical shells, regulargrid standard cartesian grid
+  # decompositionType: Altitude   # Determines the MPI decomposition type. Options: "Altitude" are spherical shells, "RegularGrid" standard cartesian grid.
 
   prop: # Which propagation model components should be applied
     useKEPComponent: true # Keplerian propagation

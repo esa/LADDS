@@ -43,12 +43,12 @@ LADDS::AltitudeBasedDecomposition::AltitudeBasedDecomposition(LADDS::ConfigReade
   // shifting the interval a bit
   // TODO: find a more even distribution of the particles
   altitudeIntervals = this->logspace(std::log10(minAltitude), std::log10(maxAltitude - Physics::R_EARTH), numRanks);
-  for (int i = 0; i < numRanks; i++) {
-    altitudeIntervals[i] += Physics::R_EARTH;
+  for (auto &interval : altitudeIntervals) {
+    interval += Physics::R_EARTH;
   }
   altitudeIntervals[0] = 0.0;
   // note that actual max altitude is the corner of the box, so higher than maxaltitude in the config but there should
-  // be very satellites between maxAltitude and this
+  // be very few satellites between maxAltitude and this
   altitudeIntervals.push_back(std::sqrt(3 * std::pow(maxAltitude, 2.0)));
   SPDLOG_LOGGER_INFO(config.getLogger().get(),
                      "Computed altitude intervals fo ranks: {}",
@@ -80,7 +80,7 @@ int LADDS::AltitudeBasedDecomposition::getRank(const std::array<double, 3> &coor
 
   const auto altitudeSquared = autopas::utils::ArrayMath::dot(coordinates, coordinates);
   for (size_t i = 0; i < altitudeIntervals.size() - 1; i++) {
-    if (altitudeSquared >= altitudeIntervals[i] * altitudeIntervals[i] &&
+    if (altitudeSquared >= altitudeIntervals[i] * altitudeIntervals[i] and
         altitudeSquared < altitudeIntervals[i + 1] * altitudeIntervals[i + 1]) {
       return i;
     }
@@ -171,6 +171,6 @@ void LADDS::AltitudeBasedDecomposition::rebalanceDecomposition(const std::vector
   autopas.resizeBox(localBoxMin, localBoxMax);
 
   auto logger = spdlog::get(LADDS_SPD_LOGGER_NAME);
-  SPDLOG_LOGGER_INFO(
+  SPDLOG_LOGGER_DEBUG(
       logger.get(), "Recomputed altitude intervals: {}", autopas::utils::ArrayUtils::to_string(altitudeIntervals));
 }

@@ -26,16 +26,18 @@ class AltitudeBasedDecomposition : public DomainDecomposition {
   ~AltitudeBasedDecomposition() override = default;
 
   /**
-   * Get the rank id that contains the given simulation domain coordinates
+   * Get the rank id that contains the given simulation domain coordinates.
    * @param coordinates 3D
    * @return rank id
    */
   int getRank(const std::array<double, 3> &coordinates) const override;
 
   /**
-   * Get the particles which are leaving the local domain.
+   * Get the particles that are leaving the local domain and remove them from the container.
+   * These particles are not necessarily leaving the bounding box of the AutoPas container
+   * but the altitude region it is responsible for.
    * @param  autopas autopas container
-   * @retval vector of particles
+   * @return Vector of particles.
    */
   std::vector<Particle> getAndRemoveLeavingParticles(AutoPas_t &autopas) const override;
 
@@ -48,24 +50,26 @@ class AltitudeBasedDecomposition : public DomainDecomposition {
   /**
    * Altitude bucket boundaries for all ranks.
    */
-  std::vector<double> altitudeIntervals;
+  std::vector<double> altitudeIntervals{};
 
   /**
    * Returns the altitude of the rank with the given index.
    * @param rank: The rank index
    * @return The altitude of the rank with the given index.
    */
-  double getAltitudeOfRank(const int rank) const;
+  double getAltitudeOfRank(int rank) const;
 
   /**
    * Creates a vector of logspaced numbers similar to np.logspace.
-   * @retval std::vector<double>: The vector of logspaced numbers.
+   * @return Vector of logspaced numbers.
    */
   [[nodiscard]] std::vector<double> logspace(const double a, const double b, const int k);
 
   /**
-   * Balances the domain decomposition based on particle locations.
-   * @param  &particles: vector of all particles in all ranks
+   * Balances the domain decomposition based on particle locations, 
+   * aiming for a similar number of particles per rank.
+   * @param particles vector of all particles in all ranks
+   * @param autopas
    */
   void rebalanceDecomposition(const std::vector<LADDS::Particle> &particles, AutoPas_t &autopas) override;
 };
