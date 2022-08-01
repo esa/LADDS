@@ -1,10 +1,10 @@
 # This script parses an arbitrary number of files each containing the CLI output of LADDS,
 # extracts the timer information and merges it into one CSV for further processing.
 
-if [[ $# < 1 ]]
+if [[ $# -lt 1 ]]
 then
     echo "Usage: " $0 " outFiles..."
-    exit -1
+    exit 1
 fi
 
 outFiles="$@"
