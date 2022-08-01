@@ -15,7 +15,7 @@
 
 class BreakupWrapperTest : public testing::Test {
  public:
-  BreakupWrapperTest() : logger("BreakupWrapperTestLogger"), simulation(logger) {
+  BreakupWrapperTest() : logger(LADDS_SPD_LOGGER_NAME), simulation(logger) {
     logger.get()->set_level(LADDS::Logger::Level::off);
 
     // initialize a minimal default configuration

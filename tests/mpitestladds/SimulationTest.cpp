@@ -7,10 +7,11 @@
 #include "SimulationTest.h"
 
 #include "autopas/utils/WrapOpenMP.h"
+#include "ladds/TypeDefinitions.h"
 #include "ladds/distributedMemParallelization/ParticleMigrationHandler.h"
 
 SimulationTest::SimulationTest()
-    : maxThreadsBefore(autopas::autopas_get_max_threads()), logger("SimulationTestLogger"), simulation(logger) {
+    : maxThreadsBefore(autopas::autopas_get_max_threads()), logger(LADDS_SPD_LOGGER_NAME), simulation(logger) {
   // make sure to only use one thread
   autopas::autopas_set_num_threads(1);
 
@@ -114,8 +115,7 @@ TEST_F(SimulationTest, testParticleMigrationHandler) {
   auto leavingParticles = autopas->updateContainer();
   EXPECT_EQ(leavingParticles.size(), 7) << "Expected all except one particle to have left.";
   ASSERT_EQ(autopas->getNumberOfParticles(), 1) << "Expected exactly one particle to remain.";
-  const auto incomingParticles =
-      LADDS::ParticleMigrationHandler::communicateParticles(leavingParticles, *autopas, *decomposition);
+  const auto incomingParticles = decomposition->communicateParticles(leavingParticles, *autopas, *decomposition);
   EXPECT_EQ(incomingParticles.size(), numRanks - 1);
   for (const auto &p : incomingParticles) {
     autopas->addParticle(p);

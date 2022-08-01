@@ -75,5 +75,18 @@ class AltitudeBasedDecomposition : public DomainDecomposition {
    * @param autopas
    */
   void rebalanceDecomposition(const std::vector<LADDS::Particle> &particles, AutoPas_t &autopas) override;
+
+  /**
+   * Send the given list of leaving particles to the respective target ranks and receive their leaving
+   * particles which are relevant for the local rank.
+   * @param leavingParticles in/out parameter of leaving particles. If everything worked the vector should be empty
+   * after the function call.
+   * @param autopas
+   * @param decomposition
+   * @return Vector of incoming particles.
+   */
+  std::vector<LADDS::Particle> communicateParticles(std::vector<LADDS::Particle> &leavingParticles,
+                                                    autopas::AutoPas<Particle> &autopas,
+                                                    const DomainDecomposition &decomposition) const override;
 };
 }  // namespace LADDS

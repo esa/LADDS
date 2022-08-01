@@ -315,8 +315,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     timers.containerUpdate.stop();
 
     timers.particleCommunication.start();
-    auto incomingParticles =
-        ParticleMigrationHandler::communicateParticles(leavingParticles, autopas, domainDecomposition);
+    auto incomingParticles = domainDecomposition.communicateParticles(leavingParticles, autopas, domainDecomposition);
     timers.particleCommunication.stop();
 
     timers.collisionDetectionImmigrants.start();

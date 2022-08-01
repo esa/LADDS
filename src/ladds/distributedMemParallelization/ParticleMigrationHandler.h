@@ -11,9 +11,7 @@
 
 #include "ladds/CollisionFunctor.h"
 #include "ladds/TypeDefinitions.h"
-#include "ladds/distributedMemParallelization/AltitudeBasedDecomposition.h"
 #include "ladds/distributedMemParallelization/DomainDecomposition.h"
-#include "ladds/distributedMemParallelization/RegularGridDecomposition.h"
 #include "ladds/particle/Particle.h"
 
 /**
@@ -21,19 +19,6 @@
  * detecting conjunctions at the boundaries of the domain.
  */
 namespace LADDS::ParticleMigrationHandler {
-
-/**
- * Send the given list of leaving particles to all (up to) 26 logical surrounding ranks and receive their leaving
- * particles which are relevant for the local rank.
- * @param leavingParticles in/out parameter of leaving particles. If everything worked the vector should be empty
- * after the function call.
- * @param autopas
- * @param decomposition
- * @return Vector of incoming particles.
- */
-std::vector<LADDS::Particle> communicateParticles(std::vector<LADDS::Particle> &leavingParticles,
-                                                  autopas::AutoPas<Particle> &autopas,
-                                                  const DomainDecomposition &decomposition);
 
 /**
  * Interact all incoming particles with all particles which potentially crossed its path since the last container

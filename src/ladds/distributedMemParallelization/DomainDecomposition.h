@@ -28,6 +28,11 @@ class DomainDecomposition {
   virtual ~DomainDecomposition() = default;
 
   /**
+   * Prints info on the domain decomposition.
+   */
+  void printMPIInfo() const;
+
+  /**
    * Returns the minimum coordinates of the global domain.
    * @return bottom left front corner of the global domain.
    */
@@ -88,6 +93,19 @@ class DomainDecomposition {
    * @return
    */
   autopas::AutoPas_MPI_Comm getCommunicator() const;
+
+  /**
+   * Send the given list of leaving particles to the respective target ranks and receive their leaving
+   * particles which are relevant for the local rank.
+   * @param leavingParticles in/out parameter of leaving particles. If everything worked the vector should be empty
+   * after the function call.
+   * @param autopas
+   * @param decomposition
+   * @return Vector of incoming particles.
+   */
+  virtual std::vector<LADDS::Particle> communicateParticles(std::vector<LADDS::Particle> &leavingParticles,
+                                                            autopas::AutoPas<Particle> &autopas,
+                                                            const DomainDecomposition &decomposition) const = 0;
 
   /**
    * Balances the domain decomposition based on particle locations.

@@ -9,6 +9,8 @@
 #include <autopas/utils/ArrayMath.h>
 #include <autopas/utils/WrapOpenMP.h>
 
+#include "ladds/distributedMemParallelization/ParticleCommunicator.h"
+
 LADDS::RegularGridDecomposition::RegularGridDecomposition(LADDS::ConfigReader &config) {
   // initialize MPI
   int numRanks{};
@@ -43,16 +45,7 @@ LADDS::RegularGridDecomposition::RegularGridDecomposition(LADDS::ConfigReader &c
   localBoxMax = add(localBoxMin, localBoxLength);
 
   // print parallelization info
-  if (rank == 0) {
-    SPDLOG_LOGGER_INFO(config.getLogger().get(),
-                       "Parallelization Configuration\n"
-                       "MPI Ranks              : {}\n"
-                       "OpenMP Threads per Rank: {}\n"
-                       "MPI Decomposition      : {}",
-                       numRanks,
-                       autopas::autopas_get_max_threads(),
-                       autopas::utils::ArrayUtils::to_string(dims));
-  }
+  printMPIInfo();
 }
 
 int LADDS::RegularGridDecomposition::getRank(const std::array<double, 3> &coordinates) const {
@@ -77,4 +70,89 @@ std::tuple<std::array<int, 3>, std::array<int, 3>, std::array<int, 3>> LADDS::Re
   std::array<int, 3> coords{};
   autopas::AutoPas_MPI_Cart_get(communicator, dims.size(), dims.data(), periods.data(), coords.data());
   return {dims, periods, coords};
+}
+
+std::vector<LADDS::Particle> LADDS::RegularGridDecomposition::communicateParticles(
+    std::vector<LADDS::Particle> &leavingParticles,
+    autopas::AutoPas<LADDS::Particle> &autopas,
+    const DomainDecomposition &decomposition) const {
+  // Set up the communicator
+  const auto &comm = decomposition.getCommunicator();
+  const auto &localBoxMin = autopas.getBoxMin();
+  const auto &localBoxMax = autopas.getBoxMax();
+  auto logger = spdlog::get(LADDS_SPD_LOGGER_NAME);
+
+  ParticleCommunicator particleCommunicator;
+  std::vector<LADDS::Particle> incomingParticles;
+
+  auto getNeighborRank = [&](const auto &coordsThis, int direction, auto op) {
+    auto coordsOther = coordsThis;
+    coordsOther[direction] = op(coordsOther[direction], 1);
+    int rankOther{};
+    autopas::AutoPas_MPI_Cart_rank(comm, coordsOther.data(), &rankOther);
+    return rankOther;
+  };
+
+  if (const auto *regularGridDecomp = dynamic_cast<const RegularGridDecomposition *>(&decomposition)) {
+    const auto &[coordsMax, periods, coords] = regularGridDecomp->getGridInfo();
+    enum CommDir : int { X, Y, Z };
+    for (CommDir commDir = X; commDir <= Z; commDir = static_cast<CommDir>(commDir + 1)) {
+      // trigger both non-blocking sends before doing both blocking receives
+
+      // send left (negative direction)
+      if (coords[commDir] != 0) {
+        // sort particles that are leaving in the negative direction to the end of leavingParticles
+        auto leavingParticlesIter =
+            std::partition(leavingParticles.begin(), leavingParticles.end(), [&](const Particle &p) {
+              return p.getPosition()[commDir] > localBoxMin[commDir];
+            });
+        const int rankLeft = getNeighborRank(coords, commDir, std::minus<>());
+        particleCommunicator.sendParticles(leavingParticlesIter, leavingParticles.end(), rankLeft, comm);
+        // clip sent particles
+        leavingParticles.erase(leavingParticlesIter, leavingParticles.end());
+      }
+
+      // communication right (positive direction)
+      if (coords[commDir] != coordsMax[commDir] - 1) {
+        // sort particles that are leaving in the positive direction to the end of leavingParticles
+        auto leavingParticlesIter =
+            std::partition(leavingParticles.begin(), leavingParticles.end(), [&](const Particle &p) {
+              return p.getPosition()[commDir] < localBoxMax[commDir];
+            });
+        const int rankRight = getNeighborRank(coords, commDir, std::plus<>());
+        particleCommunicator.sendParticles(leavingParticlesIter, leavingParticles.end(), rankRight, comm);
+        // clip sent particles
+        leavingParticles.erase(leavingParticlesIter, leavingParticles.end());
+
+        // receive
+        auto incomingParticlesRight = particleCommunicator.receiveParticles(rankRight, comm);
+        incomingParticles.insert(incomingParticles.end(), incomingParticlesRight.begin(), incomingParticlesRight.end());
+      }
+
+      // receive left (negative direction)
+      if (coords[commDir] != 0) {
+        const int rankLeft = getNeighborRank(coords, commDir, std::minus<>());
+        auto incomingParticlesLeft = particleCommunicator.receiveParticles(rankLeft, comm);
+        incomingParticles.insert(incomingParticles.end(), incomingParticlesLeft.begin(), incomingParticlesLeft.end());
+      }
+
+      // sort particles which have to be added to the local container to the front of incomingParticles
+      auto incomingParticlesIter =
+          std::partition(incomingParticles.begin(), incomingParticles.end(), [&](const Particle &p) {
+            return autopas::utils::inBox(p.getPosition(), localBoxMin, localBoxMax);
+          });
+
+      // move particles that were not inserted to leaving particles.
+      // These pass-through particles are those changing ranks in more than one dimension.
+      leavingParticles.insert(leavingParticles.end(), incomingParticlesIter, incomingParticles.end());
+      incomingParticles.erase(incomingParticlesIter, incomingParticles.end());
+
+      particleCommunicator.waitAndFlushBuffers();
+    }
+    return incomingParticles;
+  } else {
+    throw std::runtime_error(
+        "RegularGridDecomposition::communicateParticles: "
+        "The passed decomposition is not of type RegularGridDecomposition");
+  }
 }

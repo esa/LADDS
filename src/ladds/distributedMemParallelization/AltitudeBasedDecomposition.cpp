@@ -11,6 +11,7 @@
 #include <spdlog/spdlog.h>
 
 #include "ladds/TypeDefinitions.h"
+#include "ladds/distributedMemParallelization/ParticleCommunicator.h"
 #include "satellitePropagator/physics/Constants.h"
 
 LADDS::AltitudeBasedDecomposition::AltitudeBasedDecomposition(LADDS::ConfigReader &config) {
@@ -58,16 +59,7 @@ LADDS::AltitudeBasedDecomposition::AltitudeBasedDecomposition(LADDS::ConfigReade
   localBoxMax = {altitudeIntervals[rank + 1], altitudeIntervals[rank + 1], altitudeIntervals[rank + 1]};
 
   // print parallelization info
-  if (rank == 0) {
-    SPDLOG_LOGGER_INFO(config.getLogger().get(),
-                       "Parallelization Configuration\n"
-                       "MPI Ranks              : {}\n"
-                       "OpenMP Threads per Rank: {}\n"
-                       "MPI Decomposition      : {}\n",
-                       numRanks,
-                       autopas::autopas_get_max_threads(),
-                       autopas::utils::ArrayUtils::to_string(dims));
-  }
+  printMPIInfo();
 }
 
 int LADDS::AltitudeBasedDecomposition::getRank(const std::array<double, 3> &coordinates) const {
@@ -77,18 +69,17 @@ int LADDS::AltitudeBasedDecomposition::getRank(const std::array<double, 3> &coor
   using autopas::utils::ArrayMath::sub;
 
   const auto altitudeSquared = autopas::utils::ArrayMath::dot(coordinates, coordinates);
-  size_t rank{};
   for (size_t i = 0; i < altitudeIntervals.size() - 1; i++) {
     if (altitudeSquared >= altitudeIntervals[i] * altitudeIntervals[i] and
         altitudeSquared < altitudeIntervals[i + 1] * altitudeIntervals[i + 1]) {
-      rank = i;
-      break;
+      SPDLOG_LOGGER_TRACE(logger.get(),
+                          "Getting rank for coordinates {} result was {}",
+                          autopas::utils::ArrayUtils::to_string(coordinates),
+                          i);
+      return i;
     }
   }
-  SPDLOG_LOGGER_TRACE(logger.get(),
-                      "Getting rank for coordinates {} result was {}",
-                      autopas::utils::ArrayUtils::to_string(coordinates),
-                      rank);
+
   throw std::runtime_error("Could not find rank for coordinates " + autopas::utils::ArrayUtils::to_string(coordinates));
 }
 
@@ -126,7 +117,7 @@ std::vector<LADDS::Particle> LADDS::AltitudeBasedDecomposition::getAndRemoveLeav
   for (auto &particle : autopas) {
     SPDLOG_LOGGER_TRACE(logger.get(),
                         "Checking particle {} at Position {} - supposed to be in rank {}",
-                        particle.getId(),
+                        particle.getID(),
                         autopas::utils::ArrayUtils::to_string(particle.getPosition),
                         getRank(particle.getPosition()));
     if (this->getRank(particle.getPosition()) != rank) {
@@ -176,4 +167,104 @@ void LADDS::AltitudeBasedDecomposition::rebalanceDecomposition(const std::vector
   auto logger = spdlog::get(LADDS_SPD_LOGGER_NAME);
   SPDLOG_LOGGER_DEBUG(
       logger.get(), "Recomputed altitude intervals: {}", autopas::utils::ArrayUtils::to_string(altitudeIntervals));
+}
+
+std::vector<LADDS::Particle> LADDS::AltitudeBasedDecomposition::communicateParticles(
+    std::vector<LADDS::Particle> &leavingParticles,
+    autopas::AutoPas<LADDS::Particle> &autopas,
+    const DomainDecomposition &decomposition) const {
+  // Set up the communicator
+  const auto &comm = decomposition.getCommunicator();
+  auto logger = spdlog::get(LADDS_SPD_LOGGER_NAME);
+
+  ParticleCommunicator particleCommunicator;
+  std::vector<LADDS::Particle> incomingParticles;
+
+  auto getNeighborRank = [&](const auto &coordsThis, int direction, auto op) {
+    auto coordsOther = coordsThis;
+    coordsOther[direction] = op(coordsOther[direction], 1);
+    int rankOther{};
+    autopas::AutoPas_MPI_Cart_rank(comm, coordsOther.data(), &rankOther);
+    return rankOther;
+  };
+
+  if (const auto *altitudeBasedDecomposition = dynamic_cast<const AltitudeBasedDecomposition *>(&decomposition)) {
+    const auto rank = altitudeBasedDecomposition->getRank();
+    int numRanks{};
+    autopas::AutoPas_MPI_Comm_size(decomposition.getCommunicator(), &numRanks);
+    const auto coords = std::array<int, 1>{rank};
+    // trigger both non-blocking sends before doing both blocking receives
+    // send left (negative direction), commDir is only x for this decomp, thus 0
+    const int commDir = 0;
+    const auto altBoxMinSquared = std::pow(altitudeBasedDecomposition->getAltitudeOfRank(rank), 2.);
+    const auto altBoxMaxSquared = std::pow(altitudeBasedDecomposition->getAltitudeOfRank(rank + 1), 2.);
+
+    if (rank != 0) {
+      // sort particles that are leaving in the negative direction to the end of leavingParticles
+      auto leavingParticlesIter =
+          std::partition(leavingParticles.begin(), leavingParticles.end(), [&](const Particle &p) {
+            return autopas::utils::ArrayMath::dot(p.getPosition(), p.getPosition()) > altBoxMinSquared;
+          });
+      const int rankLeft = getNeighborRank(coords, commDir, std::minus<>());
+
+      // get left neighbors lower limit to check particle is not skipping right through it
+      const auto leftNeighboraltBoxMinSquared = std::pow(altitudeBasedDecomposition->getAltitudeOfRank(rankLeft), 2);
+      // sanity check
+      for (const auto &p : leavingParticles) {
+        if (autopas::utils::ArrayMath::dot(p.getPosition(), p.getPosition()) < leftNeighboraltBoxMinSquared) {
+          SPDLOG_LOGGER_WARN(
+              logger.get(), "Particle {} skipping through left neighbor {}  while migrating.", p.getID(), rankLeft);
+        }
+      }
+      particleCommunicator.sendParticles(leavingParticlesIter, leavingParticles.end(), rankLeft, comm);
+
+      // clip sent particles
+      leavingParticles.erase(leavingParticlesIter, leavingParticles.end());
+    }
+
+    // communication right (positive direction)
+    if (rank != numRanks - 1) {
+      // sort particles that are leaving in the positive direction to the end of leavingParticles
+      auto leavingParticlesIter =
+          std::partition(leavingParticles.begin(), leavingParticles.end(), [&](const Particle &p) {
+            return autopas::utils::ArrayMath::dot(p.getPosition(), p.getPosition()) > altBoxMaxSquared;
+          });
+      const int rankRight = getNeighborRank(coords, commDir, std::plus<>());
+
+      // get right neighbors upper limit to check particle is not skipping right through it
+      const auto leftNeighboraltBoxMaxSquared = std::pow(altitudeBasedDecomposition->getAltitudeOfRank(rankRight), 2);
+      for (auto &p : leavingParticles) {
+        if (autopas::utils::ArrayMath::dot(p.getPosition(), p.getPosition()) > leftNeighboraltBoxMaxSquared) {
+          SPDLOG_LOGGER_WARN(
+              logger.get(), "Particle {} skipping through right neighbor {}  while migrating.", p.getID(), rankRight);
+        }
+      }
+
+      particleCommunicator.sendParticles(leavingParticlesIter, leavingParticles.end(), rankRight, comm);
+
+      // clip sent particles
+      leavingParticles.erase(leavingParticlesIter, leavingParticles.end());
+
+      // receive
+      auto incomingParticlesRight = particleCommunicator.receiveParticles(rankRight, comm);
+      incomingParticles.insert(incomingParticles.end(), incomingParticlesRight.begin(), incomingParticlesRight.end());
+    }
+
+    // receive left (negative direction)
+    if (rank != 0) {
+      const int rankLeft = getNeighborRank(coords, commDir, std::minus<>());
+      auto incomingParticlesLeft = particleCommunicator.receiveParticles(rankLeft, comm);
+      incomingParticles.insert(incomingParticles.end(), incomingParticlesLeft.begin(), incomingParticlesLeft.end());
+    }
+
+    leavingParticles.erase(leavingParticles.begin(), leavingParticles.end());
+    particleCommunicator.waitAndFlushBuffers();
+
+    SPDLOG_LOGGER_DEBUG(logger.get(), "Rank {} received {} particles", rank, incomingParticles.size());
+    return incomingParticles;
+  } else {
+    throw std::runtime_error(
+        "AltitudeBasedDecomposition::communicateParticles() "
+        "The passed decomposition is not of type AltitudeBasedDecomposition");
+  }
 }
