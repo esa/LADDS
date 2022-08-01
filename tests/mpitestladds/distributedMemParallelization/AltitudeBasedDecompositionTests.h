@@ -1,24 +1,23 @@
 /**
- * @file SimulationTest.h
- * @author F. Gratl
- * @date 02.06.22
+ * @file AltitudeBasedDecompositionTests.h
+ * @author P. Gomez
+ * @date 2022-08-01
  */
 
 #pragma once
 
 #include <gtest/gtest.h>
-#include <yaml-cpp/node/node.h>
 
 #include "ladds/Simulation.h"
-#include "ladds/distributedMemParallelization/DomainDecomposition.h"
+#include "ladds/distributedMemParallelization/AltitudeBasedDecomposition.h"
 #include "ladds/io/ConfigReader.h"
 #include "ladds/io/Logger.h"
 
-class SimulationTest : public testing::Test {
+class AltitudeBasedDecompositionTests : public testing::Test {
  public:
-  SimulationTest();
+  AltitudeBasedDecompositionTests();
 
-  ~SimulationTest() override;
+  ~AltitudeBasedDecompositionTests() override;
 
   int maxThreadsBefore;
   YAML::Node config;
@@ -27,7 +26,7 @@ class SimulationTest : public testing::Test {
   LADDS::Simulation simulation;
   std::unique_ptr<LADDS::ConfigReader> configReader;
   std::unique_ptr<AutoPas_t> autopas;
-  std::unique_ptr<LADDS::RegularGridDecomposition> decomposition;
+  std::unique_ptr<LADDS::AltitudeBasedDecomposition> decomposition;
   static constexpr std::array<double, 3> zeroVec{0., 0., 0.};
   static constexpr double constellationCutoff = 0.04;
 };
