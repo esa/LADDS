@@ -9,8 +9,6 @@
 #include <fstream>
 #include <iomanip>
 
-#include "ladds/io/hdf5/HDF5Definitions.h"
-
 namespace LADDS {
 
 ConfigReader::ConfigReader(const std::string &configPath, const Logger &logger, int rank, int numRanks)
@@ -22,9 +20,12 @@ ConfigReader::ConfigReader(const std::string &configPath, const Logger &logger, 
   nextSafeParticleID = lengthIDRange * rank;
   lastSafeParticleID = lengthIDRange * (rank + 1) - 1;
 }
+
 size_t ConfigReader::newParticleID() {
   if (nextSafeParticleID > lastSafeParticleID) {
-    throw std::runtime_error("No particle IDs left in this rank's ID space!");
+    auto msg = fmt::format(
+        "Particle ID overflow! nextSafeParticleID: {}, lastSafeParticleID: {}", nextSafeParticleID, lastSafeParticleID);
+    throw std::runtime_error(msg);
   }
   return nextSafeParticleID++;
 }

@@ -73,11 +73,9 @@ std::tuple<std::array<int, 3>, std::array<int, 3>, std::array<int, 3>> LADDS::Re
 }
 
 std::vector<LADDS::Particle> LADDS::RegularGridDecomposition::communicateParticles(
-    std::vector<LADDS::Particle> &leavingParticles,
-    autopas::AutoPas<LADDS::Particle> &autopas,
-    const DomainDecomposition &decomposition) const {
+    std::vector<LADDS::Particle> &leavingParticles, autopas::AutoPas<LADDS::Particle> &autopas) const {
   // Set up the communicator
-  const auto &comm = decomposition.getCommunicator();
+  const auto &comm = getCommunicator();
   const auto &localBoxMin = autopas.getBoxMin();
   const auto &localBoxMax = autopas.getBoxMax();
   auto logger = spdlog::get(LADDS_SPD_LOGGER_NAME);
@@ -93,66 +91,60 @@ std::vector<LADDS::Particle> LADDS::RegularGridDecomposition::communicateParticl
     return rankOther;
   };
 
-  if (const auto *regularGridDecomp = dynamic_cast<const RegularGridDecomposition *>(&decomposition)) {
-    const auto &[coordsMax, periods, coords] = regularGridDecomp->getGridInfo();
-    enum CommDir : int { X, Y, Z };
-    for (CommDir commDir = X; commDir <= Z; commDir = static_cast<CommDir>(commDir + 1)) {
-      // trigger both non-blocking sends before doing both blocking receives
+  const auto &[coordsMax, periods, coords] = getGridInfo();
+  enum CommDir : int { X, Y, Z };
+  for (CommDir commDir = X; commDir <= Z; commDir = static_cast<CommDir>(commDir + 1)) {
+    // trigger both non-blocking sends before doing both blocking receives
 
-      // send left (negative direction)
-      if (coords[commDir] != 0) {
-        // sort particles that are leaving in the negative direction to the end of leavingParticles
-        auto leavingParticlesIter =
-            std::partition(leavingParticles.begin(), leavingParticles.end(), [&](const Particle &p) {
-              return p.getPosition()[commDir] > localBoxMin[commDir];
-            });
-        const int rankLeft = getNeighborRank(coords, commDir, std::minus<>());
-        particleCommunicator.sendParticles(leavingParticlesIter, leavingParticles.end(), rankLeft, comm);
-        // clip sent particles
-        leavingParticles.erase(leavingParticlesIter, leavingParticles.end());
-      }
-
-      // communication right (positive direction)
-      if (coords[commDir] != coordsMax[commDir] - 1) {
-        // sort particles that are leaving in the positive direction to the end of leavingParticles
-        auto leavingParticlesIter =
-            std::partition(leavingParticles.begin(), leavingParticles.end(), [&](const Particle &p) {
-              return p.getPosition()[commDir] < localBoxMax[commDir];
-            });
-        const int rankRight = getNeighborRank(coords, commDir, std::plus<>());
-        particleCommunicator.sendParticles(leavingParticlesIter, leavingParticles.end(), rankRight, comm);
-        // clip sent particles
-        leavingParticles.erase(leavingParticlesIter, leavingParticles.end());
-
-        // receive
-        auto incomingParticlesRight = particleCommunicator.receiveParticles(rankRight, comm);
-        incomingParticles.insert(incomingParticles.end(), incomingParticlesRight.begin(), incomingParticlesRight.end());
-      }
-
-      // receive left (negative direction)
-      if (coords[commDir] != 0) {
-        const int rankLeft = getNeighborRank(coords, commDir, std::minus<>());
-        auto incomingParticlesLeft = particleCommunicator.receiveParticles(rankLeft, comm);
-        incomingParticles.insert(incomingParticles.end(), incomingParticlesLeft.begin(), incomingParticlesLeft.end());
-      }
-
-      // sort particles which have to be added to the local container to the front of incomingParticles
-      auto incomingParticlesIter =
-          std::partition(incomingParticles.begin(), incomingParticles.end(), [&](const Particle &p) {
-            return autopas::utils::inBox(p.getPosition(), localBoxMin, localBoxMax);
+    // send left (negative direction)
+    if (coords[commDir] != 0) {
+      // sort particles that are leaving in the negative direction to the end of leavingParticles
+      auto leavingParticlesIter =
+          std::partition(leavingParticles.begin(), leavingParticles.end(), [&](const Particle &p) {
+            return p.getPosition()[commDir] > localBoxMin[commDir];
           });
-
-      // move particles that were not inserted to leaving particles.
-      // These pass-through particles are those changing ranks in more than one dimension.
-      leavingParticles.insert(leavingParticles.end(), incomingParticlesIter, incomingParticles.end());
-      incomingParticles.erase(incomingParticlesIter, incomingParticles.end());
-
-      particleCommunicator.waitAndFlushBuffers();
+      const int rankLeft = getNeighborRank(coords, commDir, std::minus<>());
+      particleCommunicator.sendParticles(leavingParticlesIter, leavingParticles.end(), rankLeft, comm);
+      // clip sent particles
+      leavingParticles.erase(leavingParticlesIter, leavingParticles.end());
     }
-    return incomingParticles;
-  } else {
-    throw std::runtime_error(
-        "RegularGridDecomposition::communicateParticles: "
-        "The passed decomposition is not of type RegularGridDecomposition");
+
+    // communication right (positive direction)
+    if (coords[commDir] != coordsMax[commDir] - 1) {
+      // sort particles that are leaving in the positive direction to the end of leavingParticles
+      auto leavingParticlesIter =
+          std::partition(leavingParticles.begin(), leavingParticles.end(), [&](const Particle &p) {
+            return p.getPosition()[commDir] < localBoxMax[commDir];
+          });
+      const int rankRight = getNeighborRank(coords, commDir, std::plus<>());
+      particleCommunicator.sendParticles(leavingParticlesIter, leavingParticles.end(), rankRight, comm);
+      // clip sent particles
+      leavingParticles.erase(leavingParticlesIter, leavingParticles.end());
+
+      // receive
+      auto incomingParticlesRight = particleCommunicator.receiveParticles(rankRight, comm);
+      incomingParticles.insert(incomingParticles.end(), incomingParticlesRight.begin(), incomingParticlesRight.end());
+    }
+
+    // receive left (negative direction)
+    if (coords[commDir] != 0) {
+      const int rankLeft = getNeighborRank(coords, commDir, std::minus<>());
+      auto incomingParticlesLeft = particleCommunicator.receiveParticles(rankLeft, comm);
+      incomingParticles.insert(incomingParticles.end(), incomingParticlesLeft.begin(), incomingParticlesLeft.end());
+    }
+
+    // sort particles which have to be added to the local container to the front of incomingParticles
+    auto incomingParticlesIter =
+        std::partition(incomingParticles.begin(), incomingParticles.end(), [&](const Particle &p) {
+          return autopas::utils::inBox(p.getPosition(), localBoxMin, localBoxMax);
+        });
+
+    // move particles that were not inserted to leaving particles.
+    // These pass-through particles are those changing ranks in more than one dimension.
+    leavingParticles.insert(leavingParticles.end(), incomingParticlesIter, incomingParticles.end());
+    incomingParticles.erase(incomingParticlesIter, incomingParticles.end());
+
+    particleCommunicator.waitAndFlushBuffers();
   }
+  return incomingParticles;
 }

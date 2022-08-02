@@ -82,11 +82,9 @@ class AltitudeBasedDecomposition : public DomainDecomposition {
    * @param leavingParticles in/out parameter of leaving particles. If everything worked the vector should be empty
    * after the function call.
    * @param autopas
-   * @param decomposition
    * @return Vector of incoming particles.
    */
   std::vector<LADDS::Particle> communicateParticles(std::vector<LADDS::Particle> &leavingParticles,
-                                                    autopas::AutoPas<Particle> &autopas,
-                                                    const DomainDecomposition &decomposition) const override;
+                                                    autopas::AutoPas<Particle> &autopas) const override;
 };
 }  // namespace LADDS

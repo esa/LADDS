@@ -100,12 +100,10 @@ class DomainDecomposition {
    * @param leavingParticles in/out parameter of leaving particles. If everything worked the vector should be empty
    * after the function call.
    * @param autopas
-   * @param decomposition
    * @return Vector of incoming particles.
    */
   virtual std::vector<LADDS::Particle> communicateParticles(std::vector<LADDS::Particle> &leavingParticles,
-                                                            autopas::AutoPas<Particle> &autopas,
-                                                            const DomainDecomposition &decomposition) const = 0;
+                                                            autopas::AutoPas<Particle> &autopas) const = 0;
 
   /**
    * Balances the domain decomposition based on particle locations.

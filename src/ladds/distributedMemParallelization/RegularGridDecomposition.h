@@ -41,7 +41,6 @@ class RegularGridDecomposition : public DomainDecomposition {
    * @return Vector of incoming particles.
    */
   std::vector<LADDS::Particle> communicateParticles(std::vector<LADDS::Particle> &leavingParticles,
-                                                    autopas::AutoPas<Particle> &autopas,
-                                                    const DomainDecomposition &decomposition) const override;
+                                                    autopas::AutoPas<Particle> &autopas) const override;
 };
 }  // namespace LADDS
