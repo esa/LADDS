@@ -124,31 +124,51 @@ TEST_F(AltitudeBasedDecompositionTests, testAltDecompParticleMigration) {
 
   LADDS::SatelliteLoader::addSatellitesToAutoPas(*autopas, particles, *decomposition, *configReader);
 
-  std::cout << autopas::utils::ArrayUtils::to_string(decomposition->altitudeIntervals) << std::endl;
+  unsigned long numParticlesGlobal{};
+  unsigned long numParticlesLocal = autopas->getNumberOfParticles();
+  autopas::AutoPas_MPI_Allreduce(&numParticlesLocal,
+                                 &numParticlesGlobal,
+                                 1,
+                                 AUTOPAS_MPI_UNSIGNED_LONG,
+                                 AUTOPAS_MPI_SUM,
+                                 decomposition->getCommunicator());
+
+  ASSERT_EQ(numParticlesGlobal, 4ul) << "Expected 4 total particles but got " << numParticlesGlobal << " on rank "
+                                     << rank;
 
   for (auto &particle : *autopas) {
-    std::cout << particle << std::endl;
     // Send particles from rank 0 to rank 1
-    if (decomposition->getRank(particle.getPosition()) == 0) particle.setPosition({0., 0., 7000});
+    if (decomposition->getRank(particle.getPosition()) == 0) {
+      std::cout << "Changing particle " << particle.getID() << " from rank " << rank << std::endl;
+      particle.setPosition({0., 0., 7000});
+    }
     // Send particles from rank 1 to rank 2
-    if (decomposition->getRank(particle.getPosition()) == 1) particle.setPosition({0., 0., 7500});
+    else if (decomposition->getRank(particle.getPosition()) == 1) {
+      std::cout << "Changing particle " << particle.getID() << " from rank " << rank << std::endl;
+      particle.setPosition({0., 0., 7500});
+    }
     // Send particles from rank 2 to rank 0
-    if (decomposition->getRank(particle.getPosition()) == 2) particle.setPosition({0., 0., 6500});
+    else if (decomposition->getRank(particle.getPosition()) == 2) {
+      std::cout << "Changing particle " << particle.getID() << " from rank " << rank << std::endl;
+      particle.setPosition({0., 0., 6500});
+    }
   }
 
   std::vector<LADDS::Particle> leavingParticles = decomposition->getAndRemoveLeavingParticles(*autopas);
-
+  for (auto &particle : leavingParticles) {
+    std::cout << "Rank " << rank << ": " << particle.getID() << " is leaving." << std::endl;
+  }
   unsigned long numLeavingParticlesGlobal{};
   unsigned long numLeavingParticlesLocal = leavingParticles.size();
-  autopas::AutoPas_MPI_Reduce(&numLeavingParticlesLocal,
-                              &numLeavingParticlesGlobal,
-                              1,
-                              AUTOPAS_MPI_UNSIGNED_LONG,
-                              AUTOPAS_MPI_SUM,
-                              0,
-                              decomposition->getCommunicator());
+  autopas::AutoPas_MPI_Allreduce(&numLeavingParticlesLocal,
+                                 &numLeavingParticlesGlobal,
+                                 1,
+                                 AUTOPAS_MPI_UNSIGNED_LONG,
+                                 AUTOPAS_MPI_SUM,
+                                 decomposition->getCommunicator());
 
-  ASSERT_EQ(numLeavingParticlesGlobal, 3ul) << "Expected 3 leaving particles.";
+  ASSERT_EQ(numLeavingParticlesGlobal, 3ul)
+      << "Expected 3 leaving particles but got " << numLeavingParticlesGlobal << " on rank " << rank;
 
   std::array<size_t, 3> expectedIDs{0, 1, 2};
   for (auto &leavingParticle : leavingParticles) {
