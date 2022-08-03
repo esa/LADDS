@@ -136,10 +136,19 @@ TEST_F(AltitudeBasedDecompositionTests, testAltDecompParticleMigration) {
     if (decomposition->getRank(particle.getPosition()) == 2) particle.setPosition({0., 0., 6500});
   }
 
-  autopas::AutoPas_MPI_Barrier(decomposition->getCommunicator());
-
   std::vector<LADDS::Particle> leavingParticles = decomposition->getAndRemoveLeavingParticles(*autopas);
-  ASSERT_EQ(leavingParticles.size(), 3ul) << "Expected 3 leaving particles.";
+
+  unsigned long numLeavingParticlesGlobal{};
+  unsigned long numLeavingParticlesLocal = leavingParticles.size();
+  autopas::AutoPas_MPI_Reduce(&numLeavingParticlesLocal,
+                              &numLeavingParticlesGlobal,
+                              1,
+                              AUTOPAS_MPI_UNSIGNED_LONG,
+                              AUTOPAS_MPI_SUM,
+                              0,
+                              decomposition->getCommunicator());
+
+  ASSERT_EQ(numLeavingParticlesGlobal, 3ul) << "Expected 3 leaving particles.";
 
   std::array<size_t, 3> expectedIDs{0, 1, 2};
   for (auto &leavingParticle : leavingParticles) {
