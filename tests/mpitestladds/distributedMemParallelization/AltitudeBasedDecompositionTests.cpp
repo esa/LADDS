@@ -31,7 +31,7 @@ AltitudeBasedDecompositionTests::AltitudeBasedDecompositionTests()
   config["sim"]["collisionDistanceFactor"] = 1.;
   config["sim"]["iterations"] = 1;
   config["sim"]["minAltitude"] = 150.;
-  config["sim"]["prop"]["useKEPComponent"] = true;
+  config["sim"]["prop"]["useKEPComponent"] = false;
   config["sim"]["decompositionType"] = "Altitude";
 
   configReader = std::make_unique<LADDS::ConfigReader>(config, logger);
@@ -183,4 +183,116 @@ TEST_F(AltitudeBasedDecompositionTests, testAltDecompParticleMigration) {
     if (p.getID() == 1) ASSERT_TRUE(rank == 2) << "Expected leaving particles to be on rank 2.";
     if (p.getID() == 2) ASSERT_TRUE(rank == 0) << "Expected leaving particles to be on rank 0.";
   }
+}
+
+/**
+ * Tests whether leaving particles in collisions are caught correctly
+ * This test is expected to run on 8 MPI ranks
+ */
+TEST_F(AltitudeBasedDecompositionTests, testAltDecompCollisions) {
+  int numRanks{};
+  autopas::AutoPas_MPI_Comm_size(decomposition->getCommunicator(), &numRanks);
+  if (numRanks != 8) {
+    GTEST_FAIL() << "Test is expected to be launched with 8 ranks but only has " << numRanks;
+  }
+  int rank{};
+  autopas::AutoPas_MPI_Comm_rank(decomposition->getCommunicator(), &rank);
+
+  configReader->setValue("sim/breakup/enabled", true);
+  auto [csvWriter, accumulator, integrator] = simulation.initIntegrator(*autopas, *configReader);
+
+  // initialize N particles on the local rank
+  std::vector<LADDS::Particle> particles{};
+  constexpr int N = 4;
+  std::array<std::array<double, 3>, N> positions{{
+      {0., 0., 6705.},
+      {0., 0., 6707.},
+      {0., 6705., 0},
+      {0., 6707., 0},
+  }};
+  std::array<std::array<double, 3>, N> velocities{{
+      {0., 0., 8.},
+      {0., 0., 0.},
+      {0., 0., 0.},
+      {0., -8., 0.},
+  }};
+  for (size_t i = 0; i < N; ++i) {
+    constexpr double mass = 42.;
+    constexpr double radius = 42.;
+    const LADDS::Particle p{
+        positions[i],
+        velocities[i],
+        static_cast<size_t>(rank) * 1000ul + i,
+        "Rank " + std::to_string(rank) + " p" + std::to_string(i),
+        LADDS::Particle::ActivityState::evasivePreserving,
+        mass,
+        radius,
+        LADDS::Particle::calculateBcInv(std::numeric_limits<double>::quiet_NaN(), mass, radius, 2.2),
+        std::numeric_limits<size_t>::max()};
+    particles.push_back(p);
+  }
+
+  std::cout << autopas::utils::ArrayUtils::to_string(decomposition->altitudeIntervals) << std::endl;
+
+  // LADDS::SatelliteLoader::addSatellitesToAutoPas(*autopas, particles, *decomposition, *configReader);
+
+  // unsigned long numParticlesGlobal{};
+  // unsigned long numParticlesLocal = autopas->getNumberOfParticles();
+  // autopas::AutoPas_MPI_Allreduce(&numParticlesLocal,
+  //                                &numParticlesGlobal,
+  //                                1,
+  //                                AUTOPAS_MPI_UNSIGNED_LONG,
+  //                                AUTOPAS_MPI_SUM,
+  //                                decomposition->getCommunicator());
+
+  // ASSERT_EQ(numParticlesGlobal, 4ul) << "Expected 4 total particles but got " << numParticlesGlobal << " on rank "
+  //                                    << rank;
+
+  // for (auto &particle : *autopas) {
+  //   // Send particles from rank 0 to rank 1
+  //   if (decomposition->getRank(particle.getPosition()) == 0) {
+  //     std::cout << "Changing particle " << particle.getID() << " from rank " << rank << std::endl;
+  //     particle.setPosition({0., 0., 7000});
+  //   }
+  //   // Send particles from rank 1 to rank 2
+  //   else if (decomposition->getRank(particle.getPosition()) == 1) {
+  //     std::cout << "Changing particle " << particle.getID() << " from rank " << rank << std::endl;
+  //     particle.setPosition({0., 0., 7500});
+  //   }
+  //   // Send particles from rank 2 to rank 0
+  //   else if (decomposition->getRank(particle.getPosition()) == 2) {
+  //     std::cout << "Changing particle " << particle.getID() << " from rank " << rank << std::endl;
+  //     particle.setPosition({0., 0., 6500});
+  //   }
+  // }
+
+  // std::vector<LADDS::Particle> leavingParticles = decomposition->getAndRemoveLeavingParticles(*autopas);
+  // for (auto &particle : leavingParticles) {
+  //   std::cout << "Rank " << rank << ": " << particle.getID() << " is leaving." << std::endl;
+  // }
+  // unsigned long numLeavingParticlesGlobal{};
+  // unsigned long numLeavingParticlesLocal = leavingParticles.size();
+  // autopas::AutoPas_MPI_Allreduce(&numLeavingParticlesLocal,
+  //                                &numLeavingParticlesGlobal,
+  //                                1,
+  //                                AUTOPAS_MPI_UNSIGNED_LONG,
+  //                                AUTOPAS_MPI_SUM,
+  //                                decomposition->getCommunicator());
+
+  // ASSERT_EQ(numLeavingParticlesGlobal, 3ul)
+  //     << "Expected 3 leaving particles but got " << numLeavingParticlesGlobal << " on rank " << rank;
+
+  // std::array<size_t, 3> expectedIDs{0, 1, 2};
+  // for (auto &leavingParticle : leavingParticles) {
+  //   ASSERT_TRUE(std::find(expectedIDs.begin(), expectedIDs.end(), leavingParticle.getID()) != expectedIDs.end())
+  //       << "Expected leaving particle with ID " << leavingParticle.getID() << " to be in expectedIDs.";
+  // }
+
+  // decomposition->communicateParticles(leavingParticles, *autopas);
+
+  // for (auto &p : leavingParticles) {
+  //   if (p.getID() == 0) ASSERT_TRUE(rank == 1) << "Expected leaving particles to be on rank 1.";
+  //   if (p.getID() == 1) ASSERT_TRUE(rank == 2) << "Expected leaving particles to be on rank 2.";
+  //   if (p.getID() == 2) ASSERT_TRUE(rank == 0) << "Expected leaving particles to be on rank 0.";
+  // }
 }
