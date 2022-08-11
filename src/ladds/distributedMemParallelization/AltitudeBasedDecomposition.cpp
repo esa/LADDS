@@ -41,7 +41,6 @@ LADDS::AltitudeBasedDecomposition::AltitudeBasedDecomposition(LADDS::ConfigReade
   // calculate local box extent
   // we have to account for the fact that there won't be anything between 0, Physics::R_EARTH  + minAltitude, so
   // shifting the interval a bit
-  // TODO: find a more even distribution of the particles
   altitudeIntervals = this->logspace(std::log10(minAltitude), std::log10(maxAltitude - Physics::R_EARTH), numRanks);
   for (auto &interval : altitudeIntervals) {
     interval += Physics::R_EARTH;
