@@ -7,7 +7,7 @@
 
 #include "ladds/particle/Particle.h"
 
-LADDS::CollisionFunctor::CollisionCollectionT LADDS::ParticleMigrationHandler::collisionDetectionImmigrants(
+LADDS::CollisionFunctor::CollisionCollectionT LADDS::ParticleMigrationHandler::collisionDetectionAroundParticles(
     AutoPas_t &autopas,
     std::vector<LADDS::Particle> &incomingParticles,
     double deltaT,

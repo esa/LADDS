@@ -315,19 +315,32 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     migratedParticlesLocal = leavingParticles.size();
     timers.containerUpdate.stop();
 
+    timers.collisionDetectionEmmigrants.start();
+    auto leaving_collisions =
+        ParticleMigrationHandler::collisionDetectionAroundParticles(autopas,
+                                                                    leavingParticles,
+                                                                    deltaT * autopas.getVerletRebuildFrequency(),
+                                                                    8.,
+                                                                    collisionDistanceFactor,
+                                                                    minDetectionRadius);
+    timers.collisionDetectionEmmigrants.stop();
+
     timers.particleCommunication.start();
     auto incomingParticles = domainDecomposition.communicateParticles(leavingParticles, autopas);
     timers.particleCommunication.stop();
 
     timers.collisionDetectionImmigrants.start();
     auto collisions =
-        ParticleMigrationHandler::collisionDetectionImmigrants(autopas,
-                                                               incomingParticles,
-                                                               deltaT * autopas.getVerletRebuildFrequency(),
-                                                               8.,
-                                                               collisionDistanceFactor,
-                                                               minDetectionRadius);
+        ParticleMigrationHandler::collisionDetectionAroundParticles(autopas,
+                                                                    incomingParticles,
+                                                                    deltaT * autopas.getVerletRebuildFrequency(),
+                                                                    8.,
+                                                                    collisionDistanceFactor,
+                                                                    minDetectionRadius);
     timers.collisionDetectionImmigrants.stop();
+
+    // Combine collisions from leaving and incoming particles
+    collisions.insert(collisions.end(), leaving_collisions.begin(), leaving_collisions.end());
     totalConjunctions += collisions.size();
 
     if (breakupWrapper) {

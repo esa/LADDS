@@ -37,7 +37,7 @@ namespace LADDS::ParticleMigrationHandler {
  * @param minDetectionRadius
  * @return Collection of collision partners
  */
-LADDS::CollisionFunctor::CollisionCollectionT collisionDetectionImmigrants(
+LADDS::CollisionFunctor::CollisionCollectionT collisionDetectionAroundParticles(
     AutoPas_t &autopas,
     std::vector<LADDS::Particle> &incomingParticles,
     double deltaT,
