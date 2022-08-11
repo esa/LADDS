@@ -23,7 +23,20 @@ namespace LADDS::SatelliteLoader {
  * @param config
  * @param decomp Needed for the communicator
  */
-void loadSatellites(AutoPas_t &autopas, ConfigReader &config, const DomainDecomposition &decomp);
+void loadSatellites(AutoPas_t &autopas, ConfigReader &config, DomainDecomposition &decomp);
+
+/**
+ * Adds the passed particles to the autopas container.
+ *
+ * @param autopas
+ * @param satellites
+ * @param decomp
+ * @param config
+ * */
+void addSatellitesToAutoPas(AutoPas_t &autopas,
+                            std::vector<Particle> &satellites,
+                            DomainDecomposition &decomp,
+                            ConfigReader &config);
 
 /**
  * Parse constellation information and prepare satellites for insertion.

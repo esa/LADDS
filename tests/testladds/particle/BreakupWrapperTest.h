@@ -15,7 +15,7 @@
 
 class BreakupWrapperTest : public testing::Test {
  public:
-  BreakupWrapperTest() : logger("BreakupWrapperTestLogger"), simulation(logger) {
+  BreakupWrapperTest() : logger(LADDS_SPD_LOGGER_NAME), simulation(logger) {
     logger.get()->set_level(LADDS::Logger::Level::off);
 
     // initialize a minimal default configuration
@@ -28,6 +28,9 @@ class BreakupWrapperTest : public testing::Test {
     // no propagator components are activated (not even kepler) to keep trajectories simpler
     config["sim"]["iterations"] = 1;
     config["sim"]["breakup"]["enabled"] = true;
+
+    // init decomp in cfg file correctly
+    config["sim"]["decompositionType"] = "RegularGrid";
 
     configReader = std::make_unique<LADDS::ConfigReader>(config, logger);
     decomposition = std::make_unique<LADDS::RegularGridDecomposition>(*configReader);

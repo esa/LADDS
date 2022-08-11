@@ -21,7 +21,7 @@ using ParameterTuple = std::tuple<std::array<double, 3>, bool>;
 
 class SimulationTest : public testing::TestWithParam<ParameterTuple> {
  public:
-  SimulationTest() : logger("SimulationTestLogger"), simulation(logger) {
+  SimulationTest() : logger(LADDS_SPD_LOGGER_NAME), simulation(logger) {
     logger.get()->set_level(LADDS::Logger::Level::off);
 
     // initialize a minimal default configuration
@@ -37,6 +37,7 @@ class SimulationTest : public testing::TestWithParam<ParameterTuple> {
     config["sim"]["iterations"] = 1;
     config["sim"]["minAltitude"] = 150.;
     config["sim"]["prop"]["useKEPComponent"] = true;
+    config["sim"]["decompositionType"] = "RegularGrid";
 
     configReader = std::make_unique<LADDS::ConfigReader>(config, logger);
 

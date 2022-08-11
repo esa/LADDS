@@ -16,6 +16,7 @@
 
 #include "CollisionFunctor.h"
 #include "TypeDefinitions.h"
+#include "ladds/distributedMemParallelization/AltitudeBasedDecomposition.h"
 #include "ladds/distributedMemParallelization/DomainDecomposition.h"
 #include "ladds/distributedMemParallelization/RegularGridDecomposition.h"
 #include "ladds/io/ConfigReader.h"
@@ -104,30 +105,6 @@ class Simulation {
                                                                               double minDetectionRadius);
 
   /**
-   * Interact all incoming particles with all particles which potentially crossed its path since the last container
-   * update.
-   *
-   * These particles are found in a box around the immigrant's position -deltaT time ago.
-   * The box has a side length of 2x the maximum coverable distance by any particle.
-   *
-   * @note The first pointers in the returned tuple collection point to particles in the immigrant vector!
-   *
-   * @param autopas
-   * @param incomingParticles
-   * @param deltaT Time since the last container update.
-   * @param maxV Maximal velocity a particle is assumed to have. Has to be positive.
-   * @param collisionDistanceFactor See CollisionFunctor::_collisionDistanceFactor
-   * @param minDetectionRadius
-   * @return Collection of collision partners
-   */
-  CollisionFunctor::CollisionCollectionT collisionDetectionImmigrants(AutoPas_t &autopas,
-                                                                      std::vector<Particle> &incomingParticles,
-                                                                      double deltaT,
-                                                                      double maxV,
-                                                                      double collisionDistanceFactor,
-                                                                      double minDetectionRadius);
-
-  /**
    * Auxiliary function to avoid code duplication. Triggers the writing of collisions and if necessary the breakup
    * simulation. Also invokes the relevant timers.
    * @param iteration
@@ -199,19 +176,6 @@ class Simulation {
   size_t computeTimeout(ConfigReader &config);
 
   /**
-   * Send the given list of leaving particles to all (up to) 26 logical surrounding ranks and receive their leaving
-   * particles which are relevant for the local rank.
-   * @param leavingParticles in/out parameter of leaving particles. If everything worked the vector should be empty
-   * after the function call.
-   * @param autopas
-   * @param decomposition
-   * @return Vector of incoming particles.
-   */
-  std::vector<Particle> communicateParticles(std::vector<Particle> &leavingParticles,
-                                             autopas::AutoPas<Particle> &autopas,
-                                             const RegularGridDecomposition &decomposition);
-
-  /**
    * Prints one line on the info log level stating every rank's number of particles, sorted by rank number.
    * @param autopas
    * @param decomposition
@@ -225,11 +189,13 @@ class Simulation {
    * @param iteration
    * @param numParticlesLocal
    * @param totalConjunctionsLocal
+   * @param localMigrations
    * @param comm
    */
   void printProgressOutput(size_t iteration,
                            size_t numParticlesLocal,
                            size_t totalConjunctionsLocal,
+                           size_t localMigrations,
                            const autopas::AutoPas_MPI_Comm &comm);
 
   /**
