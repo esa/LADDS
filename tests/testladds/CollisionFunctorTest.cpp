@@ -37,7 +37,7 @@ TEST(CollisionFunctorTest, ThreeParticles) {
                         std::numeric_limits<size_t>::max());
   }
 
-  LADDS::CollisionFunctor collisionFunctor(cutoff, 10.0, 1., 0.01);
+  LADDS::CollisionFunctor collisionFunctor(cutoff, 10.0, 1., 0.01, 0.1);
 
   for (size_t i = 0; i < debris.size(); ++i) {
     for (size_t j = i + 1; j < debris.size(); ++j) {
@@ -162,7 +162,7 @@ TEST(CollisionFunctorTest, MixActivityStates) {
                       LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
                       std::numeric_limits<size_t>::max());
 
-  LADDS::CollisionFunctor collisionFunctor(cutoff, 10.0, 1., 0.01);
+  LADDS::CollisionFunctor collisionFunctor(cutoff, 10.0, 1., 0.01, 0.1);
 
   for (size_t i = 0; i < debris.size(); ++i) {
     for (size_t j = i + 1; j < debris.size(); ++j) {
@@ -240,7 +240,7 @@ TEST(CollisionFunctorTest, CollisionDistanceFactorTest) {
 
   // test for different factors
   for (const double collisionDistanceFactor : {1., 2.}) {
-    LADDS::CollisionFunctor collisionFunctor(cutoff, dt, collisionDistanceFactor, 0.1);
+    LADDS::CollisionFunctor collisionFunctor(cutoff, dt, collisionDistanceFactor, 0.1, 0.1);
     collisionFunctor.AoSFunctor(debris[0], debris[1], newton3);
     collisionFunctor.endTraversal(newton3);
     if (collisionDistanceFactor == 1.) {
@@ -266,7 +266,7 @@ TEST_P(CollisionFunctorTest, LinearInterpolationTest) {
   const auto &[x1, x2, v1, v2, dt, squaredExpectedDist, collisionPoint] = GetParam();
 
   // collisionDistanceFactor > 1 to actually cover all conjunctions
-  LADDS::CollisionFunctor collisionFunctor(cutoff, dt, 10., 0.1);
+  LADDS::CollisionFunctor collisionFunctor(cutoff, dt, 10., 0.1, 0.1);
 
   std::vector<LADDS::Particle> debris;
   debris.reserve(numDebris);

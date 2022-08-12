@@ -207,9 +207,11 @@ void Simulation::updateConstellation(AutoPas_t &autopas,
 std::tuple<CollisionFunctor::CollisionCollectionT, bool> Simulation::collisionDetection(AutoPas_t &autopas,
                                                                                         double deltaT,
                                                                                         double collisionDistanceFactor,
-                                                                                        double minDetectionRadius) {
+                                                                                        double minDetectionRadius,
+                                                                                        double CDMcutoffInKM) {
   // pairwise interaction
-  CollisionFunctor collisionFunctor(autopas.getCutoff(), deltaT, collisionDistanceFactor, minDetectionRadius);
+  CollisionFunctor collisionFunctor(
+      autopas.getCutoff(), deltaT, collisionDistanceFactor, minDetectionRadius, CDMcutoffInKM);
   bool stillTuning = autopas.iteratePairwise(&collisionFunctor);
   return {collisionFunctor.getCollisions(), stillTuning};
 }
@@ -236,6 +238,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
         logger.get(), "sim/timestepsPerCollisionDetection is {} but must not be <1!", timestepsPerCollisionDetection);
   }
   const auto minDetectionRadius = config.get<double>("sim/minDetectionRadius", 0.05);
+  const auto CDMcutoffInKM = config.get<double>("sim/CDMcutoffInKM", 0.1);
   const auto minAltitude = config.get<double>("sim/minAltitude", 150.);
   std::vector<Particle> delayedInsertion;
 
@@ -326,7 +329,8 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                                                                deltaT * autopas.getVerletRebuildFrequency(),
                                                                8.,
                                                                collisionDistanceFactor,
-                                                               minDetectionRadius);
+                                                               minDetectionRadius,
+                                                               CDMcutoffInKM);
     timers.collisionDetectionImmigrants.stop();
     totalConjunctions += collisions.size();
 
@@ -360,7 +364,8 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       auto [collisions, stillTuning] = collisionDetection(autopas,
                                                           deltaT * static_cast<double>(timestepsPerCollisionDetection),
                                                           collisionDistanceFactor,
-                                                          minDetectionRadius);
+                                                          minDetectionRadius,
+                                                          CDMcutoffInKM);
       timers.collisionDetection.stop();
       totalConjunctions += collisions.size();
       if (collisions.size() > 0) {

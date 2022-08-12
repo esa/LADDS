@@ -34,7 +34,8 @@ namespace LADDS::ParticleMigrationHandler {
  * @param deltaT Time since the last container update.
  * @param maxV Maximal velocity a particle is assumed to have. Has to be positive.
  * @param collisionDistanceFactor See CollisionFunctor::_collisionDistanceFactor
- * @param minDetectionRadius
+ * @param minDetectionRadius See CollisionFunctor::_minDetectionRadius
+ * @param CDMcutoffInKM See CollisionFunctor::_CDMcutoffInKM
  * @return Collection of collision partners
  */
 LADDS::CollisionFunctor::CollisionCollectionT collisionDetectionImmigrants(
@@ -43,6 +44,7 @@ LADDS::CollisionFunctor::CollisionCollectionT collisionDetectionImmigrants(
     double deltaT,
     double maxV,
     double collisionDistanceFactor,
-    double minDetectionRadius);
+    double minDetectionRadius,
+    double CDMcutoffInKM);
 
 }  // namespace LADDS::ParticleMigrationHandler

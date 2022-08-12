@@ -13,7 +13,8 @@ LADDS::CollisionFunctor::CollisionCollectionT LADDS::ParticleMigrationHandler::c
     double deltaT,
     double maxV,
     double collisionDistanceFactor,
-    double minDetectionRadius) {
+    double minDetectionRadius,
+    double CDMcutoffInKM) {
   using autopas::utils::ArrayMath::abs;
   using autopas::utils::ArrayMath::add;
   using autopas::utils::ArrayMath::div;
@@ -21,7 +22,8 @@ LADDS::CollisionFunctor::CollisionCollectionT LADDS::ParticleMigrationHandler::c
   using autopas::utils::ArrayMath::mulScalar;
   using autopas::utils::ArrayMath::sub;
 
-  LADDS::CollisionFunctor collisionFunctor(autopas.getCutoff(), deltaT, collisionDistanceFactor, minDetectionRadius);
+  LADDS::CollisionFunctor collisionFunctor(
+      autopas.getCutoff(), deltaT, collisionDistanceFactor, minDetectionRadius, CDMcutoffInKM);
   const std::array<double, 3> maxVVec{maxV, maxV, maxV};
   const auto maxCoveredDistance = mulScalar(maxVVec, deltaT);
 

@@ -11,6 +11,7 @@ sim:
   minAltitude: 150 # Everything below this altitude above ground will be considered burning up [km]
   deltaT: 10.0 # [s]
   collisionDistanceFactor: 1.0 # Factor multiplied with the sum of radii to over approximate collision distances.
+  # CDMcutoffInKM: 0.1 # Distance at which even evaded conjunctions are tracked (in a separate out file)
   timestepsPerCollisionDetection: 1
   # decompositionType: Altitude   # Determines the MPI decomposition type. Options: "Altitude" are spherical shells, "RegularGrid" standard cartesian grid.
 
