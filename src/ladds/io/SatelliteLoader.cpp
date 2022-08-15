@@ -131,6 +131,8 @@ std::vector<Constellation> SatelliteLoader::loadConstellations(ConfigReader &con
   std::vector<Constellation> constellations;
   auto constellationList = config.get<std::string>("io/constellationList", "", true);
   if (not constellationList.empty()) {
+    throw std::runtime_error("Constellations are currently not supported! See https://github.com/esa/LADDS/issues/149");
+
     auto constellationDataStr = config.get<std::string>("io/constellationList");
     // count constellation by counting ';'
     int nConstellations = std::count(constellationDataStr.begin(), constellationDataStr.end(), ';') + 1;
