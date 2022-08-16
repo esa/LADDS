@@ -206,7 +206,6 @@ TEST_F(AltitudeBasedDecompositionTests, testAltDecompCollisions) {
   int rank{};
   autopas::AutoPas_MPI_Comm_rank(decomposition->getCommunicator(), &rank);
 
-  configReader->setValue("sim/breakup/enabled", true);
   auto [csvWriter, accumulator, integrator] = simulation.initIntegrator(*autopas, *configReader);
 
   // initialize N particles on the local rank
@@ -305,6 +304,12 @@ TEST_F(AltitudeBasedDecompositionTests, testAltDecompCollisions) {
   for (auto &p : incomingParticles)
     std::cout << "Rank " << rank << ": " << p.getID() << " at "
               << autopas::utils::ArrayUtils::to_string(p.getPosition()) << " is arriving." << std::endl;
+
+  // Check if the arriving particles are correct
+  if (rank < 2)
+    ASSERT_EQ(incomingParticles.size(), 2) << "Expected " << 2 << " particles on rank " << rank;
+  else
+    ASSERT_EQ(incomingParticles.size(), 0) << "Expected " << 0 << " particles on rank " << rank;
 
   auto incoming_collisions = LADDS::ParticleMigrationHandler::collisionDetectionAroundParticles(
       *autopas,
