@@ -322,7 +322,8 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                                                                     deltaT * autopas.getVerletRebuildFrequency(),
                                                                     8.,
                                                                     collisionDistanceFactor,
-                                                                    minDetectionRadius);
+                                                                    minDetectionRadius,
+                                                                    true);  // <- checking for collisions among leavers
     timers.collisionDetectionEmmigrants.stop();
 
     timers.particleCommunication.start();

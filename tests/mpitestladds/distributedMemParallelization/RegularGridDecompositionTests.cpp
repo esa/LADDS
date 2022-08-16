@@ -1,16 +1,15 @@
 /**
- * @file SimulationTest.cpp
+ * @file RegularGridDecompositionTests.cpp
  * @author F. Gratl
  * @date 02.06.22
  */
 
-#include "SimulationTest.h"
-
+#include "RegularGridDecompositionTests.h"
 #include "autopas/utils/WrapOpenMP.h"
 #include "ladds/TypeDefinitions.h"
 #include "ladds/distributedMemParallelization/ParticleMigrationHandler.h"
 
-SimulationTest::SimulationTest()
+RegularGridDecompositionTests::RegularGridDecompositionTests()
     : maxThreadsBefore(autopas::autopas_get_max_threads()), logger(LADDS_SPD_LOGGER_NAME), simulation(logger) {
   // make sure to only use one thread
   autopas::autopas_set_num_threads(1);
@@ -39,7 +38,7 @@ SimulationTest::SimulationTest()
   autopas = simulation.initAutoPas(*configReader, *decomposition);
 }
 
-SimulationTest::~SimulationTest() {
+RegularGridDecompositionTests::~RegularGridDecompositionTests() {
   // reset omp max threads
   autopas::autopas_set_num_threads(maxThreadsBefore);
 }
@@ -47,7 +46,7 @@ SimulationTest::~SimulationTest() {
 /**
  * This test is expected to run on 8 MPI ranks
  */
-TEST_F(SimulationTest, testParticleMigrationHandler) {
+TEST_F(RegularGridDecompositionTests, testParticleMigrationHandler) {
   using autopas::utils::ArrayMath::add;
   using autopas::utils::ArrayMath::mul;
   using autopas::utils::ArrayMath::mulScalar;
