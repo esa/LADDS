@@ -28,6 +28,7 @@ class Timers {
   autopas::utils::Timer collisionDetectionEmmigrants{};
   autopas::utils::Timer collisionWriting{};
   autopas::utils::Timer collisionSimulation{};
+  autopas::utils::Timer evasionWriting{};
   autopas::utils::Timer containerUpdate{};
   autopas::utils::Timer output{};
 

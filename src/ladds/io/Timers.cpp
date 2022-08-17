@@ -73,13 +73,15 @@ void Timers::printTimers(ConfigReader &config, const DomainDecomposition &decomp
           printLB(collisionWriting) +
       timerToString("    Collision simulation           ", accMPITimers(collisionSimulation), maxNumberOfDigits, timeSimAcc) +
           printLB(collisionSimulation) +
+      timerToString("    Collision writer               ", accMPITimers(evasionWriting), maxNumberOfDigits, timeSimAcc) +
+          printLB(evasionWriting) +
       timerToString("    Container update               ", accMPITimers(containerUpdate), maxNumberOfDigits, timeSimAcc) +
           printLB(containerUpdate) +
       timerToString("    Output                         ", accMPITimers(output), maxNumberOfDigits, timeTotalAcc) +
           printLB(output /*offest for formatting*/) +
       timerToString("Total (wall-time)                  ", timeTotal, maxNumberOfDigits) + "\n" +
       timerToString("  One iteration                    ", timeSim / iterations, maxNumberOfDigits, timeTotal));
-      // clang-format om
+  // clang-format on
 }
 
 /**

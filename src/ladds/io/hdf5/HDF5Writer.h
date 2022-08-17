@@ -49,6 +49,13 @@ class HDF5Writer final : public ConjuctionWriterInterface {
    */
   void writeConjunctions(size_t iteration, const CollisionFunctor::CollisionCollectionT &collisions) override;
 
+  /**
+   * Write evasions of the current iteration to the HDF5 file. If evasions is empty, nothing is written.
+   * @param iteration
+   * @param evasions
+   */
+  void writeEvasions(size_t iteration, const CollisionFunctor::CollisionCollectionT &evasions) override;
+
  private:
   /**
    * Highest partilce ID that was written in any previous iteration.
@@ -64,6 +71,10 @@ class HDF5Writer final : public ConjuctionWriterInterface {
    * Object holding the info for the hdf5 compound type of the collision data.
    */
   h5pp::hid::h5t collisionInfoH5Type;
+  /**
+   * Object holding the info for the hdf5 compound type of the collision data.
+   */
+  h5pp::hid::h5t evasionInfoH5Type;
   /**
    * Object holding the info for the hdf5 compound type of the constant particle properties data.
    */

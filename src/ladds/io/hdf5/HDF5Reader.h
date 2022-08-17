@@ -29,7 +29,19 @@ class HDF5Reader {
    */
   std::vector<Particle> readParticles(size_t iteration, double coefficientOfDrag) const;
 
+  /**
+   * Read the collisions of particles in the HDF5 file.
+   * @param iteration
+   * @return
+   */
   std::vector<HDF5Definitions::CollisionInfo> readCollisions(size_t iteration) const;
+
+  /**
+   * Read the evasions of particles in the HDF5 file.
+   * @param iteration
+   * @return
+   */
+  std::vector<HDF5Definitions::CollisionInfo> readEvasions(size_t iteration) const;
 
   /**
    * Finds the last iteration that is stored in the file.

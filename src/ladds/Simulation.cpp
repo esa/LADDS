@@ -364,6 +364,11 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       autopas.addParticle(p);
     }
 
+    // store evasions in HDF5
+    timers.evasionWriting.start();
+    conjuctionWriter->writeEvasions(iteration, evasions);
+    timers.evasionWriting.stop();
+
     processCollisions(iteration, collisions, *conjuctionWriter, breakupWrapper.get());
 
     // sanity check: after communication there should be no leaving particles left
