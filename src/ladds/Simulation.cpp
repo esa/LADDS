@@ -204,16 +204,17 @@ void Simulation::updateConstellation(AutoPas_t &autopas,
   }
 }
 
-std::tuple<CollisionFunctor::CollisionCollectionT, bool> Simulation::collisionDetection(AutoPas_t &autopas,
-                                                                                        double deltaT,
-                                                                                        double collisionDistanceFactor,
-                                                                                        double minDetectionRadius,
-                                                                                        double CDMcutoffInKM) {
+std::tuple<CollisionFunctor::CollisionCollectionT, CollisionFunctor::CollisionCollectionT, bool>
+Simulation::collisionDetection(AutoPas_t &autopas,
+                               double deltaT,
+                               double collisionDistanceFactor,
+                               double minDetectionRadius,
+                               double CDMcutoffInKM) {
   // pairwise interaction
   CollisionFunctor collisionFunctor(
       autopas.getCutoff(), deltaT, collisionDistanceFactor, minDetectionRadius, CDMcutoffInKM);
   bool stillTuning = autopas.iteratePairwise(&collisionFunctor);
-  return {collisionFunctor.getCollisions(), stillTuning};
+  return {collisionFunctor.getCollisions(), collisionFunctor.getEvadedCollisions(), stillTuning};
 }
 
 size_t Simulation::simulationLoop(AutoPas_t &autopas,
@@ -323,7 +324,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     timers.particleCommunication.stop();
 
     timers.collisionDetectionImmigrants.start();
-    auto collisions =
+    auto [collisions, evasion] =
         ParticleMigrationHandler::collisionDetectionImmigrants(autopas,
                                                                incomingParticles,
                                                                deltaT * autopas.getVerletRebuildFrequency(),
@@ -361,11 +362,12 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
     if (iteration % timestepsPerCollisionDetection == 0) {
       timers.collisionDetection.start();
-      auto [collisions, stillTuning] = collisionDetection(autopas,
-                                                          deltaT * static_cast<double>(timestepsPerCollisionDetection),
-                                                          collisionDistanceFactor,
-                                                          minDetectionRadius,
-                                                          CDMcutoffInKM);
+      auto [collisions, evasions, stillTuning] =
+          collisionDetection(autopas,
+                             deltaT * static_cast<double>(timestepsPerCollisionDetection),
+                             collisionDistanceFactor,
+                             minDetectionRadius,
+                             CDMcutoffInKM);
       timers.collisionDetection.stop();
       totalConjunctions += collisions.size();
       if (collisions.size() > 0) {

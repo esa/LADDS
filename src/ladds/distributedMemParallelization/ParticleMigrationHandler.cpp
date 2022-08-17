@@ -7,14 +7,14 @@
 
 #include "ladds/particle/Particle.h"
 
-LADDS::CollisionFunctor::CollisionCollectionT LADDS::ParticleMigrationHandler::collisionDetectionImmigrants(
-    AutoPas_t &autopas,
-    std::vector<LADDS::Particle> &incomingParticles,
-    double deltaT,
-    double maxV,
-    double collisionDistanceFactor,
-    double minDetectionRadius,
-    double CDMcutoffInKM) {
+std::tuple<LADDS::CollisionFunctor::CollisionCollectionT, LADDS::CollisionFunctor::CollisionCollectionT>
+LADDS::ParticleMigrationHandler::collisionDetectionImmigrants(AutoPas_t &autopas,
+                                                              std::vector<LADDS::Particle> &incomingParticles,
+                                                              double deltaT,
+                                                              double maxV,
+                                                              double collisionDistanceFactor,
+                                                              double minDetectionRadius,
+                                                              double CDMcutoffInKM) {
   using autopas::utils::ArrayMath::abs;
   using autopas::utils::ArrayMath::add;
   using autopas::utils::ArrayMath::div;
@@ -41,5 +41,5 @@ LADDS::CollisionFunctor::CollisionCollectionT LADDS::ParticleMigrationHandler::c
         [&](auto &p) { collisionFunctor.AoSFunctor(immigrant, p, false); }, lowerCorner, higherCorner);
   }
 
-  return collisionFunctor.getCollisions();
+  return {collisionFunctor.getCollisions(), collisionFunctor.getEvadedCollisions()};
 }

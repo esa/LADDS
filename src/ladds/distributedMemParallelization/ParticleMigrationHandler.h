@@ -38,13 +38,13 @@ namespace LADDS::ParticleMigrationHandler {
  * @param CDMcutoffInKM See CollisionFunctor::_CDMcutoffInKM
  * @return Collection of collision partners
  */
-LADDS::CollisionFunctor::CollisionCollectionT collisionDetectionImmigrants(
-    AutoPas_t &autopas,
-    std::vector<LADDS::Particle> &incomingParticles,
-    double deltaT,
-    double maxV,
-    double collisionDistanceFactor,
-    double minDetectionRadius,
-    double CDMcutoffInKM);
+std::tuple<LADDS::CollisionFunctor::CollisionCollectionT, LADDS::CollisionFunctor::CollisionCollectionT>
+collisionDetectionImmigrants(AutoPas_t &autopas,
+                             std::vector<LADDS::Particle> &incomingParticles,
+                             double deltaT,
+                             double maxV,
+                             double collisionDistanceFactor,
+                             double minDetectionRadius,
+                             double CDMcutoffInKM);
 
 }  // namespace LADDS::ParticleMigrationHandler
