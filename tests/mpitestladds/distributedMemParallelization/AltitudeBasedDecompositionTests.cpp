@@ -178,8 +178,9 @@ TEST_F(AltitudeBasedDecompositionTests, testAltDecompParticleMigration) {
   ASSERT_EQ(numLeavingParticlesGlobal, 3ul)
       << "Expected 3 leaving particles but got " << numLeavingParticlesGlobal << " on rank " << rank;
 
-  std::array<size_t, 3> expectedIDs{0, 1, 2};
+  std::array<size_t, 3> expectedIDs{0, 1000, 2000};
   for (auto &leavingParticle : leavingParticles) {
+    std::cout << leavingParticle.getID() << std::endl;
     ASSERT_TRUE(std::find(expectedIDs.begin(), expectedIDs.end(), leavingParticle.getID()) != expectedIDs.end())
         << "Expected leaving particle with ID " << leavingParticle.getID() << " to be in expectedIDs.";
   }
@@ -282,13 +283,14 @@ TEST_F(AltitudeBasedDecompositionTests, testAltDecompCollisions) {
   else
     ASSERT_EQ(leavingParticles.size(), 0) << "Expected " << 0 << " particles on rank " << rank;
 
-  auto leaving_collisions = LADDS::ParticleMigrationHandler::collisionDetectionAroundParticles(
+  auto [leaving_collisions, leaving_evasions] = LADDS::ParticleMigrationHandler::collisionDetectionAroundParticles(
       *autopas,
       leavingParticles,
       config["sim"]["deltaT"].as<double>() * autopas->getVerletRebuildFrequency(),
       8.,
       config["sim"]["collisionDistanceFactor"].as<double>(),
       0.05,
+      0.1,
       true);
 
   if (rank < 2) std::cout << "Rank: " << rank << " Leaving collisions: " << leaving_collisions.size() << std::endl;
@@ -311,12 +313,13 @@ TEST_F(AltitudeBasedDecompositionTests, testAltDecompCollisions) {
   else
     ASSERT_EQ(incomingParticles.size(), 0) << "Expected " << 0 << " particles on rank " << rank;
 
-  auto incoming_collisions = LADDS::ParticleMigrationHandler::collisionDetectionAroundParticles(
+  auto [incoming_collisions, incoming_evasions] = LADDS::ParticleMigrationHandler::collisionDetectionAroundParticles(
       *autopas,
       incomingParticles,
       config["sim"]["deltaT"].as<double>() * autopas->getVerletRebuildFrequency(),
       8.,
       config["sim"]["collisionDistanceFactor"].as<double>(),
+      0.1,
       0.05);
 
   if (rank < 2) std::cout << "Rank: " << rank << " Incoming Collisions: " << incoming_collisions.size() << std::endl;
