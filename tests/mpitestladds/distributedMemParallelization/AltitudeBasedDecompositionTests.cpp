@@ -284,6 +284,7 @@ TEST_F(AltitudeBasedDecompositionTests, testAltDecompCollisions) {
     ASSERT_EQ(leavingParticles.size(), 0) << "Expected " << 0 << " particles on rank " << rank;
 
   auto [leaving_collisions, leaving_evasions] = LADDS::ParticleMigrationHandler::collisionDetectionAroundParticles(
+
       *autopas,
       leavingParticles,
       config["sim"]["deltaT"].as<double>() * autopas->getVerletRebuildFrequency(),
@@ -314,6 +315,7 @@ TEST_F(AltitudeBasedDecompositionTests, testAltDecompCollisions) {
     ASSERT_EQ(incomingParticles.size(), 0) << "Expected " << 0 << " particles on rank " << rank;
 
   auto [incoming_collisions, incoming_evasions] = LADDS::ParticleMigrationHandler::collisionDetectionAroundParticles(
+
       *autopas,
       incomingParticles,
       config["sim"]["deltaT"].as<double>() * autopas->getVerletRebuildFrequency(),

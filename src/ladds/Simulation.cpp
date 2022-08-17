@@ -320,7 +320,9 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     timers.containerUpdate.stop();
 
     timers.collisionDetectionEmmigrants.start();
+    
     auto [leaving_collisions, leaving_evasions] =
+
         ParticleMigrationHandler::collisionDetectionAroundParticles(autopas,
                                                                     leavingParticles,
                                                                     deltaT * autopas.getVerletRebuildFrequency(),
@@ -335,6 +337,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     timers.particleCommunication.stop();
 
     timers.collisionDetectionImmigrants.start();
+
     auto [collisions, evasions] =
         ParticleMigrationHandler::collisionDetectionAroundParticles(autopas,
                                                                     incomingParticles,
@@ -343,11 +346,13 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                                                                     collisionDistanceFactor,
                                                                     minDetectionRadius,
                                                                     CDMcutoffInKM);
+
     timers.collisionDetectionImmigrants.stop();
 
     // Combine collisions from leaving and incoming particles
     collisions.insert(collisions.end(), leaving_collisions.begin(), leaving_collisions.end());
     evasions.insert(evasions.end(), leaving_evasions.begin(), leaving_evasions.end());
+
     totalConjunctions += collisions.size();
 
     if (breakupWrapper) {
