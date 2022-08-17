@@ -36,15 +36,17 @@ namespace LADDS::ParticleMigrationHandler {
  * @param collisionDistanceFactor See CollisionFunctor::_collisionDistanceFactor
  * @param minDetectionRadius See CollisionFunctor::_minDetectionRadius
  * @param CDMcutoffInKM See CollisionFunctor::_CDMcutoffInKM
+ * @param checkForInternalCollisions If true, also check for internal collisions in the passed vector.
  * @return Collection of collision partners
  */
 std::tuple<LADDS::CollisionFunctor::CollisionCollectionT, LADDS::CollisionFunctor::CollisionCollectionT>
-collisionDetectionImmigrants(AutoPas_t &autopas,
-                             std::vector<LADDS::Particle> &incomingParticles,
-                             double deltaT,
-                             double maxV,
-                             double collisionDistanceFactor,
-                             double minDetectionRadius,
-                             double CDMcutoffInKM);
+collisionDetectionAroundParticles(AutoPas_t &autopas,
+                                  std::vector<LADDS::Particle> &incomingParticles,
+                                  double deltaT,
+                                  double maxV,
+                                  double collisionDistanceFactor,
+                                  double minDetectionRadius,
+                                  double CDMcutoffInKM,
+                                  bool checkForInternalCollisions = false);
 
 }  // namespace LADDS::ParticleMigrationHandler

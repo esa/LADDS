@@ -47,6 +47,7 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   if (i.isDummy() or j.isDummy()) {
     return;
   }
+
   const auto &iActivity = i.getActivityState();
   const auto &jActivity = j.getActivityState();
   const auto &iRadius = i.getRadius();
@@ -60,9 +61,9 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
 
   // skip if both particles have same parent, i.e. originate from same breakup
   if ((i.getParentIdentifier() != std::numeric_limits<size_t>::max()) and
-      i.getParentIdentifier() == j.getParentIdentifier())
+      i.getParentIdentifier() == j.getParentIdentifier()) {
     return;
-
+  }
   // calculate distance between particles
   const auto dr = sub(i.getR(), j.getR());
   const auto distanceSquare = dot(dr, dr);

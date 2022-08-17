@@ -67,6 +67,8 @@ void Timers::printTimers(ConfigReader &config, const DomainDecomposition &decomp
           printLB(collisionDetection) +
       timerToString("    Collision detection immigrants ", accMPITimers(collisionDetectionImmigrants), maxNumberOfDigits, timeSimAcc) +
           printLB(collisionDetectionImmigrants) +
+      timerToString("    Collision detection emmigrants ", accMPITimers(collisionDetectionEmmigrants), maxNumberOfDigits, timeSimAcc) +
+          printLB(collisionDetectionEmmigrants) +   
       timerToString("    Collision writer               ", accMPITimers(collisionWriting), maxNumberOfDigits, timeSimAcc) +
           printLB(collisionWriting) +
       timerToString("    Collision simulation           ", accMPITimers(collisionSimulation), maxNumberOfDigits, timeSimAcc) +
