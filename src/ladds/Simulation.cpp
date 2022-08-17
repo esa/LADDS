@@ -320,7 +320,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     timers.containerUpdate.stop();
 
     timers.collisionDetectionEmmigrants.start();
-    
+
     auto [leaving_collisions, leaving_evasions] =
 
         ParticleMigrationHandler::collisionDetectionAroundParticles(autopas,
