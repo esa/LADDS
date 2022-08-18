@@ -47,6 +47,7 @@ collisionDetectionAroundParticles(AutoPas_t &autopas,
                                   double collisionDistanceFactor,
                                   double minDetectionRadius,
                                   double evasionTrackingCutoffInKM,
-                                  bool checkForInternalCollisions = false);
+                                  bool checkForInternalCollisions);
+
 
 }  // namespace LADDS::ParticleMigrationHandler

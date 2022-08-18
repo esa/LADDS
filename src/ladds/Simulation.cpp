@@ -345,8 +345,8 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                                                                     8.,
                                                                     collisionDistanceFactor,
                                                                     minDetectionRadius,
-                                                                    evasionTrackingCutoffInKM);
-
+                                                                    evasionTrackingCutoffInKM,
+                                                                    false);
     timers.collisionDetectionImmigrants.stop();
 
     // Combine collisions from leaving and incoming particles
