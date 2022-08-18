@@ -45,6 +45,6 @@ LADDS::CollisionFunctor::CollisionCollectionT collisionDetectionAroundParticles(
     double maxV,
     double collisionDistanceFactor,
     double minDetectionRadius,
-    bool checkForInternalCollisions = false);
+    bool checkForInternalCollisions);
 
 }  // namespace LADDS::ParticleMigrationHandler

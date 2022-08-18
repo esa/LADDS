@@ -317,7 +317,8 @@ TEST_F(AltitudeBasedDecompositionTests, testAltDecompCollisions) {
       config["sim"]["deltaT"].as<double>() * autopas->getVerletRebuildFrequency(),
       8.,
       config["sim"]["collisionDistanceFactor"].as<double>(),
-      0.05);
+      0.05,
+      false);
 
   if (rank < 2) std::cout << "Rank: " << rank << " Incoming Collisions: " << incoming_collisions.size() << std::endl;
   // Check if the incoming particles collisions are correct

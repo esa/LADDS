@@ -251,7 +251,8 @@ TEST_F(RegularGridDecompositionTests, testGridDecompCollisions) {
       config["sim"]["deltaT"].as<double>() * autopas->getVerletRebuildFrequency(),
       8.,
       config["sim"]["collisionDistanceFactor"].as<double>(),
-      0.05);
+      0.05,
+      false);
 
   if (rank == 6 or rank == 7)
     std::cout << "Rank: " << rank << " Incoming Collisions: " << incoming_collisions.size() << std::endl;

@@ -337,7 +337,8 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                                                                     deltaT * autopas.getVerletRebuildFrequency(),
                                                                     8.,
                                                                     collisionDistanceFactor,
-                                                                    minDetectionRadius);
+                                                                    minDetectionRadius,
+                                                                    false);
     timers.collisionDetectionImmigrants.stop();
 
     // Combine collisions from leaving and incoming particles
