@@ -28,10 +28,13 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
    * @param collisionDistanceFactor See CollisionFunctor::_collisionDistanceFactor.
    * @param minDetectionRadius All particles with a larger radius are assumed to be detectable by radar.
    *        Thus collisions with particles that are Particle::ActivityState::evasive will not be considered.
-   * @param CDMcutoffInKM Absolute cutoff we consider for CDMs , that is tracking of evaded conjunctions.
+   * @param evasionTrackingCutoffInKM Absolute cutoff we consider for CDMs , that is tracking of evaded conjunctions.
    */
-  CollisionFunctor(
-      double cutoff, double dt, double collisionDistanceFactor, double minDetectionRadius, double CDMcutoffInKM);
+  CollisionFunctor(double cutoff,
+                   double dt,
+                   double collisionDistanceFactor,
+                   double minDetectionRadius,
+                   double evasionTrackingCutoffInKM);
 
   [[nodiscard]] bool isRelevantForTuning() final {
     return true;
@@ -122,7 +125,7 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
    * Squared of cutoff we consider for conjunction detection messages (CDMs) , that determines
    * whether we are tracking them as evaded conjunctions.
    */
-  const double _squaredCDMcutoffInKM;
+  const double _squaredEvasionTrackingCutoffInKM;
 };
 
 }  // namespace LADDS

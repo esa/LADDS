@@ -15,14 +15,17 @@
 #include "ladds/utils/DistanceApproximation.h"
 
 namespace LADDS {
-CollisionFunctor::CollisionFunctor(
-    double cutoff, double dt, double collisionDistanceFactor, double minDetectionRadius, double CDMcutoffInKM)
+CollisionFunctor::CollisionFunctor(double cutoff,
+                                   double dt,
+                                   double collisionDistanceFactor,
+                                   double minDetectionRadius,
+                                   double evasionTrackingCutoffInKM)
     : Functor(cutoff),
       _cutoffSquare(cutoff * cutoff),
       _dt(dt),
       _collisionDistanceFactor(collisionDistanceFactor / 1000.),  // also imply conversion from m to km
       _minDetectionRadius(minDetectionRadius),
-      _squaredCDMcutoffInKM(CDMcutoffInKM * CDMcutoffInKM) {
+      _squaredEvasionTrackingCutoffInKM(evasionTrackingCutoffInKM * evasionTrackingCutoffInKM) {
   _threadData.resize(autopas::autopas_get_max_threads());
 }
 
@@ -84,7 +87,7 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   // For evaded collisions we collect them at this point
   // and store pointers to colliding pair
   if (wasEvaded) {
-    if (distanceSquare_lines < _squaredCDMcutoffInKM) {
+    if (distanceSquare_lines < _squaredEvasionTrackingCutoffInKM) {
       return;
     }
     // compute potential collision point as middle between the two particles

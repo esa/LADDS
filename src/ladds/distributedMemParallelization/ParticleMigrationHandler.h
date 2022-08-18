@@ -35,7 +35,7 @@ namespace LADDS::ParticleMigrationHandler {
  * @param maxV Maximal velocity a particle is assumed to have. Has to be positive.
  * @param collisionDistanceFactor See CollisionFunctor::_collisionDistanceFactor
  * @param minDetectionRadius See CollisionFunctor::_minDetectionRadius
- * @param CDMcutoffInKM See CollisionFunctor::_CDMcutoffInKM
+ * @param evasionTrackingCutoffInKM See CollisionFunctor::_evasionTrackingCutoffInKM
  * @param checkForInternalCollisions If true, also check for internal collisions in the passed vector.
  * @return Collection of collision partners
  */
@@ -46,7 +46,7 @@ collisionDetectionAroundParticles(AutoPas_t &autopas,
                                   double maxV,
                                   double collisionDistanceFactor,
                                   double minDetectionRadius,
-                                  double CDMcutoffInKM,
+                                  double evasionTrackingCutoffInKM,
                                   bool checkForInternalCollisions = false);
 
 }  // namespace LADDS::ParticleMigrationHandler

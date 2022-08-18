@@ -209,10 +209,10 @@ Simulation::collisionDetection(AutoPas_t &autopas,
                                double deltaT,
                                double collisionDistanceFactor,
                                double minDetectionRadius,
-                               double CDMcutoffInKM) {
+                               double evasionTrackingCutoffInKM) {
   // pairwise interaction
   CollisionFunctor collisionFunctor(
-      autopas.getCutoff(), deltaT, collisionDistanceFactor, minDetectionRadius, CDMcutoffInKM);
+      autopas.getCutoff(), deltaT, collisionDistanceFactor, minDetectionRadius, evasionTrackingCutoffInKM);
   bool stillTuning = autopas.iteratePairwise(&collisionFunctor);
   return {collisionFunctor.getCollisions(), collisionFunctor.getEvadedCollisions(), stillTuning};
 }
@@ -239,7 +239,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
         logger.get(), "sim/timestepsPerCollisionDetection is {} but must not be <1!", timestepsPerCollisionDetection);
   }
   const auto minDetectionRadius = config.get<double>("sim/minDetectionRadius", 0.05);
-  const auto CDMcutoffInKM = config.get<double>("sim/CDMcutoffInKM", 0.1);
+  const auto evasionTrackingCutoffInKM = config.get<double>("sim/evasionTrackingCutoffInKM", 0.1);
   const auto minAltitude = config.get<double>("sim/minAltitude", 150.);
   std::vector<Particle> delayedInsertion;
 
@@ -345,7 +345,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                                                                     8.,
                                                                     collisionDistanceFactor,
                                                                     minDetectionRadius,
-                                                                    CDMcutoffInKM);
+                                                                    evasionTrackingCutoffInKM);
 
     timers.collisionDetectionImmigrants.stop();
 
@@ -392,7 +392,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                              deltaT * static_cast<double>(timestepsPerCollisionDetection),
                              collisionDistanceFactor,
                              minDetectionRadius,
-                             CDMcutoffInKM);
+                             evasionTrackingCutoffInKM);
       timers.collisionDetection.stop();
       totalConjunctions += collisions.size();
       if (collisions.size() > 0) {

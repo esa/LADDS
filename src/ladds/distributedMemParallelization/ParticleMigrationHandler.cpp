@@ -14,7 +14,7 @@ LADDS::ParticleMigrationHandler::collisionDetectionAroundParticles(AutoPas_t &au
                                                                    double maxV,
                                                                    double collisionDistanceFactor,
                                                                    double minDetectionRadius,
-                                                                   double CDMcutoffInKM,
+                                                                   double evasionTrackingCutoffInKM,
                                                                    bool checkForInternalCollisions) {
   using autopas::utils::ArrayMath::abs;
   using autopas::utils::ArrayMath::add;
@@ -24,7 +24,7 @@ LADDS::ParticleMigrationHandler::collisionDetectionAroundParticles(AutoPas_t &au
   using autopas::utils::ArrayMath::sub;
 
   LADDS::CollisionFunctor collisionFunctor(
-      autopas.getCutoff(), deltaT, collisionDistanceFactor, minDetectionRadius, CDMcutoffInKM);
+      autopas.getCutoff(), deltaT, collisionDistanceFactor, minDetectionRadius, evasionTrackingCutoffInKM);
   const std::array<double, 3> maxVVec{maxV, maxV, maxV};
   const auto maxCoveredDistance = mulScalar(maxVVec, deltaT);
 

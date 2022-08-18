@@ -97,7 +97,7 @@ class Simulation {
    * @param deltaT
    * @param collisionDistanceFactor See CollisionFunctor::_collisionDistanceFactor
    * @param minDetectionRadius
-   * @param CDMcutoffInKM
+   * @param evasionTrackingCutoffInKM
    * @return Tuple of the collisions, evasions and whether AutoPas is currently in tuning mode.
    */
   std::tuple<CollisionFunctor::CollisionCollectionT, CollisionFunctor::CollisionCollectionT, bool> collisionDetection(
@@ -105,7 +105,7 @@ class Simulation {
       double deltaT,
       double collisionDistanceFactor,
       double minDetectionRadius,
-      double CDMcutoffInKM);
+      double evasionTrackingCutoffInKM);
 
   /**
    * Auxiliary function to avoid code duplication. Triggers the writing of collisions and if necessary the breakup
