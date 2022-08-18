@@ -87,7 +87,7 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   // For evaded collisions we collect them at this point
   // and store pointers to colliding pair
   if (wasEvaded) {
-    if (distanceSquare_lines < _squaredEvasionTrackingCutoffInKM) {
+    if (distanceSquare_lines > _squaredEvasionTrackingCutoffInKM) {
       return;
     }
     // compute potential collision point as middle between the two particles

@@ -261,6 +261,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
   const auto timeout = computeTimeout(config);
 
   size_t totalConjunctions{0ul};
+  size_t totalEvasions{0ul};
   size_t migratedParticlesLocal{0ul};
   std::unique_ptr<DecompositionLogger> decompositionLogger{};
 
@@ -355,6 +356,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     evasions.insert(evasions.end(), leaving_evasions.begin(), leaving_evasions.end());
 
     totalConjunctions += collisions.size();
+    totalEvasions += evasions.size();
 
     if (breakupWrapper) {
       // all particles which are part of a collision will be deleted in the breakup.
@@ -396,6 +398,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                              evasionTrackingCutoffInKM);
       timers.collisionDetection.stop();
       totalConjunctions += collisions.size();
+      totalEvasions += evasions.size();
       if (collisions.size() > 0) {
         iterationsSinceLastCollision = 0;
       }
@@ -434,6 +437,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       printProgressOutput(iteration,
                           autopas.getNumberOfParticles(),
                           totalConjunctions,
+                          totalEvasions,
                           migratedParticlesLocal,
                           domainDecomposition.getCommunicator());
     }
@@ -661,10 +665,12 @@ void Simulation::printNumParticlesPerRank(const autopas::AutoPas<Particle> &auto
 void Simulation::printProgressOutput(size_t iteration,
                                      size_t numParticlesLocal,
                                      size_t totalConjunctionsLocal,
+                                     size_t totalEvasionsLocal,
                                      size_t localMigrations,
                                      autopas::AutoPas_MPI_Comm const &comm) {
   unsigned long numParticlesGlobal{};
   unsigned long totalConjunctionsGlobal{};
+  unsigned long totalEvasionsGlobal{};
   unsigned long migratedParticlesGlobal{};
   autopas::AutoPas_MPI_Reduce(
       &localMigrations, &migratedParticlesGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, comm);
@@ -673,12 +679,16 @@ void Simulation::printProgressOutput(size_t iteration,
       &numParticlesLocal, &numParticlesGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, comm);
   autopas::AutoPas_MPI_Reduce(
       &totalConjunctionsLocal, &totalConjunctionsGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, comm);
-  SPDLOG_LOGGER_INFO(logger.get(),
-                     "It {} | Total particles: {} | Total conjunctions: {} | Migrated particles: {}",
-                     iteration,
-                     numParticlesGlobal,
-                     totalConjunctionsGlobal,
-                     migratedParticlesGlobal);
+  autopas::AutoPas_MPI_Reduce(
+      &totalEvasionsLocal, &totalEvasionsGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, comm);
+  SPDLOG_LOGGER_INFO(
+      logger.get(),
+      "It {} | Total particles: {} | Total conjunctions: {} | Migrated particles: {} | Total evasions: {}",
+      iteration,
+      numParticlesGlobal,
+      totalConjunctionsGlobal,
+      migratedParticlesGlobal,
+      totalEvasionsGlobal);
 }
 
 }  // namespace LADDS

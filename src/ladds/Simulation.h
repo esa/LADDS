@@ -192,12 +192,14 @@ class Simulation {
    * @param iteration
    * @param numParticlesLocal
    * @param totalConjunctionsLocal
+   * @param totalEvasionsLocal
    * @param localMigrations
    * @param comm
    */
   void printProgressOutput(size_t iteration,
                            size_t numParticlesLocal,
                            size_t totalConjunctionsLocal,
+                           size_t totalEvasionsLocal,
                            size_t localMigrations,
                            const autopas::AutoPas_MPI_Comm &comm);
 
