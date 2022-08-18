@@ -8,6 +8,8 @@
 
 #include <gmock/gmock-matchers.h>
 
+#include "ladds/particle/BreakupWrapper.h"
+
 /**
  * Crash two particles into each other and observe that new particles have higher IDs.
  */
@@ -46,4 +48,30 @@ TEST_F(BreakupWrapperTest, testSimulationLoop) {
   for (const auto &p : *autopas) {
     EXPECT_GT(p.getID(), highestIdBeforeCrash);
   }
+}
+
+TEST_F(BreakupWrapperTest, stressTest) {
+  const size_t numCollisions = 100;
+  const size_t numParticles = 2 * numCollisions;
+  for (int i = 0; i < numParticles; ++i) {
+    autopas->addParticle(LADDS::Particle({Physics::R_EARTH + 1000., 0., static_cast<double>(i)},
+                                         {0., 2., 0.},
+                                         i,
+                                         "A",
+                                         LADDS::Particle::ActivityState::passive,
+                                         10.,
+                                         1.,
+                                         LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                                         std::numeric_limits<size_t>::max()));
+  }
+  ASSERT_EQ(numParticles, autopas->getNumberOfParticles());
+  std::vector<LADDS::Particle *> particlePointers;
+  particlePointers.reserve(numParticles);
+  autopas->forEach([&](auto &p) { particlePointers.push_back(&p); });
+
+  LADDS::BreakupWrapper breakupWrapper(*configReader, *autopas);
+  EXPECT_NO_THROW(for (int collisionId = 0; collisionId < numCollisions; ++collisionId) {
+    breakupWrapper.simulateBreakup(
+        {{particlePointers[collisionId], particlePointers[numCollisions / 2 + collisionId], 4.2, {0., 0., 0.}}});
+  });
 }
