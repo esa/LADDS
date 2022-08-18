@@ -78,7 +78,7 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
 
   // if distance is smaller we compute the shortest vector between the linear interpolations
   // of the particle trajectory over the last timestep and position of particle 2 at that time
-  const auto [dr_lines, p2] = distanceByLinearInterpolation(i, j, _dt);
+  const auto [dr_lines, p2] = LADDS::utils::distanceByLinearInterpolation(i, j, _dt);
 
   const auto distanceSquare_lines = dot(dr_lines, dr_lines);
   // _collisionDistanceFactor also converts this to km

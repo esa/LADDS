@@ -4,10 +4,15 @@
  * @date 18.08.22
  */
 
+#include "DistanceApproximation.h"
+
 #include <autopas/utils/ArrayMath.h>
 
-inline std::tuple<std::array<double, 3>, std::array<double, 3>> LADDS::utils::distanceByLinearInterpolation(
-    const Particle &i, const Particle &j, double dt) {
+namespace LADDS::utils {
+
+std::tuple<std::array<double, 3>, std::array<double, 3>> distanceByLinearInterpolation(const Particle &i,
+                                                                                       const Particle &j,
+                                                                                       double dt) {
   using autopas::utils::ArrayMath::add;
   using autopas::utils::ArrayMath::dot;
   using autopas::utils::ArrayMath::mulScalar;
@@ -51,3 +56,5 @@ inline std::tuple<std::array<double, 3>, std::array<double, 3>> LADDS::utils::di
 
   return std::make_tuple(sub(p1PosAtTimeT, p2PosAtTimeT), p2PosAtTimeT);
 }
+
+}  // namespace LADDS::utils

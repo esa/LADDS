@@ -5,6 +5,7 @@
  */
 
 #pragma once
+#include "ladds/particle/Particle.h"
 
 namespace LADDS::utils {
 
@@ -15,8 +16,8 @@ namespace LADDS::utils {
  * @param dt Time over which to compute the minimal distance
  * @return Vector between particles and position of p2 at minimal distance
  */
-inline std::tuple<std::array<double, 3>, std::array<double, 3>> distanceByLinearInterpolation(const Particle &i,
-                                                                                              const Particle &j,
-                                                                                              double dt)
+std::tuple<std::array<double, 3>, std::array<double, 3>> distanceByLinearInterpolation(const Particle &i,
+                                                                                       const Particle &j,
+                                                                                       double dt);
 
-}  // namespace LADDS
+}  // namespace LADDS::utils

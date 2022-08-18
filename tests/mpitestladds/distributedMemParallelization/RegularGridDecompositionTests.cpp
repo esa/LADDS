@@ -241,11 +241,12 @@ TEST_F(RegularGridDecompositionTests, testGridDecompCollisions) {
               << autopas::utils::ArrayUtils::to_string(p.getPosition()) << " is arriving." << std::endl;
 
   // Check if the arriving particles are correct
-  // TODO currently there is a bug with comms for this decomposition, reenable when fixed
-  // if (rank == 7)
-  //   ASSERT_EQ(incomingParticles.size(), 2) << "Expected " << 2 << " particles on rank " << rank;
-  // else
-  //   ASSERT_EQ(incomingParticles.size(), 0) << "Expected " << 0 << " particles on rank " << rank;
+  // https://github.com/esa/LADDS/issues/152
+  GTEST_SKIP_("RegularGridDecomposition currently not operational!");
+  if (rank == 7)
+    ASSERT_EQ(incomingParticles.size(), 2) << "Expected " << 2 << " particles on rank " << rank;
+  else
+    ASSERT_EQ(incomingParticles.size(), 0) << "Expected " << 0 << " particles on rank " << rank;
 
   auto [incoming_collisions, incoming_evasions] = LADDS::ParticleMigrationHandler::collisionDetectionAroundParticles(
       *autopas,
