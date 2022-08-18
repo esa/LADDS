@@ -8,7 +8,7 @@ from tqdm import tqdm
 import pandas as pd
 
 
-def load_hdf5(filename, starting_t, dt, stepsize=1, verbose=False):
+def load_particle_data_from_hdf5(filename, starting_t, dt, stepsize=1, verbose=False):
     """
     Loads an hdf5 file and returns the data.
     """
@@ -67,6 +67,39 @@ def load_hdf5(filename, starting_t, dt, stepsize=1, verbose=False):
         vs.append(v * 1000.0)  # convert to m
         ids.append(ID)
 
+    # Some code breaks if constant properties change
+    assert len(data["ParticleData"]["ConstantProperties"][0]) == 6
+    constant_props = data["ParticleData"]["ConstantProperties"][()]
+
+    return (
+        iterations_idx,
+        rs,
+        vs,
+        ids,
+        constant_props,
+        end_t,
+        max_iterations,
+    )
+
+
+def load_conjunctions_and_evasions(filename, constant_props, verbose=False):
+    """
+    Loads the conjunction and evasion data from the hdf5 file and returns the data.
+    """
+
+    # Load hdf5 file
+    data = h5py.File(filename)
+
+    def get_particle_size(ID):
+        for p in constant_props:
+            if p[0] == ID:
+                return p[3]
+
+    def get_particle_status(ID):
+        for p in constant_props:
+            if p[0] == ID:
+                return p[5]
+
     # Convert conjunctions to a pandas dataframe for convenience
     conj = pd.DataFrame(
         columns=[
@@ -84,6 +117,12 @@ def load_hdf5(filename, starting_t, dt, stepsize=1, verbose=False):
 
     try:
         collision_keys = data["CollisionData"].keys()
+    except Exception as e:
+        collision_keys = None
+        if verbose:
+            print("No collisions found in ", filename)
+
+    if collision_keys is not None:
         for idx, it in tqdm(
             enumerate(collision_keys), total=len(collision_keys), disable=not verbose
         ):
@@ -109,9 +148,6 @@ def load_hdf5(filename, starting_t, dt, stepsize=1, verbose=False):
                     },
                     ignore_index=True,
                 )
-    except:
-        if verbose:
-            print("No collisions found in ", filename)
 
     # Convert evasions to a pandas dataframe for convenience
     evasions_df = pd.DataFrame(
@@ -130,6 +166,12 @@ def load_hdf5(filename, starting_t, dt, stepsize=1, verbose=False):
 
     try:
         evasion_keys = data["EvasionData"].keys()
+    except Exception as e:
+        if verbose:
+            print("No evasions found in ", filename)
+        evasion_keys = None
+
+    if evasion_keys is not None:
         for idx, it in tqdm(
             enumerate(evasion_keys), total=len(evasion_keys), disable=not verbose
         ):
@@ -154,24 +196,10 @@ def load_hdf5(filename, starting_t, dt, stepsize=1, verbose=False):
                     },
                     ignore_index=True,
                 )
-    except Exception as e:
-        if verbose:
-            print("No evasions found in ", filename)
-
-    # Some code breaks if constant properties change
-    assert len(data["ParticleData"]["ConstantProperties"][0]) == 6
-    constant_props = data["ParticleData"]["ConstantProperties"][()]
 
     return (
-        iterations_idx,
-        rs,
-        vs,
-        ids,
         conj,
         evasions_df,
-        constant_props,
-        end_t,
-        max_iterations,
     )
 
 
@@ -180,7 +208,11 @@ def load_hdf5s_from_mpi_run(path_to_results_folder, starting_t, dt, stepsize=1):
     Loads all hdf5 files in a folder and returns the data.
     """
     print("Loading hdf5s from MPI run")
+
+    # Get all hdf5 files in folder
     runs = glob(path_to_results_folder + "/*.h5_rank_*")
+
+    # Init vars to hold the data
     rs, vs, ids = [], [], []
     end_t, max_iterations, iterations_idx = None, None, None
     constant_props = None
@@ -213,18 +245,19 @@ def load_hdf5s_from_mpi_run(path_to_results_folder, starting_t, dt, stepsize=1):
         ]
     )
 
+    # Loop over all hdf5 files and load data,
+    # we need two loops because we need some of the data for
+    # the rest of it
     for run in runs:
         (
             iterations_idx_new,
             rs_i,
             vs_i,
             ids_i,
-            conj_i,
-            evasions_i,
             constant_props_i,
             end_t_new,
             max_iterations_new,
-        ) = load_hdf5(run, starting_t, dt, stepsize)
+        ) = load_particle_data_from_hdf5(run, starting_t, dt, stepsize)
 
         # Check data among ranks is consistent
         if end_t is None:
@@ -236,18 +269,31 @@ def load_hdf5s_from_mpi_run(path_to_results_folder, starting_t, dt, stepsize=1):
             assert max_iterations == max_iterations_new
             assert (iterations_idx == iterations_idx_new).all()
 
-        rs = rs + rs_i
-        vs = vs + vs_i
-        ids = ids + ids_i
-
         if constant_props is None:
             constant_props = constant_props_i
+            rs = rs_i
+            vs = vs_i
+            ids = ids_i
         else:
             constant_props = np.concatenate((constant_props, constant_props_i), axis=0)
+            for it in range(len(iterations_idx)):
+                rs[it] = np.concatenate((rs[it], rs_i[it]), axis=0)
+                vs[it] = np.concatenate((vs[it], vs_i[it]), axis=0)
+                ids[it] = np.concatenate((ids[it], ids_i[it]), axis=0)
+
+    for run in runs:
+        (conj_i, evasions_i,) = load_conjunctions_and_evasions(run, constant_props)
 
         conj = pd.concat([conj, conj_i])
         evasions = pd.concat([evasions, evasions_i])
 
+    print("Found a total of", max_iterations, " iterations.")
+    total_days = end_t.mjd - starting_t.mjd
+    print("Simulation ran for a total of", total_days, " days.")
+    print("Total # of indices (available timesteps) = ", len(iterations_idx))
+    print("Total # of particles = ", len(ids[0]))
+    print("Total # of evasions = ", len(evasions))
+    print("Total # of conjunctions = ", len(conj))
     return (
         iterations_idx,
         rs,
