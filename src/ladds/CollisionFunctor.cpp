@@ -84,7 +84,9 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   // For evaded collisions we collect them at this point
   // and store pointers to colliding pair
   if (wasEvaded) {
-    if (distanceSquare_lines < _squaredCDMcutoffInKM) return;
+    if (distanceSquare_lines < _squaredCDMcutoffInKM) {
+      return;
+    }
     // compute potential collision point as middle between the two particles
     const auto collision_point = add(p2, mulScalar(dr_lines, 0.5));
 
@@ -104,7 +106,9 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   } else {
     // if they were not evaded, check if actual collisions takes place, i.e.
     // particles are far enough away (i.e. further than sum of their scaled sizes)
-    if (distanceSquare_lines > (scaledObjectSeparation * scaledObjectSeparation)) return;
+    if (distanceSquare_lines > (scaledObjectSeparation * scaledObjectSeparation)) {
+      return;
+    }
 
     // if not compute collision point as middle between the two particles
     const auto collision_point = add(p2, mulScalar(dr_lines, 0.5));
