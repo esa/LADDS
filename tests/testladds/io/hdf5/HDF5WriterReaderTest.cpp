@@ -220,6 +220,6 @@ TEST_F(HDF5WriterReaderTest, AppendCheckpointTest) {
 }
 #else
 TEST(HDF5WriterReaderTest, TestWriterNotCompiledException) {
-  EXPECT_THROW(HDF5Writer("foo", true, 0), std::runtime_error);
+  EXPECT_THROW(LADDS::HDF5Writer("foo", true, 0), std::runtime_error);
 }
 #endif
