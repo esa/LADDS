@@ -329,6 +329,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                                                                     8.,
                                                                     collisionDistanceFactor,
                                                                     minDetectionRadius,
+                                                                    evasionTrackingCutoffInKM,
                                                                     true);  // <- checking for collisions among leavers
     timers.collisionDetectionEmmigrants.stop();
 
