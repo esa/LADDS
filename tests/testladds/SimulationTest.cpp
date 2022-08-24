@@ -44,7 +44,8 @@ TEST_F(SimulationTest, testInsertionOverlap) {
                       LADDS::Particle::ActivityState::passive,
                       1.,
                       1.,
-                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)),
+                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                      std::numeric_limits<size_t>::max()),
       LADDS::Particle({6870.99577848984, 4.89582991243564, 5.83462288687537},
                       {-0.00844301944979238, 4.89582790671436, 5.83462049654983},
                       2,
@@ -52,7 +53,8 @@ TEST_F(SimulationTest, testInsertionOverlap) {
                       LADDS::Particle::ActivityState::passive,
                       1.,
                       1.,
-                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2))};
+                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                      std::numeric_limits<size_t>::max())};
   for (const auto &s : initialSatellites) {
     autopas->addParticle(s);
   }
@@ -64,7 +66,8 @@ TEST_F(SimulationTest, testInsertionOverlap) {
                       LADDS::Particle::ActivityState::passive,
                       0,
                       0,
-                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)),
+                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                      std::numeric_limits<size_t>::max()),
       LADDS::Particle({6870.99577848984, 4.89582991243564, 5.83462288687537},
                       {-0.00844301944979238, 4.89582790671436, 5.83462049654983},
                       4,
@@ -72,7 +75,8 @@ TEST_F(SimulationTest, testInsertionOverlap) {
                       LADDS::Particle::ActivityState::passive,
                       1.,
                       1.,
-                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2))};
+                      LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                      std::numeric_limits<size_t>::max())};
 
   auto constellationCutoff = config["io"]["constellationCutoff"].as<double>();
 
@@ -103,27 +107,29 @@ TEST_F(SimulationTest, testBurnUp) {
   autopas->addParticle(LADDS::Particle({minAltitude + 1., 0., 0.},
                                        {-10., 0., 0.},
                                        0,
-                                       "1km above ground towards earth",
+                                       "toEarth",
                                        LADDS::Particle::ActivityState::passive,
                                        1.,
                                        1.,
-                                       LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)));
+                                       LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                                       std::numeric_limits<size_t>::max()));
   // initialize a particle 1km above burn up radius with a trajectory away from earth
   // different position to avoid any interferences
   autopas->addParticle(LADDS::Particle({0., minAltitude + 1., 0.},
                                        {0., 10., 0.},
                                        1,
-                                       "1km above ground away from earth",
+                                       "fromEarth",
                                        LADDS::Particle::ActivityState::passive,
                                        1.,
                                        1.,
-                                       LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)));
+                                       LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                                       std::numeric_limits<size_t>::max()));
   ASSERT_EQ(autopas->getNumberOfParticles(), 2) << "Initial particles not found!";
 
   // dummy because interface requires it
   std::vector<LADDS::Constellation> constellations{};
   // do one iteration where the burnup is expected to happen
-  simulation.simulationLoop(*autopas, *integrator, constellations, *configReader);
+  simulation.simulationLoop(*autopas, *integrator, constellations, *configReader, *decomposition);
 
   EXPECT_EQ(autopas->getNumberOfParticles(), 1) << "Exactly one particle should have burnt up!";
   EXPECT_EQ(autopas->begin()->getID(), 1) << "Remaining particle has unexpected Id!";
@@ -149,7 +155,8 @@ TEST_F(SimulationTest, testTimestepsPerCollisionDetection) {
                                          LADDS::Particle::ActivityState::passive,
                                          1.,
                                          1.,
-                                         LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)));
+                                         LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                                         std::numeric_limits<size_t>::max()));
     autopas->addParticle(LADDS::Particle({minAltitude + 100., -20, 0.},
                                          {0., 10., 0.},
                                          1,
@@ -157,7 +164,8 @@ TEST_F(SimulationTest, testTimestepsPerCollisionDetection) {
                                          LADDS::Particle::ActivityState::passive,
                                          1.,
                                          1.,
-                                         LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)));
+                                         LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                                         std::numeric_limits<size_t>::max()));
     ASSERT_EQ(autopas->getNumberOfParticles(), 2) << "Initial particles not found!";
 
     configReader->setValue("sim/iterations", iterations);
@@ -165,7 +173,8 @@ TEST_F(SimulationTest, testTimestepsPerCollisionDetection) {
     configReader->setValue("sim/timestepsPerCollisionDetection", 2);
     // dummy because interface requires it
     std::vector<LADDS::Constellation> constellations{};
-    const auto conjunctions = simulation.simulationLoop(*autopas, *integrator, constellations, *configReader);
+    const auto conjunctions =
+        simulation.simulationLoop(*autopas, *integrator, constellations, *configReader, *decomposition);
     constexpr auto errorString{"Unexpected number of conjunctions in iterations "};
     switch (iterations) {
       case 1:
@@ -199,7 +208,8 @@ TEST_P(SimulationTest, testCheckedInsert) {
                                        LADDS::Particle::ActivityState::passive,
                                        1.,
                                        1.,
-                                       LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)));
+                                       LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                                       std::numeric_limits<size_t>::max()));
 
   // particle that will be inserted
   LADDS::Particle p1{posTestParticle,
@@ -209,7 +219,8 @@ TEST_P(SimulationTest, testCheckedInsert) {
                      LADDS::Particle::ActivityState::passive,
                      1.,
                      1.,
-                     LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)};
+                     LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                     std::numeric_limits<size_t>::max()};
 
   const auto escapedParticles = autopas->updateContainer();
   ASSERT_TRUE(escapedParticles.empty()) << "Test setup faulty!";

@@ -4,7 +4,8 @@
  * @date 28.06.21
  */
 
-#include <iostream>
+#include <autopas/utils/WrapMPI.h>
+
 #include <string>
 
 #include "Simulation.h"
@@ -19,19 +20,29 @@
  * @return
  */
 int main(int argc, char **argv) {
+  autopas::AutoPas_MPI_Init(&argc, &argv);
+
   LADDS::Logger logger;
 
   // Default config path
   if (argc != 2) {
     logger.log(LADDS::Logger::Level::critical, "No config given!");
+    autopas::AutoPas_MPI_Finalize();
     return -1;
   }
 
+  int mpiRank{};
+  autopas::AutoPas_MPI_Comm_rank(AUTOPAS_MPI_COMM_WORLD, &mpiRank);
+  int numMpiRanks{};
+  autopas::AutoPas_MPI_Comm_size(AUTOPAS_MPI_COMM_WORLD, &numMpiRanks);
+
   // Read in config
   const auto *cfgFilePath = argv[1];
-  auto config = LADDS::ConfigReader(cfgFilePath, logger);
+  auto config = LADDS::ConfigReader(cfgFilePath, logger, mpiRank, numMpiRanks);
 
-  logger.get()->set_level(spdlog::level::from_str(config.get<std::string>("sim/logLevel", "info")));
+  if (mpiRank == 0) {
+    logger.get()->set_level(spdlog::level::from_str(config.get<std::string>("sim/logLevel", "info")));
+  }
   SPDLOG_LOGGER_INFO(logger.get(), "LADDS version: {}", LADDS_VERSION);
   SPDLOG_LOGGER_INFO(logger.get(), "Config loaded.");
 
@@ -39,5 +50,6 @@ int main(int argc, char **argv) {
 
   simulation.run(config);
 
+  autopas::AutoPas_MPI_Finalize();
   return 0;
 }

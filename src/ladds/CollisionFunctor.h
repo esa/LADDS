@@ -24,9 +24,9 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
   /**
    * Constructor
    * @param cutoff Distance for two particles to be considered for sub time step investigation (interpolation).
-   * @param dt time step width
+   * @param dt time over which to consider collisions (length of the interpolation).
    * @param collisionDistanceFactor See CollisionFunctor::_collisionDistanceFactor.
-   * @param minDetectionRadius All particles with a larger are assumed to be detectable by radar.
+   * @param minDetectionRadius All particles with a larger radius are assumed to be detectable by radar.
    *        Thus collisions with particles that are Particle::ActivityState::evasive will not be considered.
    */
   CollisionFunctor(double cutoff, double dt, double collisionDistanceFactor, double minDetectionRadius);
@@ -65,7 +65,7 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
 
   void endTraversal(bool newton3) final;
 
-  using CollisionT = std::tuple<Particle *, Particle *, double>;
+  using CollisionT = std::tuple<Particle *, Particle *, double, std::array<double, 3>>;
   using CollisionCollectionT = std::vector<CollisionT>;
 
   [[nodiscard]] const CollisionCollectionT &getCollisions() const;

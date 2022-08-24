@@ -8,6 +8,8 @@
 
 #include <satellitePropagator/physics/AccelerationComponents/DragComponent.h>
 
+#include <limits>
+
 namespace LADDS {
 
 std::vector<Particle> DatasetReader::readDataset(const std::string &csvFilepath, double coefficientOfDrag) {
@@ -40,7 +42,8 @@ std::vector<Particle> DatasetReader::readDataset(const std::string &csvFilepath,
                                     activityState,
                                     mass,
                                     radius,
-                                    bcInv);
+                                    bcInv,
+                                    std::numeric_limits<size_t>::max());
   }
 
   return particleCollection;

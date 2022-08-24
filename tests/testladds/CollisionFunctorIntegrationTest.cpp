@@ -33,7 +33,8 @@ void CollisionFunctorIntegrationTest::SetUpTestSuite() {
                                   LADDS::Particle::ActivityState::passive,
                                   1.,
                                   1.,
-                                  LADDS::Particle::calculateBcInv(0., 1., 1., 2.2)};
+                                  LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                                  0};
   _debris.reserve(numDebris);
 
   // fix seed for randomPosition()
@@ -42,6 +43,7 @@ void CollisionFunctorIntegrationTest::SetUpTestSuite() {
   for (int i = 0; i < numDebris; ++i) {
     defaultParticle.setR(autopasTools::generators::RandomGenerator::randomPosition(_boxMin, _boxMax));
     defaultParticle.setID(i);
+    defaultParticle.setParentIdentifier(i);
     _debris.push_back(defaultParticle);
   }
 
@@ -116,7 +118,7 @@ TEST_P(CollisionFunctorIntegrationTest, testAutoPasAlgorithm) {
   auto collisionPtrs = functor.getCollisions();
   std::vector<std::pair<size_t, size_t>> collisionIDs;
   collisionIDs.reserve(collisionPtrs.size());
-  for (const auto &[pi, pj, dist] : collisionPtrs) {
+  for (const auto &[pi, pj, dist, _] : collisionPtrs) {
     collisionIDs.emplace_back(pi->getID(), pj->getID());
   }
 
