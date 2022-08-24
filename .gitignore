@@ -37,6 +37,10 @@
 .cache
 .vscode
 
+# Python stuff
+*.pyc
+*.pyo
+
 # Data folder
 data
 *.ipynb_checkpoints
