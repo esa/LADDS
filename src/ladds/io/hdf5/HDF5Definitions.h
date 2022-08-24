@@ -16,6 +16,8 @@ constexpr auto datasetParticleIDs = "/Particles/IDs";
 constexpr auto tableParticleConstantProperties = "ConstantProperties";
 constexpr auto groupCollisionData = "CollisionData/";
 constexpr auto datasetCollisions = "/Collisions";
+constexpr auto groupEvasionData = "EvasionData/";
+constexpr auto datasetEvasions = "/Evasions";
 
 /**
  * Type to which any floating point data will be cast before writing.
@@ -44,6 +46,20 @@ struct CollisionInfo {
     return idA == rhs.idA && idB == rhs.idB && distanceSquared == rhs.distanceSquared;
   }
   bool operator!=(const CollisionInfo &rhs) const {
+    return !(rhs == *this);
+  }
+};
+
+/**
+ * Type for the information of a single evaded collision.
+ */
+struct EvasionInfo {
+  unsigned int idA, idB;
+  float distanceSquared;
+  bool operator==(const EvasionInfo &rhs) const {
+    return idA == rhs.idA && idB == rhs.idB && distanceSquared == rhs.distanceSquared;
+  }
+  bool operator!=(const EvasionInfo &rhs) const {
     return !(rhs == *this);
   }
 };

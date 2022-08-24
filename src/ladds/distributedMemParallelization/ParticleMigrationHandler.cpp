@@ -7,14 +7,15 @@
 
 #include "ladds/particle/Particle.h"
 
-LADDS::CollisionFunctor::CollisionCollectionT LADDS::ParticleMigrationHandler::collisionDetectionAroundParticles(
-    AutoPas_t &autopas,
-    std::vector<LADDS::Particle> &particles,
-    double deltaT,
-    double maxV,
-    double collisionDistanceFactor,
-    double minDetectionRadius,
-    bool checkForInternalCollisions) {
+std::tuple<LADDS::CollisionFunctor::CollisionCollectionT, LADDS::CollisionFunctor::CollisionCollectionT>
+LADDS::ParticleMigrationHandler::collisionDetectionAroundParticles(AutoPas_t &autopas,
+                                                                   std::vector<LADDS::Particle> &particles,
+                                                                   double deltaT,
+                                                                   double maxV,
+                                                                   double collisionDistanceFactor,
+                                                                   double minDetectionRadius,
+                                                                   double evasionTrackingCutoffInKM,
+                                                                   bool checkForInternalCollisions) {
   using autopas::utils::ArrayMath::abs;
   using autopas::utils::ArrayMath::add;
   using autopas::utils::ArrayMath::div;
@@ -22,7 +23,8 @@ LADDS::CollisionFunctor::CollisionCollectionT LADDS::ParticleMigrationHandler::c
   using autopas::utils::ArrayMath::mulScalar;
   using autopas::utils::ArrayMath::sub;
 
-  LADDS::CollisionFunctor collisionFunctor(autopas.getCutoff(), deltaT, collisionDistanceFactor, minDetectionRadius);
+  LADDS::CollisionFunctor collisionFunctor(
+      autopas.getCutoff(), deltaT, collisionDistanceFactor, minDetectionRadius, evasionTrackingCutoffInKM);
   const std::array<double, 3> maxVVec{maxV, maxV, maxV};
   const auto maxCoveredDistance = mulScalar(maxVVec, deltaT);
 
@@ -50,5 +52,5 @@ LADDS::CollisionFunctor::CollisionCollectionT LADDS::ParticleMigrationHandler::c
   }
   collisionFunctor.endTraversal(false);
 
-  return collisionFunctor.getCollisions();
+  return {collisionFunctor.getCollisions(), collisionFunctor.getEvadedCollisions()};
 }

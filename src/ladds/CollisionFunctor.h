@@ -28,8 +28,13 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
    * @param collisionDistanceFactor See CollisionFunctor::_collisionDistanceFactor.
    * @param minDetectionRadius All particles with a larger radius are assumed to be detectable by radar.
    *        Thus collisions with particles that are Particle::ActivityState::evasive will not be considered.
+   * @param evasionTrackingCutoffInKM Absolute cutoff we consider for CDMs , that is tracking of evaded conjunctions.
    */
-  CollisionFunctor(double cutoff, double dt, double collisionDistanceFactor, double minDetectionRadius);
+  CollisionFunctor(double cutoff,
+                   double dt,
+                   double collisionDistanceFactor,
+                   double minDetectionRadius,
+                   double evasionTrackingCutoffInKM);
 
   [[nodiscard]] bool isRelevantForTuning() final {
     return true;
@@ -70,6 +75,8 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
 
   [[nodiscard]] const CollisionCollectionT &getCollisions() const;
 
+  [[nodiscard]] const CollisionCollectionT &getEvadedCollisions() const;
+
   void AoSFunctor(Particle &i, Particle &j, bool newton3) final;
 
   void SoAFunctorSingle(autopas::SoAView<SoAArraysType> soa, bool newton3) final;
@@ -88,6 +95,7 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
   // Buffer struct that is safe against false sharing
   struct ThreadData {
     CollisionCollectionT collisions{};
+    CollisionCollectionT evadedCollisions{};
   } __attribute__((aligned(64)));
 
   // make sure that the size of ThreadData is correct
@@ -97,6 +105,7 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
   std::vector<ThreadData> _threadData{};
   // key = particle with the smaller id
   CollisionCollectionT _collisions{};
+  CollisionCollectionT _evadedCollisions{};
   const double _cutoffSquare;
   const double _dt;
 
@@ -105,11 +114,18 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
    * Also converts from meter to km.
    */
   const double _collisionDistanceFactor;
+
   /**
    * Minimal object size in meter that is assumed to be detectable.
    * Objects larger than this can be evaded by evasive particles.
    */
   const double _minDetectionRadius;
+
+  /**
+   * Squared of cutoff we consider for conjunction detection messages (CDMs) , that determines
+   * whether we are tracking them as evaded conjunctions.
+   */
+  const double _squaredEvasionTrackingCutoffInKM;
 };
 
 }  // namespace LADDS
