@@ -32,6 +32,14 @@ class ConfigReader {
 
   size_t newParticleID();
 
+  void setNextSafeParticleID(size_t nextSafeParticleID) {
+    this->nextSafeParticleID = nextSafeParticleID;
+  }
+
+  void setLastSafeParticleID(size_t lastSafeParticleID) {
+    this->lastSafeParticleID = lastSafeParticleID;
+  }
+
   /**
    * Constructor that uses an already loaded YAML tree.
    * @param config

@@ -22,6 +22,13 @@ class ConjuctionWriterInterface {
    * @param collisions
    */
   virtual void writeConjunctions(size_t iteration, const CollisionFunctor::CollisionCollectionT &collisions) = 0;
+
+  /**
+   * Log the conjuction data.
+   * @param iteration
+   * @param collisions
+   */
+  virtual void writeEvasions(size_t iteration, const CollisionFunctor::CollisionCollectionT &evasions) = 0;
 };
 
 }  // namespace LADDS

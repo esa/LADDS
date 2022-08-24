@@ -204,14 +204,17 @@ void Simulation::updateConstellation(AutoPas_t &autopas,
   }
 }
 
-std::tuple<CollisionFunctor::CollisionCollectionT, bool> Simulation::collisionDetection(AutoPas_t &autopas,
-                                                                                        double deltaT,
-                                                                                        double collisionDistanceFactor,
-                                                                                        double minDetectionRadius) {
+std::tuple<CollisionFunctor::CollisionCollectionT, CollisionFunctor::CollisionCollectionT, bool>
+Simulation::collisionDetection(AutoPas_t &autopas,
+                               double deltaT,
+                               double collisionDistanceFactor,
+                               double minDetectionRadius,
+                               double evasionTrackingCutoffInKM) {
   // pairwise interaction
-  CollisionFunctor collisionFunctor(autopas.getCutoff(), deltaT, collisionDistanceFactor, minDetectionRadius);
+  CollisionFunctor collisionFunctor(
+      autopas.getCutoff(), deltaT, collisionDistanceFactor, minDetectionRadius, evasionTrackingCutoffInKM);
   bool stillTuning = autopas.iteratePairwise(&collisionFunctor);
-  return {collisionFunctor.getCollisions(), stillTuning};
+  return {collisionFunctor.getCollisions(), collisionFunctor.getEvadedCollisions(), stillTuning};
 }
 
 size_t Simulation::simulationLoop(AutoPas_t &autopas,
@@ -236,6 +239,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
         logger.get(), "sim/timestepsPerCollisionDetection is {} but must not be <1!", timestepsPerCollisionDetection);
   }
   const auto minDetectionRadius = config.get<double>("sim/minDetectionRadius", 0.05);
+  const auto evasionTrackingCutoffInKM = config.get<double>("sim/evasionTrackingCutoffInKM", 0.1);
   const auto minAltitude = config.get<double>("sim/minAltitude", 150.);
   std::vector<Particle> delayedInsertion;
 
@@ -257,6 +261,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
   const auto timeout = computeTimeout(config);
 
   size_t totalConjunctions{0ul};
+  size_t totalEvasions{0ul};
   size_t migratedParticlesLocal{0ul};
   std::unique_ptr<DecompositionLogger> decompositionLogger{};
 
@@ -315,20 +320,43 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     migratedParticlesLocal = leavingParticles.size();
     timers.containerUpdate.stop();
 
+    timers.collisionDetectionEmmigrants.start();
+
+    auto [leaving_collisions, leaving_evasions] =
+
+        ParticleMigrationHandler::collisionDetectionAroundParticles(autopas,
+                                                                    leavingParticles,
+                                                                    deltaT * autopas.getVerletRebuildFrequency(),
+                                                                    8.,
+                                                                    collisionDistanceFactor,
+                                                                    minDetectionRadius,
+                                                                    evasionTrackingCutoffInKM,
+                                                                    true);  // <- checking for collisions among leavers
+    timers.collisionDetectionEmmigrants.stop();
+
     timers.particleCommunication.start();
     auto incomingParticles = domainDecomposition.communicateParticles(leavingParticles, autopas);
     timers.particleCommunication.stop();
 
     timers.collisionDetectionImmigrants.start();
-    auto collisions =
-        ParticleMigrationHandler::collisionDetectionImmigrants(autopas,
-                                                               incomingParticles,
-                                                               deltaT * autopas.getVerletRebuildFrequency(),
-                                                               8.,
-                                                               collisionDistanceFactor,
-                                                               minDetectionRadius);
+
+    auto [collisions, evasions] =
+        ParticleMigrationHandler::collisionDetectionAroundParticles(autopas,
+                                                                    incomingParticles,
+                                                                    deltaT * autopas.getVerletRebuildFrequency(),
+                                                                    8.,
+                                                                    collisionDistanceFactor,
+                                                                    minDetectionRadius,
+                                                                    evasionTrackingCutoffInKM,
+                                                                    false);
     timers.collisionDetectionImmigrants.stop();
+
+    // Combine collisions from leaving and incoming particles
+    collisions.insert(collisions.end(), leaving_collisions.begin(), leaving_collisions.end());
+    evasions.insert(evasions.end(), leaving_evasions.begin(), leaving_evasions.end());
+
     totalConjunctions += collisions.size();
+    totalEvasions += evasions.size();
 
     if (breakupWrapper) {
       // all particles which are part of a collision will be deleted in the breakup.
@@ -344,6 +372,11 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       autopas.addParticle(p);
     }
 
+    // store evasions in HDF5
+    timers.evasionWriting.start();
+    conjuctionWriter->writeEvasions(iteration, evasions);
+    timers.evasionWriting.stop();
+
     processCollisions(iteration, collisions, *conjuctionWriter, breakupWrapper.get());
 
     // sanity check: after communication there should be no leaving particles left
@@ -357,12 +390,15 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
     if (iteration % timestepsPerCollisionDetection == 0) {
       timers.collisionDetection.start();
-      auto [collisions, stillTuning] = collisionDetection(autopas,
-                                                          deltaT * static_cast<double>(timestepsPerCollisionDetection),
-                                                          collisionDistanceFactor,
-                                                          minDetectionRadius);
+      auto [collisions, evasions, stillTuning] =
+          collisionDetection(autopas,
+                             deltaT * static_cast<double>(timestepsPerCollisionDetection),
+                             collisionDistanceFactor,
+                             minDetectionRadius,
+                             evasionTrackingCutoffInKM);
       timers.collisionDetection.stop();
       totalConjunctions += collisions.size();
+      totalEvasions += evasions.size();
       if (collisions.size() > 0) {
         iterationsSinceLastCollision = 0;
       }
@@ -401,6 +437,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       printProgressOutput(iteration,
                           autopas.getNumberOfParticles(),
                           totalConjunctions,
+                          totalEvasions,
                           migratedParticlesLocal,
                           domainDecomposition.getCommunicator());
     }
@@ -628,10 +665,12 @@ void Simulation::printNumParticlesPerRank(const autopas::AutoPas<Particle> &auto
 void Simulation::printProgressOutput(size_t iteration,
                                      size_t numParticlesLocal,
                                      size_t totalConjunctionsLocal,
+                                     size_t totalEvasionsLocal,
                                      size_t localMigrations,
                                      autopas::AutoPas_MPI_Comm const &comm) {
   unsigned long numParticlesGlobal{};
   unsigned long totalConjunctionsGlobal{};
+  unsigned long totalEvasionsGlobal{};
   unsigned long migratedParticlesGlobal{};
   autopas::AutoPas_MPI_Reduce(
       &localMigrations, &migratedParticlesGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, comm);
@@ -640,12 +679,16 @@ void Simulation::printProgressOutput(size_t iteration,
       &numParticlesLocal, &numParticlesGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, comm);
   autopas::AutoPas_MPI_Reduce(
       &totalConjunctionsLocal, &totalConjunctionsGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, comm);
-  SPDLOG_LOGGER_INFO(logger.get(),
-                     "It {} | Total particles: {} | Total conjunctions: {} | Migrated particles: {}",
-                     iteration,
-                     numParticlesGlobal,
-                     totalConjunctionsGlobal,
-                     migratedParticlesGlobal);
+  autopas::AutoPas_MPI_Reduce(
+      &totalEvasionsLocal, &totalEvasionsGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, comm);
+  SPDLOG_LOGGER_INFO(
+      logger.get(),
+      "It {} | Total particles: {} | Total conjunctions: {} | Migrated particles: {} | Total evasions: {}",
+      iteration,
+      numParticlesGlobal,
+      totalConjunctionsGlobal,
+      migratedParticlesGlobal,
+      totalEvasionsGlobal);
 }
 
 }  // namespace LADDS

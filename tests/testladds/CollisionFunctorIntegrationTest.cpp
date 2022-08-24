@@ -83,7 +83,7 @@ TEST_P(CollisionFunctorIntegrationTest, testAutoPasAlgorithm) {
     GTEST_SKIP_("SoAFunctor currently not implemented!");
   }
 
-  LADDS::CollisionFunctor functor(_cutoff, 10.0, 1., 0.1);
+  LADDS::CollisionFunctor functor(_cutoff, 10.0, 1., 0.1, 0.1);
 
   if (not functor.allowsNonNewton3() and newton3 == autopas::Newton3Option::disabled) {
     GTEST_SKIP_("Functor does not support Newton3==disabled!");

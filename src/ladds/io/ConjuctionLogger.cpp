@@ -37,4 +37,10 @@ void ConjunctionLogger::writeConjunctions(size_t iteration, const CollisionFunct
   }
 }
 
+void ConjunctionLogger::writeEvasions(size_t iteration, const CollisionFunctor::CollisionCollectionT &evasions) {
+  for (const auto &[p1, p2, distanceSquare, _] : evasions) {
+    log(iteration, *p1, *p2, distanceSquare);
+  }
+}
+
 }  // namespace LADDS

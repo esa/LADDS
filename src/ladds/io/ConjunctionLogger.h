@@ -33,6 +33,8 @@ class ConjunctionLogger final : public ConjuctionWriterInterface {
 
   void writeConjunctions(size_t iteration, const CollisionFunctor::CollisionCollectionT &collisions) override;
 
+  void writeEvasions(size_t iteration, const CollisionFunctor::CollisionCollectionT &evasions) override;
+
  private:
   /**
    * Log the given arguments and the internal buffer to the csv file.

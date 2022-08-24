@@ -1,5 +1,5 @@
 /**
- * @file SimulationTest.h
+ * @file RegularGridDecompositionTests.h
  * @author F. Gratl
  * @date 02.06.22
  */
@@ -14,11 +14,11 @@
 #include "ladds/io/ConfigReader.h"
 #include "ladds/io/Logger.h"
 
-class SimulationTest : public testing::Test {
+class RegularGridDecompositionTests : public testing::Test {
  public:
-  SimulationTest();
+  RegularGridDecompositionTests();
 
-  ~SimulationTest() override;
+  ~RegularGridDecompositionTests() override;
 
   int maxThreadsBefore;
   YAML::Node config;

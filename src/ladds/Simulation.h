@@ -97,12 +97,15 @@ class Simulation {
    * @param deltaT
    * @param collisionDistanceFactor See CollisionFunctor::_collisionDistanceFactor
    * @param minDetectionRadius
-   * @return Tuple of the collisions and whether AutoPas is currently in tuning mode.
+   * @param evasionTrackingCutoffInKM
+   * @return Tuple of the collisions, evasions and whether AutoPas is currently in tuning mode.
    */
-  std::tuple<CollisionFunctor::CollisionCollectionT, bool> collisionDetection(AutoPas_t &autopas,
-                                                                              double deltaT,
-                                                                              double collisionDistanceFactor,
-                                                                              double minDetectionRadius);
+  std::tuple<CollisionFunctor::CollisionCollectionT, CollisionFunctor::CollisionCollectionT, bool> collisionDetection(
+      AutoPas_t &autopas,
+      double deltaT,
+      double collisionDistanceFactor,
+      double minDetectionRadius,
+      double evasionTrackingCutoffInKM);
 
   /**
    * Auxiliary function to avoid code duplication. Triggers the writing of collisions and if necessary the breakup
@@ -189,12 +192,14 @@ class Simulation {
    * @param iteration
    * @param numParticlesLocal
    * @param totalConjunctionsLocal
+   * @param totalEvasionsLocal
    * @param localMigrations
    * @param comm
    */
   void printProgressOutput(size_t iteration,
                            size_t numParticlesLocal,
                            size_t totalConjunctionsLocal,
+                           size_t totalEvasionsLocal,
                            size_t localMigrations,
                            const autopas::AutoPas_MPI_Comm &comm);
 

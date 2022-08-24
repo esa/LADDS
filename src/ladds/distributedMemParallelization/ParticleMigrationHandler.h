@@ -34,15 +34,19 @@ namespace LADDS::ParticleMigrationHandler {
  * @param deltaT Time since the last container update.
  * @param maxV Maximal velocity a particle is assumed to have. Has to be positive.
  * @param collisionDistanceFactor See CollisionFunctor::_collisionDistanceFactor
- * @param minDetectionRadius
+ * @param minDetectionRadius See CollisionFunctor::_minDetectionRadius
+ * @param evasionTrackingCutoffInKM See CollisionFunctor::_evasionTrackingCutoffInKM
+ * @param checkForInternalCollisions If true, also check for internal collisions in the passed vector.
  * @return Collection of collision partners
  */
-LADDS::CollisionFunctor::CollisionCollectionT collisionDetectionImmigrants(
-    AutoPas_t &autopas,
-    std::vector<LADDS::Particle> &incomingParticles,
-    double deltaT,
-    double maxV,
-    double collisionDistanceFactor,
-    double minDetectionRadius);
+std::tuple<LADDS::CollisionFunctor::CollisionCollectionT, LADDS::CollisionFunctor::CollisionCollectionT>
+collisionDetectionAroundParticles(AutoPas_t &autopas,
+                                  std::vector<LADDS::Particle> &incomingParticles,
+                                  double deltaT,
+                                  double maxV,
+                                  double collisionDistanceFactor,
+                                  double minDetectionRadius,
+                                  double evasionTrackingCutoffInKM,
+                                  bool checkForInternalCollisions);
 
 }  // namespace LADDS::ParticleMigrationHandler

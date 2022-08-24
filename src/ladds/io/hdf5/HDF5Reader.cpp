@@ -73,6 +73,15 @@ std::vector<HDF5Definitions::CollisionInfo> HDF5Reader::readCollisions(size_t it
   return collisions;
 }
 
+std::vector<HDF5Definitions::CollisionInfo> HDF5Reader::readEvasions(size_t iteration) const {
+  std::vector<HDF5Definitions::CollisionInfo> evasions{};
+#ifdef LADDS_HDF5
+  file.readDataset(evasions,
+                   HDF5Definitions::groupEvasionData + std::to_string(iteration) + HDF5Definitions::datasetEvasions);
+#endif
+  return evasions;
+}
+
 size_t HDF5Reader::readLastIterationNr() {
   std::vector<size_t> allIterations;
 #ifdef LADDS_HDF5
