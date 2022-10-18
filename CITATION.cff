@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 title: "LADDS - Large-scale Deterministic Debris Simulation"
-  authors:
+authors:
   - given-names: Pablo
     family-names: Gómez
     email: pablo.gomez@esa.int
