@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "LADDS - Large-scale Deterministic Debris Simulation"
+  authors:
+  - given-names: Pablo
+    family-names: Gómez
+    email: pablo.gomez@esa.int
+    affiliation: >-
+      European Space Agency, Advanced Concepts Team,
+      Noordwijk, 2201AZ, The Netherlands
+    orcid: 'https://orcid.org/0000-0002-5631-8240'
+  - given-names: Fabio
+    family-names: Gratl
+  - given-names: Dario
+    family-names: Izzo
+repository-code: "https://github.com/esa/LADDS/"
+license: GPL-3.0
+preferred-citation:
+  type: article
+  authors:
+  - given-names: Pablo
+    family-names: Gómez
+    email: pablo.gomez@esa.int
+    affiliation: >-
+      European Space Agency, Advanced Concepts Team,
+      Noordwijk, 2201AZ, The Netherlands
+    orcid: 'https://orcid.org/0000-0002-5631-8240'
+  - given-names: Fabio
+    family-names: Gratl
+  - given-names: Dario
+    family-names: Izzo
+  doi: "10.48550/arXiv.2203.06957"
+  journal: "Proceedings of the 3rd IAA Conference on Space Situational Awareness 2022"
+  title: "Deterministic Conjunction Tracking in Long-term Space Debris Simulations"
