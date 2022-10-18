@@ -27,6 +27,8 @@ preferred-citation:
     orcid: 'https://orcid.org/0000-0002-5631-8240'
   - given-names: Fabio
     family-names: Gratl
+  - given-names: Oliver
+    family-names: Bösing
   - given-names: Dario
     family-names: Izzo
   doi: "10.48550/arXiv.2203.06957"
