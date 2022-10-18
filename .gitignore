@@ -37,9 +37,14 @@
 .cache
 .vscode
 
+# Python stuff
+*.pyc
+*.pyo
+
 # Data folder
 data
 *.ipynb_checkpoints
 results
 MASTER
 my_notebooks
+set_env.sh

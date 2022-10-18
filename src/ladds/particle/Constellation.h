@@ -12,6 +12,7 @@
 #include <iostream>
 #include <random>
 
+#include "ladds/distributedMemParallelization/DomainDecomposition.h"
 #include "ladds/io/ConfigReader.h"
 #include "ladds/particle/Particle.h"
 
@@ -38,9 +39,10 @@ class Constellation {
    * Determines which satellites are being added to the simulation by adding each shell
    * within a time span proportional to the shells size. shells are added plane by plane
    * and linearly over time.
+   * @param domainDecomposition
    * @return std::vector<Particle> : satellites to be added to the simulation.
    */
-  std::vector<Particle> tick();
+  std::vector<Particle> tick(DomainDecomposition &domainDecomposition);
 
   /**
    * Offsets all local constellation IDs by the parameter baseId to create global IDs.

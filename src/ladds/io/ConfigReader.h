@@ -6,12 +6,13 @@
 
 #include <autopas/utils/ArrayUtils.h>
 #include <autopas/utils/StringUtils.h>
+#include <autopas/utils/WrapMPI.h>
 
 #include <optional>
 
 #include "Logger.h"
+#include "ladds/io/hdf5/HDF5Definitions.h"
 #include "yaml-cpp/yaml.h"
-
 #pragma once
 
 namespace LADDS {
@@ -24,16 +25,34 @@ class ConfigReader {
    * Constructor that loads a YAML file from disk.
    * @param configPath
    * @param logger
+   * @param rank
+   * @param numRanks
    */
-  ConfigReader(const std::string &configPath, const Logger &logger)
-      : config(loadConfig(configPath, logger)), logger(logger){};
+  ConfigReader(const std::string &configPath, const Logger &logger, int rank = 0, int numRanks = 1);
+
+  size_t newParticleID();
+
+  void setNextSafeParticleID(size_t nextSafeParticleID) {
+    this->nextSafeParticleID = nextSafeParticleID;
+  }
+
+  void setLastSafeParticleID(size_t lastSafeParticleID) {
+    this->lastSafeParticleID = lastSafeParticleID;
+  }
 
   /**
    * Constructor that uses an already loaded YAML tree.
    * @param config
    * @param logger
+   * @param rank
+   * @param numRanks
    */
-  ConfigReader(const YAML::Node &config, const Logger &logger) : config(config), logger(logger){};
+  ConfigReader(const YAML::Node &config, const Logger &logger, int rank = 0, int numRanks = 1)
+      : config(config), logger(logger) {
+    const auto lengthIDRange = std::numeric_limits<HDF5Definitions::IntType>::max() / (numRanks);
+    nextSafeParticleID = lengthIDRange * rank;
+    lastSafeParticleID = lengthIDRange * (rank + 1) - 1;
+  };
 
   /**
    * Primary function to retrieve values from the underlying YAML data.
@@ -126,6 +145,24 @@ class ConfigReader {
     }
   }
 
+  /**
+   * Getter for the logger.
+   * @return logger
+   */
+  const Logger &getLogger() const;
+
+  /**
+   * Determines the number of the fist iteration for the simulation.
+   * @return
+   */
+  size_t getFirstIterationNr();
+
+  /**
+   * Determines the number of the last iteration for the simulation.
+   * @return
+   */
+  size_t getLastIterationNr();
+
  private:
   /**
    * Helper function for setValue recursively iterating through the yaml structure,
@@ -172,6 +209,16 @@ class ConfigReader {
    * Reference to the logger used for any output.
    */
   const Logger &logger;
+
+  /**
+   * Next ID that will be returned the next time newParticleID() is called.
+   */
+  size_t nextSafeParticleID{};
+
+  /**
+   * Last particle ID of the rank-local particle id range which is safe to assign.
+   */
+  size_t lastSafeParticleID{};
 
   /**
    * Map keeping track of all loaded / parsed values.

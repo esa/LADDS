@@ -9,11 +9,81 @@
 #include "ConfigReader.h"
 #include "DatasetReader.h"
 #include "Logger.h"
+#include "ladds/distributedMemParallelization/AltitudeBasedDecomposition.h"
 #include "ladds/io/hdf5/HDF5Reader.h"
 
 namespace LADDS {
 
-void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, const Logger &logger) {
+void SatelliteLoader::addSatellitesToAutoPas(AutoPas_t &autopas,
+                                             std::vector<Particle> &satellites,
+                                             DomainDecomposition &decomp,
+                                             ConfigReader &config) {
+  int rank{};
+  autopas::AutoPas_MPI_Comm_rank(AUTOPAS_MPI_COMM_WORLD, &rank);
+  int numRanks{};
+  autopas::AutoPas_MPI_Comm_size(AUTOPAS_MPI_COMM_WORLD, &numRanks);
+
+  // We rebalance our domain decomposition based on particle positions. (only makes sense with enough particles)
+  if (satellites.size() >= (unsigned)numRanks) {
+    decomp.rebalanceDecomposition(satellites, autopas);
+  }
+
+  // load particle vector into autopas while checking that they are within the desired altitude
+  const auto maxAltitude = config.get<double>("sim/maxAltitude");
+  const auto maxAltitudeSquared = maxAltitude * maxAltitude;
+  double minAltitudeFound{std::numeric_limits<double>::max()};
+  double maxAltitudeFound{0.};
+  const auto &boxMin = autopas.getBoxMin();
+  const auto &boxMax = autopas.getBoxMax();
+
+  SPDLOG_LOGGER_INFO(config.getLogger().get(), "BoxMin: {}, BoxMax: {}", boxMin, boxMax);
+
+  for (auto &particle : satellites) {
+    const auto &pos = particle.getPosition();
+    const auto rankForParticle = decomp.getRank(pos);
+    if (rankForParticle != rank) {
+      continue;
+    }
+
+    const double altitudeSquared = autopas::utils::ArrayMath::dot(pos, pos);
+    minAltitudeFound = std::min(minAltitudeFound, altitudeSquared);
+    maxAltitudeFound = std::max(maxAltitudeFound, altitudeSquared);
+
+    if (altitudeSquared < maxAltitudeSquared) {
+      // set the id to the next free particle id of this rank
+      particle.setID(config.newParticleID());
+      autopas.addParticle(particle);
+    } else {
+      SPDLOG_LOGGER_WARN(config.getLogger().get(),
+                         "Particle NOT added because its altitudeSquared was too high!\n"
+                         "Max allowed: {}\n"
+                         "Actual: {}\n"
+                         "{})",
+                         maxAltitude,
+                         sqrt(altitudeSquared),
+                         particle.toString());
+    }
+  }
+
+  // collect and reduce global values
+  double minAltitudeFoundGlobal{};
+  autopas::AutoPas_MPI_Reduce(
+      &minAltitudeFound, &minAltitudeFoundGlobal, 1, AUTOPAS_MPI_DOUBLE, AUTOPAS_MPI_MIN, 0, decomp.getCommunicator());
+  double maxAltitudeFoundGlobal{};
+  autopas::AutoPas_MPI_Reduce(
+      &maxAltitudeFound, &maxAltitudeFoundGlobal, 1, AUTOPAS_MPI_DOUBLE, AUTOPAS_MPI_MAX, 0, decomp.getCommunicator());
+  minAltitudeFoundGlobal = sqrt(minAltitudeFoundGlobal);
+  maxAltitudeFoundGlobal = sqrt(maxAltitudeFoundGlobal);
+  SPDLOG_LOGGER_INFO(config.getLogger().get(), "Min altitude is {}", minAltitudeFoundGlobal);
+  SPDLOG_LOGGER_INFO(config.getLogger().get(), "Max altitude is {}", maxAltitudeFoundGlobal);
+  unsigned long numParticles = autopas.getNumberOfParticles();
+  unsigned long numParticlesGlobal{};
+  autopas::AutoPas_MPI_Reduce(
+      &numParticles, &numParticlesGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, decomp.getCommunicator());
+  SPDLOG_LOGGER_INFO(config.getLogger().get(), "Number of particles: {}", numParticlesGlobal);
+}
+
+void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, DomainDecomposition &decomp) {
   std::vector<Particle> satellites;
 
   // if the value is not set this is the only place that should define the default value as it is the first to access it
@@ -36,17 +106,17 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
     // TODO: Remove DATADIR functionality
     const auto csvFilePath = std::string(DATADIR) + csvFileName;
 
-    SPDLOG_LOGGER_INFO(logger.get(), "Loading scenario from CSV: {}", csvFilePath);
+    SPDLOG_LOGGER_INFO(config.getLogger().get(), "Loading scenario from CSV: {}", csvFilePath);
 
     // Read in scenario
     satellites = DatasetReader::readDataset(csvFilePath, coefficientOfDrag);
-    SPDLOG_LOGGER_DEBUG(logger.get(), "Parsed {} satellites", satellites.size());
+    SPDLOG_LOGGER_DEBUG(config.getLogger().get(), "Parsed {} satellites", satellites.size());
   }
   // ... or load checkpoint ...
   if (not checkpointPathCfg.empty()) {
     // TODO: Remove DATADIR functionality
     const auto checkpointPath = std::string(DATADIR) + checkpointPathCfg;
-    SPDLOG_LOGGER_INFO(logger.get(), "Loading scenario from HDF5 checkpoint\nFile: {}", checkpointPath);
+    SPDLOG_LOGGER_INFO(config.getLogger().get(), "Loading scenario from HDF5 checkpoint\nFile: {}", checkpointPath);
 
     HDF5Reader hdfReader(checkpointPath);
     // either load the given iteration or fall back to the last iteration stored in the file
@@ -54,41 +124,15 @@ void SatelliteLoader::loadSatellites(AutoPas_t &autopas, ConfigReader &config, c
     satellites = hdfReader.readParticles(iteration, coefficientOfDrag);
   }
 
-  // load particle vector into autopas while checking that they are within the desired altitude
-  const auto maxAltitude = config.get<double>("sim/maxAltitude");
-  const auto maxAltitudeSquared = maxAltitude * maxAltitude;
-  double minAltitudeFound{std::numeric_limits<double>::max()};
-  double maxAltitudeFound{0.};
-  for (const auto &particle : satellites) {
-    const auto &pos = particle.getPosition();
-    const double altitudeSquared = autopas::utils::ArrayMath::dot(pos, pos);
-    minAltitudeFound = std::min(minAltitudeFound, altitudeSquared);
-    maxAltitudeFound = std::max(maxAltitudeFound, altitudeSquared);
-    if (altitudeSquared < maxAltitudeSquared) {
-      autopas.addParticle(particle);
-    } else {
-      SPDLOG_LOGGER_WARN(logger.get(),
-                         "Particle NOT added because its altitudeSquared was too high!\n"
-                         "Max allowed: {}\n"
-                         "Actual: {}\n"
-                         "{})",
-                         maxAltitude,
-                         sqrt(altitudeSquared),
-                         particle.toString());
-    }
-  }
-  minAltitudeFound = sqrt(minAltitudeFound);
-  maxAltitudeFound = sqrt(maxAltitudeFound);
-  SPDLOG_LOGGER_INFO(logger.get(), "Min altitude is {}", minAltitudeFound);
-  SPDLOG_LOGGER_INFO(logger.get(), "Max altitude is {}", maxAltitudeFound);
-  SPDLOG_LOGGER_INFO(logger.get(), "Number of particles: {}", autopas.getNumberOfParticles());
+  addSatellitesToAutoPas(autopas, satellites, decomp, config);
 }
 
 std::vector<Constellation> SatelliteLoader::loadConstellations(ConfigReader &config, const Logger &logger) {
   std::vector<Constellation> constellations;
   auto constellationList = config.get<std::string>("io/constellationList", "", true);
   if (not constellationList.empty()) {
-    const auto insertionFrequency = config.get<int>("io/constellationFrequency", 1);
+    throw std::runtime_error("Constellations are currently not supported! See https://github.com/esa/LADDS/issues/149");
+
     auto constellationDataStr = config.get<std::string>("io/constellationList");
     // count constellation by counting ';'
     int nConstellations = std::count(constellationDataStr.begin(), constellationDataStr.end(), ';') + 1;

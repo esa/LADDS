@@ -11,6 +11,7 @@
 
 #include "ladds/Simulation.h"
 #include "ladds/TypeDefinitions.h"
+#include "ladds/distributedMemParallelization/RegularGridDecomposition.h"
 #include "ladds/io/Logger.h"
 
 /**
@@ -20,7 +21,7 @@ using ParameterTuple = std::tuple<std::array<double, 3>, bool>;
 
 class SimulationTest : public testing::TestWithParam<ParameterTuple> {
  public:
-  SimulationTest() : logger("SimulationTestLogger"), simulation(logger) {
+  SimulationTest() : logger(LADDS_SPD_LOGGER_NAME), simulation(logger) {
     logger.get()->set_level(LADDS::Logger::Level::off);
 
     // initialize a minimal default configuration
@@ -36,9 +37,13 @@ class SimulationTest : public testing::TestWithParam<ParameterTuple> {
     config["sim"]["iterations"] = 1;
     config["sim"]["minAltitude"] = 150.;
     config["sim"]["prop"]["useKEPComponent"] = true;
+    config["sim"]["decompositionType"] = "RegularGrid";
 
     configReader = std::make_unique<LADDS::ConfigReader>(config, logger);
-    autopas = simulation.initAutoPas(*configReader);
+
+    decomposition = std::make_unique<LADDS::RegularGridDecomposition>(*configReader);
+
+    autopas = simulation.initAutoPas(*configReader, *decomposition);
   }
 
   /**
@@ -66,6 +71,7 @@ class SimulationTest : public testing::TestWithParam<ParameterTuple> {
   LADDS::Simulation simulation;
   std::unique_ptr<LADDS::ConfigReader> configReader;
   std::unique_ptr<AutoPas_t> autopas;
+  std::unique_ptr<LADDS::DomainDecomposition> decomposition;
   static constexpr std::array<double, 3> zeroVec{0., 0., 0.};
   static constexpr std::array<double, 3> testCheckedInsertParticlePos{6871, 0, 0};
   static constexpr double constellationCutoff = 0.04;

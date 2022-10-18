@@ -10,19 +10,31 @@
 #include <autopas/utils/WrapOpenMP.h>
 
 #include <algorithm>
+#include <limits>
+
+#include "ladds/utils/DistanceApproximation.h"
 
 namespace LADDS {
-CollisionFunctor::CollisionFunctor(double cutoff, double dt, double collisionDistanceFactor, double minDetectionRadius)
+CollisionFunctor::CollisionFunctor(double cutoff,
+                                   double dt,
+                                   double collisionDistanceFactor,
+                                   double minDetectionRadius,
+                                   double evasionTrackingCutoffInKM)
     : Functor(cutoff),
       _cutoffSquare(cutoff * cutoff),
       _dt(dt),
       _collisionDistanceFactor(collisionDistanceFactor / 1000.),  // also imply conversion from m to km
-      _minDetectionRadius(minDetectionRadius) {
+      _minDetectionRadius(minDetectionRadius),
+      _squaredEvasionTrackingCutoffInKM(evasionTrackingCutoffInKM * evasionTrackingCutoffInKM) {
   _threadData.resize(autopas::autopas_get_max_threads());
 }
 
 const CollisionFunctor::CollisionCollectionT &CollisionFunctor::getCollisions() const {
   return _collisions;
+}
+
+const CollisionFunctor::CollisionCollectionT &CollisionFunctor::getEvadedCollisions() const {
+  return _evadedCollisions;
 }
 
 void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
@@ -38,16 +50,23 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
   if (i.isDummy() or j.isDummy()) {
     return;
   }
+
   const auto &iActivity = i.getActivityState();
   const auto &jActivity = j.getActivityState();
   const auto &iRadius = i.getRadius();
   const auto &jRadius = j.getRadius();
+  bool wasEvaded = false;
   if ((iActivity != Particle::ActivityState::passive and jActivity != Particle::ActivityState::passive) or
       (iActivity != Particle::ActivityState::passive and jRadius >= _minDetectionRadius) or
       (jActivity != Particle::ActivityState::passive and iRadius >= _minDetectionRadius)) {
-    return;
+    wasEvaded = true;
   }
 
+  // skip if both particles have same parent, i.e. originate from same breakup
+  if ((i.getParentIdentifier() != std::numeric_limits<size_t>::max()) and
+      i.getParentIdentifier() == j.getParentIdentifier()) {
+    return;
+  }
   // calculate distance between particles
   const auto dr = sub(i.getR(), j.getR());
   const auto distanceSquare = dot(dr, dr);
@@ -57,59 +76,57 @@ void CollisionFunctor::AoSFunctor(Particle &i, Particle &j, bool newton3) {
     return;
   }
 
-  // if distance is smaller we compute the minimum distance between the linear interpolations
-  // of the particle trajectory over the last timestep
-  // according to wolfram alpha, should look like this:
-  // https://www.wolframalpha.com/input/?i=solve+for+t+d%2Fdt%5Bsqrt%28%28-z_1+t+%2B+t+v_1+%2B+x_1+-+y_1%29%5E2+%2B+%28-z_2+t+%2B+t+v_2+%2B+x_2+-+y_2%29%5E2+%2B+%28t+v_3+-+t+z_3+%2B+x_3+-+y_3%29%5E2%29%5D
+  // if distance is smaller we compute the shortest vector between the linear interpolations
+  // of the particle trajectory over the last timestep and position of particle 2 at that time
+  const auto [dr_lines, p2] = LADDS::utils::distanceByLinearInterpolation(i, j, _dt);
 
-  const auto &vi = i.getVelocity();
-  const auto &vj = j.getVelocity();
-
-  // Get old time step position
-  const auto old_r_i = sub(i.getR(), mulScalar(vi, _dt));
-  const auto old_r_j = sub(j.getR(), mulScalar(vj, _dt));
-
-  // Compute nominator dot products
-  const auto vi_ri = dot(vi, old_r_i);
-  const auto vi_rj = dot(vi, old_r_j);
-  const auto vj_ri = dot(vj, old_r_i);
-  const auto vj_rj = dot(vj, old_r_j);
-
-  const auto nominator = vi_rj + vj_ri - vi_ri - vj_rj;
-
-  // Compute denominator dot products
-  const auto two_vi_vj = 2.0 * dot(vi, vj);
-  const auto vi_square = dot(vi, vi);
-  const auto vj_square = dot(vj, vj);
-
-  const auto denominator = vi_square + vj_square - two_vi_vj;
-
-  // Compute t at minimal distance
-  auto t = nominator / denominator;
-
-  // If in the past, minimum is at t = 0
-  // Else If in future timesteps, minimum for this is at t = _dt
-  t = std::clamp(t, 0., _dt);
-
-  // Compute actual distance by propagating along the line to t
-  const auto p1 = add(old_r_i, mulScalar(vi, t));
-  const auto p2 = add(old_r_j, mulScalar(vj, t));
-
-  const auto dr_lines = sub(p1, p2);
   const auto distanceSquare_lines = dot(dr_lines, dr_lines);
   // _collisionDistanceFactor also converts this to km
   const auto scaledObjectSeparation = (iRadius + jRadius) * _collisionDistanceFactor;
 
-  // return if particles are far enough away (i.e. further than sum of their scaled sizes)
-  if (distanceSquare_lines > (scaledObjectSeparation * scaledObjectSeparation)) return;
+  // For evaded collisions we collect them at this point
+  // and store pointers to colliding pair
+  if (wasEvaded) {
+    if (distanceSquare_lines > _squaredEvasionTrackingCutoffInKM) {
+      return;
+    }
+    // compute potential collision point as middle between the two particles
+    const auto collision_point = add(p2, mulScalar(dr_lines, 0.5));
 
-  // store pointers to colliding pair
-  if (i.getID() < j.getID()) {
-    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(
-        i.get<Particle::AttributeNames::ptr>(), j.get<Particle::AttributeNames::ptr>(), distanceSquare_lines);
+    if (i.getID() < j.getID()) {
+      _threadData[autopas::autopas_get_thread_num()].evadedCollisions.emplace_back(
+          i.get<Particle::AttributeNames::ptr>(),
+          j.get<Particle::AttributeNames::ptr>(),
+          distanceSquare_lines,
+          collision_point);
+    } else {
+      _threadData[autopas::autopas_get_thread_num()].evadedCollisions.emplace_back(
+          j.get<Particle::AttributeNames::ptr>(),
+          i.get<Particle::AttributeNames::ptr>(),
+          distanceSquare_lines,
+          collision_point);
+    }
   } else {
-    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(
-        j.get<Particle::AttributeNames::ptr>(), i.get<Particle::AttributeNames::ptr>(), distanceSquare_lines);
+    // if they were not evaded, check if actual collisions takes place, i.e.
+    // particles are far enough away (i.e. further than sum of their scaled sizes)
+    if (distanceSquare_lines > (scaledObjectSeparation * scaledObjectSeparation)) {
+      return;
+    }
+
+    // if not compute collision point as middle between the two particles
+    const auto collision_point = add(p2, mulScalar(dr_lines, 0.5));
+
+    if (i.getID() < j.getID()) {
+      _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(i.get<Particle::AttributeNames::ptr>(),
+                                                                             j.get<Particle::AttributeNames::ptr>(),
+                                                                             distanceSquare_lines,
+                                                                             collision_point);
+    } else {
+      _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(j.get<Particle::AttributeNames::ptr>(),
+                                                                             i.get<Particle::AttributeNames::ptr>(),
+                                                                             distanceSquare_lines,
+                                                                             collision_point);
+    }
   }
 }
 
@@ -120,13 +137,13 @@ void CollisionFunctor::SoAFunctorSingle(autopas::SoAView<SoAArraysType> soa, boo
 void CollisionFunctor::SoAFunctorPair(autopas::SoAView<SoAArraysType> soa1,
                                       autopas::SoAView<SoAArraysType> soa2,
                                       bool newton3) {
-  if (soa1.getNumParticles() == 0 or soa2.getNumParticles() == 0) return;
+  if (soa1.getNumberOfParticles() == 0 or soa2.getNumberOfParticles() == 0) return;
 
   // get pointers to the SoA
   const auto *const __restrict ownedStatePtr1 = soa1.template begin<Particle::AttributeNames::ownershipState>();
 
   // outer loop over SoA1
-  for (size_t i = 0; i < soa1.getNumParticles(); ++i) {
+  for (size_t i = 0; i < soa1.getNumberOfParticles(); ++i) {
     if (ownedStatePtr1[i] == autopas::OwnershipState::dummy) {
       // If the i-th particle is a dummy, skip this loop iteration.
       continue;
@@ -137,9 +154,10 @@ void CollisionFunctor::SoAFunctorPair(autopas::SoAView<SoAArraysType> soa1,
 #pragma omp declare reduction(vecMerge:CollisionCollectionT \
                               : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
     // alias because OpenMP needs it
+    // TODO add evadedCollisions when refactoring this
     auto &thisCollisions = _threadData[autopas::autopas_get_thread_num()].collisions;
 #pragma omp simd reduction(vecMerge : thisCollisions)
-    for (size_t j = 0; j < soa2.getNumParticles(); ++j) {
+    for (size_t j = 0; j < soa2.getNumberOfParticles(); ++j) {
       SoAKernel(i, j, soa1, soa2, newton3);
     }
   }
@@ -166,7 +184,8 @@ void CollisionFunctor::SoAKernel(
   // TODO: as soon as this exception is removed / the SoAFunctor properly implemented
   // remove the GTEST_SKIP in CollisionFunctorIntegrationTest::testAutoPasAlgorithm!
   throw std::runtime_error(
-      "SoA kernel not up to date with AoS Kernel as it lacks the new linear interpolation distance.");
+      "SoA kernel not up to date with AoS Kernel as it lacks the new linear interpolation distance and correct "
+      "collision position.");
 
   // get pointers to the SoAs
   const auto *const __restrict x1ptr = soa1.template begin<Particle::AttributeNames::posX>();
@@ -203,20 +222,26 @@ void CollisionFunctor::SoAKernel(
   }
 
   // store pointers to colliding pair
+  // TODO add evaded collisions when refactoring this
   if (id1ptr[i] < id2ptr[j]) {
-    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(ptr1ptr[i], ptr2ptr[j], dr2);
+    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(
+        ptr1ptr[i], ptr2ptr[j], dr2, ptr1ptr[i]->getPosition());
   } else {
-    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(ptr2ptr[j], ptr1ptr[i], dr2);
+    _threadData[autopas::autopas_get_thread_num()].collisions.emplace_back(
+        ptr2ptr[j], ptr1ptr[i], dr2, ptr1ptr[i]->getPosition());
   }
 }
 void CollisionFunctor::initTraversal() {
   _collisions.clear();
+  _evadedCollisions.clear();
 }
 
 void CollisionFunctor::endTraversal(bool newton3) {
   for (auto &data : _threadData) {
     _collisions.insert(_collisions.end(), data.collisions.begin(), data.collisions.end());
     data.collisions.clear();
+    _evadedCollisions.insert(_evadedCollisions.end(), data.evadedCollisions.begin(), data.evadedCollisions.end());
+    data.evadedCollisions.clear();
   }
 }
 }  // namespace LADDS

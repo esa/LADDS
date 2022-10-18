@@ -14,6 +14,7 @@ HDF5Writer::HDF5Writer(const std::string &filename, bool replace, unsigned int c
 #ifdef LADDS_HDF5
     : _file(filename, replace ? h5pp::FilePermission::REPLACE : h5pp::FilePermission::READWRITE),
       collisionInfoH5Type(H5Tcreate(H5T_COMPOUND, sizeof(HDF5Definitions::CollisionInfo))),
+      evasionInfoH5Type(H5Tcreate(H5T_COMPOUND, sizeof(HDF5Definitions::EvasionInfo))),
       particleConstantPropertiesH5Type(H5Tcreate(H5T_COMPOUND, sizeof(HDF5Definitions::ParticleConstantProperties)))
 #endif
 {
@@ -35,6 +36,20 @@ HDF5Writer::HDF5Writer(const std::string &filename, bool replace, unsigned int c
             "distanceSquared",
             HOFFSET(HDF5Definitions::CollisionInfo, distanceSquared),
             h5pp::type::getH5NativeType<decltype(HDF5Definitions::CollisionInfo::distanceSquared)>());
+
+  // EvasionInfo
+  H5Tinsert(evasionInfoH5Type,
+            "idA",
+            HOFFSET(HDF5Definitions::EvasionInfo, idA),
+            h5pp::type::getH5NativeType<decltype(HDF5Definitions::EvasionInfo::idA)>());
+  H5Tinsert(evasionInfoH5Type,
+            "idB",
+            HOFFSET(HDF5Definitions::EvasionInfo, idB),
+            h5pp::type::getH5NativeType<decltype(HDF5Definitions::EvasionInfo::idB)>());
+  H5Tinsert(evasionInfoH5Type,
+            "distanceSquared",
+            HOFFSET(HDF5Definitions::EvasionInfo, distanceSquared),
+            h5pp::type::getH5NativeType<decltype(HDF5Definitions::EvasionInfo::distanceSquared)>());
 
   // ParticleConstantProperties
   H5Tinsert(particleConstantPropertiesH5Type,
@@ -141,7 +156,7 @@ void HDF5Writer::writeConjunctions(size_t iteration, const CollisionFunctor::Col
   std::vector<HDF5Definitions::CollisionInfo> data;
   data.reserve(collisions.size());
 
-  for (const auto &[p1, p2, distanceSquare] : collisions) {
+  for (const auto &[p1, p2, distanceSquare, _] : collisions) {
     data.emplace_back<HDF5Definitions::CollisionInfo>(
         {static_cast<decltype(HDF5Definitions::CollisionInfo::idA)>(p1->getID()),
          static_cast<decltype(HDF5Definitions::CollisionInfo::idB)>(p2->getID()),
@@ -149,6 +164,25 @@ void HDF5Writer::writeConjunctions(size_t iteration, const CollisionFunctor::Col
   }
   const auto group = HDF5Definitions::groupCollisionData + std::to_string(iteration);
   _file.writeDataset(data, group + HDF5Definitions::datasetCollisions, collisionInfoH5Type);
+#endif
+}
+
+void HDF5Writer::writeEvasions(size_t iteration, const CollisionFunctor::CollisionCollectionT &evasions) {
+#ifdef LADDS_HDF5
+  if (evasions.empty()) {
+    return;
+  }
+  std::vector<HDF5Definitions::EvasionInfo> data;
+  data.reserve(evasions.size());
+
+  for (const auto &[p1, p2, distanceSquare, _] : evasions) {
+    data.emplace_back<HDF5Definitions::EvasionInfo>(
+        {static_cast<decltype(HDF5Definitions::EvasionInfo::idA)>(p1->getID()),
+         static_cast<decltype(HDF5Definitions::EvasionInfo::idB)>(p2->getID()),
+         static_cast<decltype(HDF5Definitions::EvasionInfo::distanceSquared)>(distanceSquare)});
+  }
+  const auto group = HDF5Definitions::groupEvasionData + std::to_string(iteration);
+  _file.writeDataset(data, group + HDF5Definitions::datasetEvasions, evasionInfoH5Type);
 #endif
 }
 

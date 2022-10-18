@@ -16,7 +16,9 @@ namespace LADDS::SatelliteToParticleConverter {
  * @param  satellite: Satellite to convert.
  * @retval Converted particles.
  */
-[[nodiscard]] inline Particle convertSatelliteToParticle(const Satellite &satellite, double coefficientOfDrag) {
+[[nodiscard]] inline Particle convertSatelliteToParticle(const Satellite &satellite,
+                                                         double coefficientOfDrag,
+                                                         size_t parentIdentifier) {
   // Convert all entries from meters to kilometers
   const auto &position = autopas::utils::ArrayMath::mulScalar(satellite.getPosition(), 1. / 1000.0);
   const auto &velocity = autopas::utils::ArrayMath::mulScalar(satellite.getVelocity(), 1. / 1000.0);
@@ -31,7 +33,8 @@ namespace LADDS::SatelliteToParticleConverter {
                   mass,
                   radius,
                   // FIXME? Back and forth conversion would eliminate bstar
-                  Particle::calculateBcInv(0., mass, radius, coefficientOfDrag)};
+                  Particle::calculateBcInv(0., mass, radius, coefficientOfDrag),
+                  parentIdentifier};
 }
 
 /**

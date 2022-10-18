@@ -6,6 +6,8 @@
 
 #include "HDF5Reader.h"
 
+#include <limits>
+
 #include "HDF5Definitions.h"
 
 namespace LADDS {
@@ -55,7 +57,8 @@ std::vector<Particle> HDF5Reader::readParticles(size_t iteration, double coeffic
                            static_cast<Particle::ActivityState>(constantProperties.activityState),
                            constantProperties.mass,
                            constantProperties.radius,
-                           constantProperties.bcInv);
+                           constantProperties.bcInv,
+                           std::numeric_limits<size_t>::max());
   }
 #endif
   return particles;
@@ -68,6 +71,15 @@ std::vector<HDF5Definitions::CollisionInfo> HDF5Reader::readCollisions(size_t it
       collisions, HDF5Definitions::groupCollisionData + std::to_string(iteration) + HDF5Definitions::datasetCollisions);
 #endif
   return collisions;
+}
+
+std::vector<HDF5Definitions::CollisionInfo> HDF5Reader::readEvasions(size_t iteration) const {
+  std::vector<HDF5Definitions::CollisionInfo> evasions{};
+#ifdef LADDS_HDF5
+  file.readDataset(evasions,
+                   HDF5Definitions::groupEvasionData + std::to_string(iteration) + HDF5Definitions::datasetEvasions);
+#endif
+  return evasions;
 }
 
 size_t HDF5Reader::readLastIterationNr() {

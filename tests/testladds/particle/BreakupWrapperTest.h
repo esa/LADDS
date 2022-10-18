@@ -10,11 +10,12 @@
 
 #include "ladds/Simulation.h"
 #include "ladds/TypeDefinitions.h"
+#include "ladds/distributedMemParallelization/RegularGridDecomposition.h"
 #include "ladds/io/Logger.h"
 
 class BreakupWrapperTest : public testing::Test {
  public:
-  BreakupWrapperTest() : logger("BreakupWrapperTestLogger"), simulation(logger) {
+  BreakupWrapperTest() : logger(LADDS_SPD_LOGGER_NAME), simulation(logger) {
     logger.get()->set_level(LADDS::Logger::Level::off);
 
     // initialize a minimal default configuration
@@ -28,8 +29,12 @@ class BreakupWrapperTest : public testing::Test {
     config["sim"]["iterations"] = 1;
     config["sim"]["breakup"]["enabled"] = true;
 
+    // init decomp in cfg file correctly
+    config["sim"]["decompositionType"] = "RegularGrid";
+
     configReader = std::make_unique<LADDS::ConfigReader>(config, logger);
-    autopas = simulation.initAutoPas(*configReader);
+    decomposition = std::make_unique<LADDS::RegularGridDecomposition>(*configReader);
+    autopas = simulation.initAutoPas(*configReader, *decomposition);
   };
 
   YAML::Node config;
@@ -37,5 +42,6 @@ class BreakupWrapperTest : public testing::Test {
   LADDS::Logger logger;
   LADDS::Simulation simulation;
   std::unique_ptr<LADDS::ConfigReader> configReader;
+  std::unique_ptr<LADDS::DomainDecomposition> decomposition;
   std::unique_ptr<AutoPas_t> autopas;
 };

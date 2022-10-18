@@ -33,6 +33,7 @@ include(version)
 include(ladds_sanitizers)
 include(ladds_clang-format)
 include(ladds_doxygen)
+include(ladds_mpi)
 
 include(autopas)
 include(propagator)
@@ -43,7 +44,7 @@ add_subdirectory(src)
 
 # needs to be in the root directory
 enable_testing()
-add_subdirectory(tests/testladds)
+add_subdirectory(tests)
 
 # modules that need the main target
 include(ladds_compilerWarnings)
