@@ -20,6 +20,7 @@
 #include "ladds/io/ConjunctionLogger.h"
 #include "ladds/io/SatelliteLoader.h"
 #include "ladds/io/VTUWriter.h"
+#include "ladds/io/decompositionLogging/AltitudeBasedDecompositionLogger.h"
 #include "ladds/io/decompositionLogging/DecompositionLogger.h"
 #include "ladds/io/decompositionLogging/RegularGridDecompositionLogger.h"
 #include "ladds/io/hdf5/HDF5Writer.h"
@@ -58,7 +59,6 @@ void setAutoPasOption(ConfigReader &config,
 std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config, DomainDecomposition &domainDecomp) {
   auto autopas = std::make_unique<AutoPas_t>();
 
-  const auto maxAltitude = config.get<double>("sim/maxAltitude");
   const auto cutoff = config.get<double>("autopas/cutoff");
   const auto desiredCellsPerDimension = config.get<double>("autopas/desiredCellsPerDimension", 25);
   const auto deltaT = config.get<double>("sim/deltaT");
@@ -267,13 +267,13 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
   std::unique_ptr<DecompositionLogger> decompositionLogger{};
 
   if (decompositionType == "Altitude") {
-    // const auto *gridDecomp = dynamic_cast<AltitudeBasedDecomposition *>(&domainDecomposition);
-    SPDLOG_LOGGER_INFO(logger.get(), "Currently no logger for AltitudeBasedDecomposition, skipping.");
+    const auto *altitudeDecomp = dynamic_cast<AltitudeBasedDecomposition *>(&domainDecomposition);
+    decompositionLogger = std::make_unique<AltitudeBasedDecompositionLogger>(config, *altitudeDecomp);
   } else if (decompositionType == "RegularGrid") {
     const auto *regularGridDecomp = dynamic_cast<const RegularGridDecomposition *>(&domainDecomposition);
     decompositionLogger = std::make_unique<RegularGridDecompositionLogger>(config, *regularGridDecomp);
   } else {
-    throw std::runtime_error("Unknown decomposition type: " + decompositionType);
+    throw std::runtime_error("No decomposition logger for decomposition type: " + decompositionType);
   }
 
   // status output at start of the simulation

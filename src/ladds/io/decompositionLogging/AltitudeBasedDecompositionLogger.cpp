@@ -1,40 +1,32 @@
 /**
- * @file RegularGridDecompositionLogger.cpp
+ * @file AltitudeBasedDecompositionLogger.cpp
  * @author F. Gratl
- * @date 24.05.22
+ * @date 24.10.22
  */
 
-#include "RegularGridDecompositionLogger.h"
+#include "AltitudeBasedDecompositionLogger.h"
 
-#include <autopas/utils/WrapMPI.h>
+LADDS::AltitudeBasedDecompositionLogger::AltitudeBasedDecompositionLogger(
+    LADDS::ConfigReader &config, const LADDS::AltitudeBasedDecomposition &decomposition)
+    : DecompositionLoggerParametrized<AltitudeBasedDecomposition>(
+          "AltitudeBasedDecompositionLogger", config, "vtp", decomposition) {}
 
-#include <fstream>
-#include <iomanip>
-
-LADDS::RegularGridDecompositionLogger::RegularGridDecompositionLogger(
-    ConfigReader &config, const LADDS::RegularGridDecomposition &decomposition)
-    : DecompositionLoggerParametrized<RegularGridDecomposition>(
-          "RegularGridDecompositionLogger", config, "vts", decomposition) {}
-
-void LADDS::RegularGridDecompositionLogger::writeMetafile(const size_t iteration) const {
+void LADDS::AltitudeBasedDecompositionLogger::writeMetafile(size_t iteration) const {
   const auto filename = filenameMetadata(iteration);
 
   std::ofstream pvtsFile;
   pvtsFile.open(filename, std::ios::out);
 
   if (not pvtsFile.is_open()) {
-    throw std::runtime_error("RegularGridDecompositionLogger::writeMetafile(): Failed to open file \"" + filename +
+    throw std::runtime_error("AltitudeBasedDecompositionLogger::writeMetafile(): Failed to open file \"" + filename +
                              "\"");
   }
-
-  const auto &[dimensions, periods, _] = decomposition.getGridInfo();
 
   const std::array<double, 3> globalBoxMin = decomposition.getGlobalBoxMin();
   const std::array<double, 3> globalBoxMax = decomposition.getGlobalBoxMax();
   pvtsFile << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n";
-  pvtsFile << "<VTKFile byte_order=\"LittleEndian\" type=\"PStructuredGrid\" version=\"0.1\">\n";
-  pvtsFile << "  <PStructuredGrid WholeExtent=\""
-           << "0 " << dimensions[0] << " 0 " << dimensions[1] << " 0 " << dimensions[2] << "\" GhostLevel=\"0\">\n";
+  pvtsFile << "<VTKFile byte_order=\"LittleEndian\" type=\"PPolyData\" version=\"0.1\">\n";
+  pvtsFile << "  <PPolyData GhostLevel=\"1\">\n";
   pvtsFile << "    <PPointData/>\n";
   pvtsFile << "    <PCellData>\n";
   pvtsFile << "      <PDataArray type=\"Float32\" Name=\"CellSizeFactor\" />\n";
@@ -62,53 +54,43 @@ void LADDS::RegularGridDecompositionLogger::writeMetafile(const size_t iteration
   autopas::AutoPas_MPI_Comm_size(decomposition.getCommunicator(), &numRanks);
   for (int rank = 0; rank < numRanks; ++rank) {
     const auto filenamePiece = filenamePayload(iteration, rank);
-    std::array<int, 3> rankGridCoords{};
-    autopas::AutoPas_MPI_Cart_coords(
-        decomposition.getCommunicator(), rank, static_cast<int>(dimensions.size()), rankGridCoords.data());
-    pvtsFile << "    <Piece "
-             << "Extent=\"" << (rankGridCoords[0]) << " " << (rankGridCoords[0] + 1) << " " << (rankGridCoords[1])
-             << " " << (rankGridCoords[1] + 1) << " " << (rankGridCoords[2]) << " " << (rankGridCoords[2] + 1) << "\" "
-             << "Source=\"" << filenamePiece << "\"/>\n";
+    pvtsFile << "    <Piece Source=\"" << filenamePiece << "\"/>\n";
   }
 
-  pvtsFile << "  </PStructuredGrid>\n";
+  pvtsFile << "  </PPolyData>\n";
   pvtsFile << "</VTKFile>\n";
 
   pvtsFile.close();
 }
 
-void LADDS::RegularGridDecompositionLogger::writePayload(const size_t iteration,
-                                                         const autopas::Configuration &autoPasConfig) const {
+void LADDS::AltitudeBasedDecompositionLogger::writePayload(size_t iteration,
+                                                           const autopas::Configuration &autoPasConfig) const {
   const auto timestepFileName = filenamePayload(iteration);
 
   std::ofstream vtsFile;
   vtsFile.open(timestepFileName, std::ios::out);
 
-  const auto &[dimensions, periods, rankGridCoords] = decomposition.getGridInfo();
+  //  const auto &[dimensions, periods, rankGridCoords] = decomposition.getGridInfo();
   int rank{};
   autopas::AutoPas_MPI_Comm_rank(decomposition.getCommunicator(), &rank);
   const std::array<double, 3> localBoxMin = decomposition.getLocalBoxMin();
   const std::array<double, 3> localBoxMax = decomposition.getLocalBoxMax();
+  //  int numRanks{};
+  //  autopas::AutoPas_MPI_Comm_size(decomposition.getCommunicator(), &numRanks);
 
   // Helper lambda to write single data values.
   auto printDataArray = [&](const auto &data, const std::string &type, const std::string &name) {
     vtsFile << "        <DataArray type=\"" << type << "\" Name=\"" << name << "\" format=\"ascii\">\n";
-    vtsFile << "          " << data << "\n";
+    vtsFile << "          " << data << " " << data << " " << data << " " << data << " " << data << " " << data << "\n";
     vtsFile << "        </DataArray>\n";
   };
 
   vtsFile << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n";
-  vtsFile << "<VTKFile byte_order=\"LittleEndian\" type=\"StructuredGrid\" version=\"0.1\">\n";
-  vtsFile << "  <StructuredGrid WholeExtent=\""
-          << "0"
-          << " " << dimensions[0] << " "
-          << "0"
-          << " " << dimensions[1] << " "
-          << "0"
-          << " " << dimensions[2] << "\">\n";
-  vtsFile << "    <Piece Extent=\"" << (rankGridCoords[0]) << " " << (rankGridCoords[0] + 1) << " "
-          << (rankGridCoords[1]) << " " << (rankGridCoords[1] + 1) << " " << (rankGridCoords[2]) << " "
-          << (rankGridCoords[2] + 1) << "\">\n";
+  vtsFile << "<VTKFile byte_order=\"LittleEndian\" type=\"PolyData\" version=\"0.1\">\n";
+  vtsFile << "  <PolyData>\n";
+  vtsFile << "    <Piece NumberOfPoints=\"" << 8
+          << "\" NumberOfVerts=\"0\" NumberOfLines=\"0\"\n"
+             "NumberOfStrips=\"0\" NumberOfPolys=\"6\">\n";
   vtsFile << "      <CellData>\n";
   printDataArray(autoPasConfig.cellSizeFactor, "Float32", "CellSizeFactor");
   printDataArray(static_cast<int>(autoPasConfig.container), "Int32", "Container");
@@ -130,8 +112,18 @@ void LADDS::RegularGridDecompositionLogger::writePayload(const size_t iteration,
   vtsFile << "          " << localBoxMax[0] << " " << localBoxMax[1] << " " << localBoxMax[2] << "\n";
   vtsFile << "        </DataArray>\n";
   vtsFile << "      </Points>\n";
+  vtsFile << "      <Polys>\n";
+  // which points are connected to one polygon, (read: 0->1, 0->1->3, ...)
+  vtsFile << "        <DataArray type=\"Int32\" Name=\"connectivity\" format=\"ascii\">\n";
+  vtsFile << "          0 1 3 2 4 5 7 6 1 5 7 3 0 4 6 2 2 3 7 6 0 1 5 4\n";
+  vtsFile << "        </DataArray>\n";
+  // which entries from "connectivity form a face (read 1-4, 5-8, ...)
+  vtsFile << "        <DataArray type=\"Int32\" Name=\"offsets\" format=\"ascii\">\n";
+  vtsFile << "          4 8 12 16 20 24\n";
+  vtsFile << "        </DataArray>\n";
+  vtsFile << "      </Polys>\n";
   vtsFile << "    </Piece>\n";
-  vtsFile << "  </StructuredGrid>\n";
+  vtsFile << "  </PolyData>\n";
   vtsFile << "</VTKFile>\n";
 
   vtsFile.close();
