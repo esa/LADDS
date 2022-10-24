@@ -323,7 +323,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
 
     timers.collisionDetectionEmmigrants.start();
 
-    auto [leaving_collisions, leaving_evasions] =
+    auto [collisionsEmmigrants, evasionsEmmigrants] =
 
         ParticleMigrationHandler::collisionDetectionAroundParticles(autopas,
                                                                     leavingParticles,
@@ -340,8 +340,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     timers.particleCommunication.stop();
 
     timers.collisionDetectionImmigrants.start();
-
-    auto [collisions, evasions] =
+    auto [collisionsImmigrants, evasionsImmigrants] =
         ParticleMigrationHandler::collisionDetectionAroundParticles(autopas,
                                                                     incomingParticles,
                                                                     deltaT * autopas.getVerletRebuildFrequency(),
@@ -353,17 +352,17 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     timers.collisionDetectionImmigrants.stop();
 
     // Combine collisions from leaving and incoming particles
-    collisions.insert(collisions.end(), leaving_collisions.begin(), leaving_collisions.end());
-    evasions.insert(evasions.end(), leaving_evasions.begin(), leaving_evasions.end());
+    collisionsImmigrants.insert(collisionsImmigrants.end(), collisionsEmmigrants.begin(), collisionsEmmigrants.end());
+    evasionsImmigrants.insert(evasionsImmigrants.end(), evasionsEmmigrants.begin(), evasionsEmmigrants.end());
 
-    totalConjunctions += collisions.size();
-    totalEvasions += evasions.size();
+    totalConjunctions += collisionsImmigrants.size();
+    totalEvasions += evasionsImmigrants.size();
 
     if (breakupWrapper) {
       // all particles which are part of a collision will be deleted in the breakup.
       // As we pass particle-pointers to the vector and not to autopas we have to mark the particles as deleted
       // manually
-      for (const auto &[p1, p2, _, __] : collisions) {
+      for (const auto &[p1, p2, _, __] : collisionsImmigrants) {
         p1->setOwnershipState(autopas::OwnershipState::dummy);
         p2->setOwnershipState(autopas::OwnershipState::dummy);
       }
@@ -373,7 +372,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       autopas.addParticle(p);
     }
 
-    processCollisions(iteration, collisions, *conjuctionWriter, breakupWrapper.get());
+    processCollisions(iteration, collisionsImmigrants, *conjuctionWriter, breakupWrapper.get());
 
     // sanity check: after communication there should be no leaving particles left
     if (not leavingParticles.empty()) {
@@ -395,7 +394,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       timers.collisionDetection.stop();
       totalConjunctions += collisions.size();
       totalEvasions += evasions.size();
-      if (collisions.size() > 0) {
+      if (not collisions.empty()) {
         iterationsSinceLastCollision = 0;
       }
 
