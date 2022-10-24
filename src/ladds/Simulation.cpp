@@ -78,8 +78,9 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config, DomainD
   autopas->setVerletRebuildFrequency(verletRebuildFrequency);
   // Scale Cell size so that we get the desired number of cells
   // -2 because internally there will be two halo cells added on top of maxAltitude
-  // FIXME: adapt calculation of CSF to MPI
-  autopas->setCellSizeFactor((maxAltitude * 2.) / ((cutoff + verletSkin) * (desiredCellsPerDimension - 2)));
+  // Assumption: the domain is a cube
+  const auto localDomainLength = domainDecomp.getLocalBoxMax()[0] - domainDecomp.getLocalBoxMin()[0];
+  autopas->setCellSizeFactor(localDomainLength / ((cutoff + verletSkin) * (desiredCellsPerDimension - 2)));
 
   // hardcode values that seem to be optimal
   std::set<autopas::Newton3Option> optimalNewton3Opt{autopas::Newton3Option::enabled};
