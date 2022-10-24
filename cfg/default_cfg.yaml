@@ -56,7 +56,7 @@ autopas:
   cutoff: 80.0 # Cutoff for autopas force interaction
   # For the following parameters sensible defaults are chosen by LADDS. Only set them here if you know what you are doing!
   #  rebuildFrequency: 1 # Number of iterations before internal data structure is rebuilt. Increases collision search radius!
-  #  desiredCellsPerDimension: 25 # Desired number of cells per dimension
+  #  desiredCellsPerDimension: 11 # Desired number of cells per dimension
   tuningMode: false # can be used to obtain good values for  the following four parameters
 #  Newton3: "enabled, disabled"
 #  DataLayout: "AoS, SoA"
