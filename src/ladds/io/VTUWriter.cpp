@@ -84,7 +84,8 @@ void VTUWriter::writeVTU(const AutoPas_t &autopas) {
   // Point properties
   int myRank{};
   autopas::AutoPas_MPI_Comm_rank(AUTOPAS_MPI_COMM_WORLD, &myRank);
-  this->printProperty<int, Particle>("rank", [&](const Particle &p) {return myRank;}, autopas);
+  this->printProperty<int, Particle>(
+      "rank", [&](const Particle &p) { return myRank; }, autopas);
   this->printProperty<unsigned int, Particle>("ID", &Particle::getID, autopas);
   this->printProperty<Particle::ActivityState, Particle>("activityState", &Particle::getActivityState, autopas);
   this->printProperty<double, Particle>("mass", &Particle::getMass, autopas);
