@@ -60,7 +60,7 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config, DomainD
   auto autopas = std::make_unique<AutoPas_t>();
 
   const auto cutoff = config.get<double>("autopas/cutoff");
-  const auto desiredCellsPerDimension = config.get<double>("autopas/desiredCellsPerDimension", 11);
+  const auto desiredCellsPerDimension = config.get<double>("autopas/desiredCellsPerDimension", 25);
   const auto deltaT = config.get<double>("sim/deltaT");
   const auto verletRebuildFrequency = config.get<unsigned int>("autopas/rebuildFrequency", 1);
   // *8.5 : Assumed max km/s   TODO: get this from input?
@@ -85,8 +85,8 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config, DomainD
   // hardcode values that seem to be optimal
   std::set<autopas::Newton3Option> optimalNewton3Opt{autopas::Newton3Option::enabled};
   std::set<autopas::DataLayoutOption> optimalDataLayoutOpt{autopas::DataLayoutOption::aos};
-  std::set<autopas::ContainerOption> optimalContainerOpt{autopas::ContainerOption::varVerletListsAsBuild};
-  std::set<autopas::TraversalOption> optimalTraversalOpt{autopas::TraversalOption::vvl_as_built};
+  std::set<autopas::ContainerOption> optimalContainerOpt{autopas::ContainerOption::linkedCells};
+  std::set<autopas::TraversalOption> optimalTraversalOpt{autopas::TraversalOption::lc_c04_HCP};
   // if tuning mode is enabled use full range of AutoPas defaults
   if (config.get<bool>("autopas/tuningMode", false)) {
     optimalNewton3Opt = autopas->getAllowedNewton3Options();
