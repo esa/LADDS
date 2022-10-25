@@ -321,7 +321,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     migratedParticlesLocal = leavingParticles.size();
     timers.containerUpdate.stop();
 
-    timers.collisionDetectionEmmigrants.start();
+    timers.collisionDetectionEmigrants.start();
 
     auto [collisionsEmmigrants, evasionsEmmigrants] =
 
@@ -333,7 +333,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                                                                     minDetectionRadius,
                                                                     evasionTrackingCutoffInKM,
                                                                     true);  // <- checking for collisions among leavers
-    timers.collisionDetectionEmmigrants.stop();
+    timers.collisionDetectionEmigrants.stop();
 
     timers.particleCommunication.start();
     auto incomingParticles = domainDecomposition.communicateParticles(leavingParticles, autopas);
