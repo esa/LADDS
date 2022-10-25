@@ -73,7 +73,7 @@ void Timers::printTimers(ConfigReader &config, const DomainDecomposition &decomp
           printLB(collisionWriting) +
       timerToString("    Collision simulation           ", accMPITimers(collisionSimulation), maxNumberOfDigits, timeSimAcc) +
           printLB(collisionSimulation) +
-      timerToString("    Collision writer               ", accMPITimers(evasionWriting), maxNumberOfDigits, timeSimAcc) +
+      timerToString("    Evasion writer                 ", accMPITimers(evasionWriting), maxNumberOfDigits, timeSimAcc) +
           printLB(evasionWriting) +
       timerToString("    Container update               ", accMPITimers(containerUpdate), maxNumberOfDigits, timeSimAcc) +
           printLB(containerUpdate) +
