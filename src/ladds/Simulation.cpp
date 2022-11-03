@@ -667,20 +667,21 @@ void Simulation::printProgressOutput(size_t iteration,
                                      size_t totalConjunctionsLocal,
                                      size_t totalEvasionsLocal,
                                      size_t localMigrations,
-                                     autopas::AutoPas_MPI_Comm const &comm) {
-  unsigned long numParticlesGlobal{};
-  unsigned long totalConjunctionsGlobal{};
-  unsigned long totalEvasionsGlobal{};
-  unsigned long migratedParticlesGlobal{};
-  autopas::AutoPas_MPI_Reduce(
-      &localMigrations, &migratedParticlesGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, comm);
+                                     autopas::AutoPas_MPI_Comm const &comm) const {
+  std::array<unsigned long, 4> commContainerLocal{
+      numParticlesLocal, totalConjunctionsLocal, totalEvasionsLocal, localMigrations},
+      commContainerGlobal{};
 
-  autopas::AutoPas_MPI_Reduce(
-      &numParticlesLocal, &numParticlesGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, comm);
-  autopas::AutoPas_MPI_Reduce(
-      &totalConjunctionsLocal, &totalConjunctionsGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, comm);
-  autopas::AutoPas_MPI_Reduce(
-      &totalEvasionsLocal, &totalEvasionsGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, comm);
+  autopas::AutoPas_MPI_Reduce(commContainerLocal.data(),
+                              commContainerGlobal.data(),
+                              commContainerLocal.size(),
+                              AUTOPAS_MPI_UNSIGNED_LONG,
+                              AUTOPAS_MPI_SUM,
+                              0,
+                              comm);
+
+  auto [numParticlesGlobal, totalConjunctionsGlobal, totalEvasionsGlobal, migratedParticlesGlobal] =
+      commContainerGlobal;
   SPDLOG_LOGGER_INFO(
       logger.get(),
       "It {} | Total particles: {} | Total conjunctions: {} | Migrated particles: {} | Total evasions: {}",
