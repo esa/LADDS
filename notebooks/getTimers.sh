@@ -35,11 +35,11 @@ get () {
     for f in ${outFiles}
     do
         # after the tag only spaces are allowed
-        result=$(sed --quiet "s/.*${tag}\s*:.*( *\([0-9.]\+\)s).*/\1/p" "${f}")
+        local result=$(sed --quiet "s/.*${tag}\s*:.*( *\([0-9.]\+\)s).*/\1/p" "${f}")
         # alternative regex for values not in ( )
         if [[ -z "$result" ]]
         then
-            result=$(sed --quiet "s/.*${tag}\s*: *\([^ ]\+\).*/\1/p" "${f}")
+            local result=$(sed --quiet "s/.*${tag}\s*: *\([^ ]\+\).*/\1/p" "${f}")
         fi
         # error output
         if [[ -z "$result" ]]
