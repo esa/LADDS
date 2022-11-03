@@ -19,7 +19,9 @@ if (LADDS_DOXYGEN)
         set(DOXYGEN_GENERATE_XML NO)
         set(DOXYGEN_GENERATE_LATEX NO)
         set(DOXYGEN_HAVE_DOT YES)
+        set(DOXYGEN_USE_MDFILE_AS_MAINPAGE ${PROJECT_SOURCE_DIR}/README.md)
         doxygen_add_docs(doc_doxygen
+                        "${PROJECT_SOURCE_DIR}/README.md"
                          ${DOXYGEN_INPUT_DIRECTORY}
                          COMMENT "Generating doxygen documentation")
     else ()
