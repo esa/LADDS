@@ -18,6 +18,16 @@ getFilenames () {
 
 }
 
+# get all lines about number of migrants (sed), calculate the average (awk) and print it rounded.
+getMigrants () {
+    echo "Avg Migrants"
+    for f in ${outFiles}
+    do
+        sed --quiet 's/.*Migrated particles: \([0-9]\+\) .*/\1/p' ${f} \
+            | awk '{ total += $1 } END {printf "%.0f\n", total/NR}'
+    done
+}
+
 # Create a column of the tag and the corresponding values from all out files
 get () {
     local tag="$@"
@@ -64,4 +74,5 @@ paste -d ','                                \
     <(get Output)                           \
     <(get 'Total (wall-time)')              \
     <(get One iteration)                    \
+    <(getMigrants)                          \
 
