@@ -23,7 +23,7 @@ env:
   OMPI_ALLOW_RUN_AS_ROOT_CONFIRM: 1
 jobs:
   tests_default_release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Install dependencies
         run: |
@@ -56,7 +56,7 @@ jobs:
           ctest -j 4 --output-on-failure -C validation -E 'CollisionFunctorIntegration.*\/.[^v]'
 
   test_ASAN:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Install dependencies
         run: |
@@ -92,7 +92,7 @@ jobs:
           ctest -j 4 --output-on-failure -C validation -E 'CollisionFunctorIntegration.*\/.[^v]'
 
   test_TSAN:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     container:
       image: autopas/autopas-build-archer
     steps:
@@ -125,7 +125,7 @@ jobs:
           ctest -j 4 --output-on-failure -C validation -E 'CollisionFunctorIntegration.*\/.[^v]'
 
   format_check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - uses: DoozyX/clang-format-lint-action@v0.12
