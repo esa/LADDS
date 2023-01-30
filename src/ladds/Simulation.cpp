@@ -60,7 +60,10 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config, DomainD
   auto autopas = std::make_unique<AutoPas_t>();
 
   const auto cutoff = config.get<double>("autopas/cutoff");
-  const auto desiredCellsPerDimension = config.get<double>("autopas/desiredCellsPerDimension", 25);
+  const auto desiredCellsPerDimension = config.get<int>("autopas/desiredCellsPerDimension", 25);
+  if (desiredCellsPerDimension < 3) {
+    throw std::runtime_error("autopas/desiredCellsPerDimension has to be at least 3 (this includes halo cells).");
+  }
   const auto deltaT = config.get<double>("sim/deltaT");
   const auto verletRebuildFrequency = config.get<unsigned int>("autopas/rebuildFrequency", 1);
   // *8.5 : Assumed max km/s   TODO: get this from input?
