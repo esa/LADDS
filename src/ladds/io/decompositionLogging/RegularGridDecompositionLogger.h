@@ -6,50 +6,19 @@
 
 #pragma once
 
-#include <autopas/selectors/Configuration.h>
-
 #include <string>
 
-#include "DecompositionLogger.h"
+#include "DecompositionLoggerParametrized.h"
 #include "ladds/distributedMemParallelization/RegularGridDecomposition.h"
 #include "ladds/io/ConfigReader.h"
 
 namespace LADDS {
-class RegularGridDecompositionLogger : public DecompositionLogger {
+class RegularGridDecompositionLogger : public DecompositionLoggerParametrized<RegularGridDecomposition> {
  public:
   RegularGridDecompositionLogger(ConfigReader &config, const LADDS::RegularGridDecomposition &decomposition);
 
   void writeMetafile(size_t iteration) const override;
 
   void writePayload(size_t iteration, const autopas::Configuration &autoPasConfig) const override;
-
- private:
-  std::string loggerName;
-
-  /**
-   * Reference to the domain decomposition.
-   */
-  const RegularGridDecomposition &decomposition;
-
-  /**
-   * Stores the maximum number of digits an iteration can have.
-   * This is used to determine the number of leading zeros for each timestep record.
-   */
-  size_t maxDigitsIterations;
-
-  /**
-   * Generates a filename for the metadata file (pvts).
-   * @param iteration
-   * @return
-   */
-  std::string filenameMetadata(size_t iteration) const;
-
-  /**
-   * Generates a filename for the payload file (vts) of a specific rank.
-   * @param iteration
-   * @param rank If omitted, the current rank number is chosen.
-   * @return
-   */
-  std::string filenamePayload(size_t iteration, int rank = -1) const;
 };
 }  // namespace LADDS

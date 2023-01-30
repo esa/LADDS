@@ -20,6 +20,7 @@
 #include "ladds/io/ConjunctionLogger.h"
 #include "ladds/io/SatelliteLoader.h"
 #include "ladds/io/VTUWriter.h"
+#include "ladds/io/decompositionLogging/AltitudeBasedDecompositionLogger.h"
 #include "ladds/io/decompositionLogging/DecompositionLogger.h"
 #include "ladds/io/decompositionLogging/RegularGridDecompositionLogger.h"
 #include "ladds/io/hdf5/HDF5Writer.h"
@@ -58,9 +59,11 @@ void setAutoPasOption(ConfigReader &config,
 std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config, DomainDecomposition &domainDecomp) {
   auto autopas = std::make_unique<AutoPas_t>();
 
-  const auto maxAltitude = config.get<double>("sim/maxAltitude");
   const auto cutoff = config.get<double>("autopas/cutoff");
-  const auto desiredCellsPerDimension = config.get<double>("autopas/desiredCellsPerDimension", 25);
+  const auto desiredCellsPerDimension = config.get<int>("autopas/desiredCellsPerDimension", 25);
+  if (desiredCellsPerDimension < 3) {
+    throw std::runtime_error("autopas/desiredCellsPerDimension has to be at least 3 (this includes halo cells).");
+  }
   const auto deltaT = config.get<double>("sim/deltaT");
   const auto verletRebuildFrequency = config.get<unsigned int>("autopas/rebuildFrequency", 1);
   // *8.5 : Assumed max km/s   TODO: get this from input?
@@ -78,8 +81,9 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config, DomainD
   autopas->setVerletRebuildFrequency(verletRebuildFrequency);
   // Scale Cell size so that we get the desired number of cells
   // -2 because internally there will be two halo cells added on top of maxAltitude
-  // FIXME: adapt calculation of CSF to MPI
-  autopas->setCellSizeFactor((maxAltitude * 2.) / ((cutoff + verletSkin) * (desiredCellsPerDimension - 2)));
+  // Assumption: the domain is a cube
+  const auto localDomainLength = domainDecomp.getLocalBoxMax()[0] - domainDecomp.getLocalBoxMin()[0];
+  autopas->setCellSizeFactor(localDomainLength / ((cutoff + verletSkin) * (desiredCellsPerDimension - 2)));
 
   // hardcode values that seem to be optimal
   std::set<autopas::Newton3Option> optimalNewton3Opt{autopas::Newton3Option::enabled};
@@ -266,13 +270,13 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
   std::unique_ptr<DecompositionLogger> decompositionLogger{};
 
   if (decompositionType == "Altitude") {
-    // const auto *gridDecomp = dynamic_cast<AltitudeBasedDecomposition *>(&domainDecomposition);
-    SPDLOG_LOGGER_INFO(logger.get(), "Currently no logger for AltitudeBasedDecomposition, skipping.");
+    const auto *altitudeDecomp = dynamic_cast<AltitudeBasedDecomposition *>(&domainDecomposition);
+    decompositionLogger = std::make_unique<AltitudeBasedDecompositionLogger>(config, *altitudeDecomp);
   } else if (decompositionType == "RegularGrid") {
     const auto *regularGridDecomp = dynamic_cast<const RegularGridDecomposition *>(&domainDecomposition);
     decompositionLogger = std::make_unique<RegularGridDecompositionLogger>(config, *regularGridDecomp);
   } else {
-    throw std::runtime_error("Unknown decomposition type: " + decompositionType);
+    throw std::runtime_error("No decomposition logger for decomposition type: " + decompositionType);
   }
 
   // status output at start of the simulation
@@ -320,9 +324,9 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     migratedParticlesLocal = leavingParticles.size();
     timers.containerUpdate.stop();
 
-    timers.collisionDetectionEmmigrants.start();
+    timers.collisionDetectionEmigrants.start();
 
-    auto [leaving_collisions, leaving_evasions] =
+    auto [collisionsEmmigrants, evasionsEmmigrants] =
 
         ParticleMigrationHandler::collisionDetectionAroundParticles(autopas,
                                                                     leavingParticles,
@@ -332,15 +336,14 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
                                                                     minDetectionRadius,
                                                                     evasionTrackingCutoffInKM,
                                                                     true);  // <- checking for collisions among leavers
-    timers.collisionDetectionEmmigrants.stop();
+    timers.collisionDetectionEmigrants.stop();
 
     timers.particleCommunication.start();
     auto incomingParticles = domainDecomposition.communicateParticles(leavingParticles, autopas);
     timers.particleCommunication.stop();
 
     timers.collisionDetectionImmigrants.start();
-
-    auto [collisions, evasions] =
+    auto [collisionsImmigrants, evasionsImmigrants] =
         ParticleMigrationHandler::collisionDetectionAroundParticles(autopas,
                                                                     incomingParticles,
                                                                     deltaT * autopas.getVerletRebuildFrequency(),
@@ -352,17 +355,17 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
     timers.collisionDetectionImmigrants.stop();
 
     // Combine collisions from leaving and incoming particles
-    collisions.insert(collisions.end(), leaving_collisions.begin(), leaving_collisions.end());
-    evasions.insert(evasions.end(), leaving_evasions.begin(), leaving_evasions.end());
+    collisionsImmigrants.insert(collisionsImmigrants.end(), collisionsEmmigrants.begin(), collisionsEmmigrants.end());
+    evasionsImmigrants.insert(evasionsImmigrants.end(), evasionsEmmigrants.begin(), evasionsEmmigrants.end());
 
-    totalConjunctions += collisions.size();
-    totalEvasions += evasions.size();
+    totalConjunctions += collisionsImmigrants.size();
+    totalEvasions += evasionsImmigrants.size();
 
     if (breakupWrapper) {
       // all particles which are part of a collision will be deleted in the breakup.
       // As we pass particle-pointers to the vector and not to autopas we have to mark the particles as deleted
       // manually
-      for (const auto &[p1, p2, _, __] : collisions) {
+      for (const auto &[p1, p2, _, __] : collisionsImmigrants) {
         p1->setOwnershipState(autopas::OwnershipState::dummy);
         p2->setOwnershipState(autopas::OwnershipState::dummy);
       }
@@ -372,7 +375,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       autopas.addParticle(p);
     }
 
-    processCollisions(iteration, collisions, *conjuctionWriter, breakupWrapper.get());
+    processCollisions(iteration, collisionsImmigrants, *conjuctionWriter, breakupWrapper.get());
 
     // sanity check: after communication there should be no leaving particles left
     if (not leavingParticles.empty()) {
@@ -394,7 +397,7 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       timers.collisionDetection.stop();
       totalConjunctions += collisions.size();
       totalEvasions += evasions.size();
-      if (collisions.size() > 0) {
+      if (not collisions.empty()) {
         iterationsSinceLastCollision = 0;
       }
 
@@ -667,20 +670,21 @@ void Simulation::printProgressOutput(size_t iteration,
                                      size_t totalConjunctionsLocal,
                                      size_t totalEvasionsLocal,
                                      size_t localMigrations,
-                                     autopas::AutoPas_MPI_Comm const &comm) {
-  unsigned long numParticlesGlobal{};
-  unsigned long totalConjunctionsGlobal{};
-  unsigned long totalEvasionsGlobal{};
-  unsigned long migratedParticlesGlobal{};
-  autopas::AutoPas_MPI_Reduce(
-      &localMigrations, &migratedParticlesGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, comm);
+                                     autopas::AutoPas_MPI_Comm const &comm) const {
+  std::array<unsigned long, 4> commContainerLocal{
+      numParticlesLocal, totalConjunctionsLocal, totalEvasionsLocal, localMigrations},
+      commContainerGlobal{};
 
-  autopas::AutoPas_MPI_Reduce(
-      &numParticlesLocal, &numParticlesGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, comm);
-  autopas::AutoPas_MPI_Reduce(
-      &totalConjunctionsLocal, &totalConjunctionsGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, comm);
-  autopas::AutoPas_MPI_Reduce(
-      &totalEvasionsLocal, &totalEvasionsGlobal, 1, AUTOPAS_MPI_UNSIGNED_LONG, AUTOPAS_MPI_SUM, 0, comm);
+  autopas::AutoPas_MPI_Reduce(commContainerLocal.data(),
+                              commContainerGlobal.data(),
+                              commContainerLocal.size(),
+                              AUTOPAS_MPI_UNSIGNED_LONG,
+                              AUTOPAS_MPI_SUM,
+                              0,
+                              comm);
+
+  auto [numParticlesGlobal, totalConjunctionsGlobal, totalEvasionsGlobal, migratedParticlesGlobal] =
+      commContainerGlobal;
   SPDLOG_LOGGER_INFO(
       logger.get(),
       "It {} | Total particles: {} | Total conjunctions: {} | Migrated particles: {} | Total evasions: {}",

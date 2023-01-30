@@ -201,7 +201,7 @@ class Simulation {
                            size_t totalConjunctionsLocal,
                            size_t totalEvasionsLocal,
                            size_t localMigrations,
-                           const autopas::AutoPas_MPI_Comm &comm);
+                           const autopas::AutoPas_MPI_Comm &comm) const;
 
   /**
    * Removes spawn protection from all particles in the container

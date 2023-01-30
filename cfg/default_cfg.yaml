@@ -1,6 +1,6 @@
 sim:
   logLevel: info # Available levels are off, critical, err, warn, info, debug, trace
-  iterations: 32000 # Number of simulation iterations
+  iterations: 1000 # Number of simulation iterations
   timeout: # timeout for the simulation. The simulation stops when either the specified number of iterations is hit or the timeout reached.
     seconds: 0 # whole seconds
     minutes: 0. # as floating points
@@ -13,7 +13,8 @@ sim:
   collisionDistanceFactor: 1.0 # Factor multiplied with the sum of radii to over approximate collision distances.
   # evasionTrackingCutoffInKM: 0.1 # Distance at which even evaded conjunctions are tracked (in a separate out file)
   timestepsPerCollisionDetection: 1
-  # decompositionType: Altitude   # Determines the MPI decomposition type. Options: "Altitude" are spherical shells, "RegularGrid" standard cartesian grid.
+  decompositionType: Altitude   # Determines the MPI decomposition type. Options: "Altitude" are spherical shells, "RegularGrid" standard cartesian grid.
+#  decompositionType: RegularGrid   # Determines the MPI decomposition type. Options: "Altitude" are spherical shells, "RegularGrid" standard cartesian grid.
 
   prop: # Which propagation model components should be applied
     useKEPComponent: true # Keplerian propagation
@@ -36,15 +37,15 @@ io:
     # propagatorOutput: propagator.csv # Output file for the propagator. Currently, nothing is written.
     fileName: initial_population.csv # CSV file containing all data to initialize the full satellite population
   #progressOutputFrequency : 50 # Frequency of writing iteration number and encounter info to std::out.
-  vtk:
-    writeFrequency: 0 # Frequency of writing vtk files [iterations]
-  hdf5:
+#  vtk:
+#    writeFrequency: 1 # Frequency of writing vtk files [iterations]
+  # hdf5:
     #    checkpoint:
     #      file: hdf5ReloadTestCheckpoint.h5
     #      iteration: 0 # Iteration to be loaded. If omitted, the last iteration in the file will be loaded.
-    fileName: simulationData.h5
-    writeFrequency: 1000 # Frequency of writing to the hdf5 file [iterations]
-    compressionLevel: 4 # Valid Levels: 0 (no compression) - 9 (max compression)
+    # fileName: simulationData.h5
+    # writeFrequency: 1000 # Frequency of writing to the hdf5 file [iterations]
+    # compressionLevel: 4 # Valid Levels: 0 (no compression) - 9 (max compression)
 
   #constellationList: AstraPhase2 # ';'-separated constellations consisting of path (to constellation directory)
   constellationFrequency: 10 # Frequency of adding satellites to simulation [iterations]
@@ -56,9 +57,9 @@ autopas:
   cutoff: 80.0 # Cutoff for autopas force interaction
   # For the following parameters sensible defaults are chosen by LADDS. Only set them here if you know what you are doing!
   #  rebuildFrequency: 1 # Number of iterations before internal data structure is rebuilt. Increases collision search radius!
-  #  desiredCellsPerDimension: 25 # Desired number of cells per dimension
+  #  desiredCellsPerDimension: 11 # Desired number of cells per dimension
   tuningMode: false # can be used to obtain good values for  the following four parameters
 #  Newton3: "enabled, disabled"
-#  DataLayout: "AoS, SoA"
-#  Container: "linkedCells, varVerletListsAsBuilt, verletListCells"
-#  Traversal: "lc_c01, lc_c04_hcp, vvl_as_build, vlc_c01, vlc_c18, vlc_sliced_balanced, vlc_slice_c02"
+#  DataLayout: "AoS"
+  Container: "varVerletListsAsBuilt"
+  Traversal: "vvl_as_build"
