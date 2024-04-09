@@ -4,6 +4,8 @@
  * @date 20.12.21
  */
 
+#pragma once
+
 #include <autopas/utils/ArrayUtils.h>
 #include <autopas/utils/StringUtils.h>
 #include <autopas/utils/WrapMPI.h>
@@ -13,7 +15,6 @@
 #include "Logger.h"
 #include "ladds/io/hdf5/HDF5Definitions.h"
 #include "yaml-cpp/yaml.h"
-#pragma once
 
 namespace LADDS {
 /**
