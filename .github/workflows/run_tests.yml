@@ -128,7 +128,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4.1.7
-      - uses: DoozyX/clang-format-lint-action@v0.12
+      - uses: DoozyX/clang-format-lint-action@v0.18.2
         with:
           source: 'src tests'
           # exclude: 'none'
