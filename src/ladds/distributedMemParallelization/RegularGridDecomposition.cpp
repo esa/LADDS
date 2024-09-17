@@ -37,11 +37,11 @@ LADDS::RegularGridDecomposition::RegularGridDecomposition(LADDS::ConfigReader &c
   using autopas::utils::ArrayMath::div;
   using autopas::utils::ArrayMath::mul;
   using autopas::utils::ArrayMath::sub;
-  using autopas::utils::ArrayUtils::static_cast_array;
+  using autopas::utils::ArrayUtils::static_cast_copy_array;
   // calculate local box extent
   const auto globalBoxLength = sub(globalBoxMax, globalBoxMin);
-  const auto localBoxLength = div(globalBoxLength, static_cast_array<double>(dims));
-  localBoxMin = add(globalBoxMin, mul(localBoxLength, static_cast_array<double>(coords)));
+  const auto localBoxLength = div(globalBoxLength, static_cast_copy_array<double>(dims));
+  localBoxMin = add(globalBoxMin, mul(localBoxLength, static_cast_copy_array<double>(coords)));
   localBoxMax = add(localBoxMin, localBoxLength);
 
   // print parallelization info
@@ -52,12 +52,12 @@ int LADDS::RegularGridDecomposition::getRank(const std::array<double, 3> &coordi
   using autopas::utils::ArrayMath::abs;
   using autopas::utils::ArrayMath::div;
   using autopas::utils::ArrayMath::sub;
-  using autopas::utils::ArrayUtils::static_cast_array;
+  using autopas::utils::ArrayUtils::static_cast_copy_array;
 
   // we need to translate to 0 avoid problems with negative coordinates
   const auto translatedCoords = sub(coordinates, globalBoxMin);
   const auto localBoxLength = abs(sub(localBoxMax, localBoxMin));
-  const auto rankGridCoords = static_cast_array<int>(div(translatedCoords, localBoxLength));
+  const auto rankGridCoords = static_cast_copy_array<int>(div(translatedCoords, localBoxLength));
   int targetRank{};
   autopas::AutoPas_MPI_Cart_rank(communicator, rankGridCoords.data(), &targetRank);
   return targetRank;

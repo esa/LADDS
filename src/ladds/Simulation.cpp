@@ -77,7 +77,7 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config, DomainD
   autopas->setBoxMin(domainDecomp.getLocalBoxMin());
   autopas->setBoxMax(domainDecomp.getLocalBoxMax());
   autopas->setCutoff(cutoff);
-  autopas->setVerletSkin(verletSkin);
+  autopas->setVerletSkinPerTimestep(verletSkin / verletRebuildFrequency);
   autopas->setVerletRebuildFrequency(verletRebuildFrequency);
   // Scale Cell size so that we get the desired number of cells
   // -2 because internally there will be two halo cells added on top of maxAltitude
@@ -612,12 +612,14 @@ void Simulation::processCollisions(size_t iteration,
                                    ConjuctionWriterInterface &conjunctionWriter,
                                    BreakupWrapper *breakupWrapper) {
   if (not collisions.empty()) {
-    SPDLOG_LOGGER_DEBUG(logger.get(), "The following particles collided between ranks:");
-    for (const auto &[p1, p2, _, __] : collisions) {
-      SPDLOG_LOGGER_DEBUG(logger.get(),
-                          "({}, {})",
-                          autopas::utils::ArrayUtils::to_string(p1->getPosition()),
-                          autopas::utils::ArrayUtils::to_string(p2->getPosition()));
+    if constexpr (SPDLOG_ACTIVE_LEVEL >= SPDLOG_LEVEL_DEBUG) {
+      SPDLOG_LOGGER_DEBUG(logger.get(), "The following particles collided between ranks:");
+      for (const auto &[p1, p2, _, __] : collisions) {
+        SPDLOG_LOGGER_DEBUG(logger.get(),
+                            "({}, {})",
+                            autopas::utils::ArrayUtils::to_string(p1->getPosition()),
+                            autopas::utils::ArrayUtils::to_string(p2->getPosition()));
+      }
     }
     iterationsSinceLastCollision = 0;
   }
