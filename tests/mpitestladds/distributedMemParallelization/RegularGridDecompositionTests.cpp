@@ -53,7 +53,7 @@ TEST_F(RegularGridDecompositionTests, testParticleMigrationHandler) {
   using autopas::utils::ArrayMath::mul;
   using autopas::utils::ArrayMath::mulScalar;
   using autopas::utils::ArrayMath::sub;
-  using autopas::utils::ArrayUtils::static_cast_array;
+  using autopas::utils::ArrayUtils::static_cast_copy_array;
 
   int numRanks{};
   autopas::AutoPas_MPI_Comm_size(decomposition->getCommunicator(), &numRanks);
@@ -97,8 +97,8 @@ TEST_F(RegularGridDecompositionTests, testParticleMigrationHandler) {
       for (int z = 0; z < 2; ++z) {
         const std::array<int, 3> rankGridIndex{x, y, z};
         // newPos = globalBoxMin + (localBoxLength / 2) + (localBoxLength * index)
-        const auto newPosition =
-            add(globalBoxMin, add(localBoxLengthHalf, mul(localBoxLength, static_cast_array<double>(rankGridIndex))));
+        const auto newPosition = add(
+            globalBoxMin, add(localBoxLengthHalf, mul(localBoxLength, static_cast_copy_array<double>(rankGridIndex))));
         // make sure all except one particle is moved away
         ASSERT_TRUE(
             (x == rankGridIndex[0] and y == rankGridIndex[1] and z == rankGridIndex[2]) or
