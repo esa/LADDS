@@ -14,7 +14,7 @@
 
 /**
  * Tests whether particles are correctly inserted into the simulation, when a particle
- * from the simulation and from the insertion overlap (or are very very close to each other)
+ * from the simulation and from the insertion overlap (or are very, very close to each other)
  */
 TEST_F(SimulationTest, testInsertionOverlap) {
   auto [csvWriter, accumulator, integrator] = simulation.initIntegrator(*autopas, *configReader);
@@ -83,11 +83,11 @@ TEST_F(SimulationTest, testInsertionOverlap) {
   ASSERT_EQ(autopas->getNumberOfParticles(), 2) << "Container initialized wrong!";
   std::vector<LADDS::Particle> delayedSatellites = newSatellites;
   // simulate some iterations and check delays against expectations from above
-  for (size_t iteration = 0; iteration < expectedDelayedParticles.size(); ++iteration) {
+  for (const auto expectedDelayedParticle : expectedDelayedParticles) {
     auto escapedParticles = autopas->updateContainer();
     ASSERT_EQ(escapedParticles.size(), 0) << "In this test nothing should escape.";
     delayedSatellites = simulation.checkedInsert(*autopas, delayedSatellites, constellationCutoff);
-    EXPECT_EQ(delayedSatellites.size(), expectedDelayedParticles[iteration]);
+    EXPECT_EQ(delayedSatellites.size(), expectedDelayedParticle);
     EXPECT_EQ(autopas->getNumberOfParticles(),
               initialSatellites.size() + newSatellites.size() - delayedSatellites.size());
 
@@ -212,7 +212,7 @@ TEST_P(SimulationTest, testCheckedInsert) {
                                        std::numeric_limits<size_t>::max()));
 
   // particle that will be inserted
-  LADDS::Particle p1{posTestParticle,
+  const LADDS::Particle p1{posTestParticle,
                      zeroVec,
                      1,
                      "tester",
@@ -225,13 +225,14 @@ TEST_P(SimulationTest, testCheckedInsert) {
   const auto escapedParticles = autopas->updateContainer();
   ASSERT_TRUE(escapedParticles.empty()) << "Test setup faulty!";
 
-  std::vector<LADDS::Particle> delayedParticles = simulation.checkedInsert(*autopas, {p1}, constellationCutoff);
+  const std::vector<LADDS::Particle> delayedParticles = simulation.checkedInsert(*autopas, {p1}, constellationCutoff);
   // if the position is safe the particle is inserted and there are now two. Otherwise, we remain with one.
   EXPECT_EQ(autopas->getNumberOfParticles(), positionIsSafe ? 2 : 1);
   // if the position is considered safe for insertion there should be no delayed particle
   EXPECT_EQ(delayedParticles.empty(), positionIsSafe);
 }
 
+namespace {
 // Generate tests for all configuration combinations
 std::vector<ParameterTuple> generateParameters() {
   using autopas::utils::ArrayMath::add;
@@ -240,7 +241,7 @@ std::vector<ParameterTuple> generateParameters() {
   // alias for readability
   const auto &particlePos = SimulationTest::testCheckedInsertParticlePos;
   const auto &searchBoxLength = SimulationTest::constellationCutoff;
-  std::array<double, 3> vectorToCorner{searchBoxLength, searchBoxLength, searchBoxLength};
+  const std::array<double, 3> vectorToCorner{searchBoxLength, searchBoxLength, searchBoxLength};
 
   return {
       // same pos as other particle
@@ -255,6 +256,7 @@ std::vector<ParameterTuple> generateParameters() {
       // pos inside sphere
       std::make_tuple(add(particlePos, mulScalar(vectorToCorner, 0.4)), false),
   };
+}
 }
 
 INSTANTIATE_TEST_SUITE_P(Generated,
