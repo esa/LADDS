@@ -4,7 +4,7 @@
 <img src="docs/LADDS_Logo.png" alt="LADDS_LOGO" width="300"/>
 </p>
 
-Codebase for the ARIADNA Study between TU Munich and ESA's Advanced Concepts Team. A more detailed project description can be found on the [Advanced Concept Team's webpage](https://www.esa.int/gsp/ACT/projects/debris_hpc/).
+Codebase for the ARIADNA Study between TU Munich and ESA's Advanced Concepts Team. A more detailed project description can be found on the [Advanced Concepts Team's webpage](https://www.esa.int/gsp/ACT/projects/debris_hpc/).
 
 ## Requirements
 
@@ -221,3 +221,9 @@ If MPI is used one HDF5 file per rank is written.
 ### CSV
 
 If HDF5 output is disabled entirely, collision and evasion data is written in a `.csv` file in ASCII layout.
+
+## Related ESA's open source software Projects
+
+* [cascade]: Long-term fast and deterministic propagation of debris populations. 
+* [dsgp4]: Differentiable SGP4 orbital propgator.
+* [NASA-breakup model]: NASA's breakup model.
