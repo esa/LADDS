@@ -14,7 +14,7 @@ FetchContent_Declare(
         autopasfetch
         GIT_REPOSITORY ${autopasRepoPath}
         # TODO: freeze 17.09.24
-        GIT_TAG master
+        GIT_TAG limitNumSpacialLocks 
 )
 # Populate dependency
 FetchContent_MakeAvailable(autopasfetch)
