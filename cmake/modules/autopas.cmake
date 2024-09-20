@@ -13,8 +13,8 @@ endif ()
 FetchContent_Declare(
         autopasfetch
         GIT_REPOSITORY ${autopasRepoPath}
-        # merge of md-flex/diffuse-loadbalancing 12.07.22
-        GIT_TAG 71fa505172bce4ee422556018f2dc444e04fca12
+        # TODO: freeze 17.09.24
+        GIT_TAG limitNumSpacialLocks 
 )
 # Populate dependency
 FetchContent_MakeAvailable(autopasfetch)
