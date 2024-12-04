@@ -213,14 +213,14 @@ TEST_P(SimulationTest, testCheckedInsert) {
 
   // particle that will be inserted
   const LADDS::Particle p1{posTestParticle,
-                     zeroVec,
-                     1,
-                     "tester",
-                     LADDS::Particle::ActivityState::passive,
-                     1.,
-                     1.,
-                     LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
-                     std::numeric_limits<size_t>::max()};
+                           zeroVec,
+                           1,
+                           "tester",
+                           LADDS::Particle::ActivityState::passive,
+                           1.,
+                           1.,
+                           LADDS::Particle::calculateBcInv(0., 1., 1., 2.2),
+                           std::numeric_limits<size_t>::max()};
 
   const auto escapedParticles = autopas->updateContainer();
   ASSERT_TRUE(escapedParticles.empty()) << "Test setup faulty!";
@@ -257,7 +257,7 @@ std::vector<ParameterTuple> generateParameters() {
       std::make_tuple(add(particlePos, mulScalar(vectorToCorner, 0.4)), false),
   };
 }
-}
+}  // namespace
 
 INSTANTIATE_TEST_SUITE_P(Generated,
                          SimulationTest,
