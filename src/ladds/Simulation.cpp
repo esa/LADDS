@@ -618,7 +618,7 @@ void Simulation::processCollisions(size_t iteration,
         ss << "\n    (" << autopas::utils::ArrayUtils::to_string(p1->getPosition()) << ", "
            << autopas::utils::ArrayUtils::to_string(p2->getPosition()) << ")";
       }
-      return ss.str;
+      return ss.str();
     }());
     iterationsSinceLastCollision = 0;
   }
