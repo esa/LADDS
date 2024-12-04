@@ -612,15 +612,14 @@ void Simulation::processCollisions(size_t iteration,
                                    ConjuctionWriterInterface &conjunctionWriter,
                                    BreakupWrapper *breakupWrapper) {
   if (not collisions.empty()) {
-    if constexpr (SPDLOG_ACTIVE_LEVEL >= SPDLOG_LEVEL_DEBUG) {
-      SPDLOG_LOGGER_DEBUG(logger.get(), "The following particles collided between ranks:");
+    SPDLOG_LOGGER_DEBUG(logger.get(), "The following particles collided between ranks:{}", [&]() {
+      std::stringstream ss;
       for (const auto &[p1, p2, _, __] : collisions) {
-        SPDLOG_LOGGER_DEBUG(logger.get(),
-                            "({}, {})",
-                            autopas::utils::ArrayUtils::to_string(p1->getPosition()),
-                            autopas::utils::ArrayUtils::to_string(p2->getPosition()));
+        ss << "\n    (" << autopas::utils::ArrayUtils::to_string(p1->getPosition()) << ", "
+           << autopas::utils::ArrayUtils::to_string(p2->getPosition()) << ")";
       }
-    }
+      return ss.str;
+    }());
     iterationsSinceLastCollision = 0;
   }
   timers.collisionWriting.start();
