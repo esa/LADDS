@@ -10,12 +10,16 @@ if (GIT_SUBMODULES_SSH)
     set(autopasRepoPath git@github.com:AutoPas/AutoPas.git)
 endif ()
 
+# Final version of 2 Body AutoPas
+set(AUTOPAS_TAG v2.0.0 CACHE STRING "AutoPas Git tag or commit id to use.")
+
+# Download and install autopas
 FetchContent_Declare(
-        autopasfetch
-        GIT_REPOSITORY ${autopasRepoPath}
-        # TODO: freeze 17.09.24
-        GIT_TAG limitNumSpacialLocks 
+    autopasfetch
+    GIT_REPOSITORY ${autopasRepoPath}
+    GIT_TAG ${AUTOPAS_TAG}
 )
+
 # Populate dependency
 FetchContent_MakeAvailable(autopasfetch)
 
