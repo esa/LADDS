@@ -109,7 +109,8 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config, DomainD
   // arbitrary number. Can be changed to whatever makes sense.
   autopas->setTuningInterval(std::numeric_limits<unsigned int>::max());
   autopas->setSelectorStrategy(autopas::SelectorStrategyOption::fastestMean);
-  autopas->setNumSamples(verletRebuildFrequency);
+  const auto tuningSamples = config.get<unsigned int>("autopas/tuningSamples", 3);
+  autopas->setNumSamples(tuningSamples);
   autopas::Logger::get()->set_level(spdlog::level::from_str(config.get<std::string>("autopas/logLevel", "error")));
   int rank{};
   autopas::AutoPas_MPI_Comm_rank(AUTOPAS_MPI_COMM_WORLD, &rank);
