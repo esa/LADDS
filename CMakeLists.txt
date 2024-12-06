@@ -1,6 +1,7 @@
-cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 #at least 3.14 for FetchContent_MakeAvailable
 #at least 3.19 for a correctly working FindHDF5 cmake module
+#at least 3.5 because CMake drops compatibility at some point
 project(LADDS)
 
 set(EXECUTABLE_NAME ladds)
