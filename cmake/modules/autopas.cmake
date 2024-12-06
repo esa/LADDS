@@ -10,8 +10,8 @@ if (GIT_SUBMODULES_SSH)
     set(autopasRepoPath git@github.com:AutoPas/AutoPas.git)
 endif ()
 
-# Final version of 2 Body AutoPas
-set(AUTOPAS_TAG v2.0.0 CACHE STRING "AutoPas Git tag or commit id to use.")
+# TODO: fix this as soon as that branch is merged
+set(AUTOPAS_TAG AoSRemainderTraversal CACHE STRING "AutoPas Git tag or commit id to use.")
 
 # Download and install autopas
 FetchContent_Declare(
