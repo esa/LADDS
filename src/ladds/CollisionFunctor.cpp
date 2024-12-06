@@ -20,7 +20,7 @@ CollisionFunctor::CollisionFunctor(double cutoff,
                                    double collisionDistanceFactor,
                                    double minDetectionRadius,
                                    double evasionTrackingCutoffInKM)
-    : Functor(cutoff),
+    : PairwiseFunctor(cutoff),
       _cutoffSquare(cutoff * cutoff),
       _dt(dt),
       _collisionDistanceFactor(collisionDistanceFactor / 1000.),  // also imply conversion from m to km

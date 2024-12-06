@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <autopas/pairwiseFunctors/Functor.h>
+#include <autopas/baseFunctors/PairwiseFunctor.h>
 #include <autopas/utils/SoA.h>
 #include <autopas/utils/SoAView.h>
 
@@ -19,7 +19,7 @@ namespace LADDS {
  * Class describing the pairwise particle computation for determining whether a collision occured.
  * This functor is passed to autopas::AutoPas::iteratePairwise() as the primary pairwise interaction.
  */
-class CollisionFunctor final : public autopas::Functor<Particle, CollisionFunctor> {
+class CollisionFunctor final : public autopas::PairwiseFunctor<Particle, CollisionFunctor> {
  public:
   /**
    * Constructor
@@ -87,6 +87,10 @@ class CollisionFunctor final : public autopas::Functor<Particle, CollisionFuncto
                         const size_t indexFirst,
                         const std::vector<size_t, autopas::AlignedAllocator<size_t>> &neighborList,
                         bool newton3) final;
+
+  std::string getName() final {
+    return "CollisionFunctor";
+  }
 
  private:
   void SoAKernel(

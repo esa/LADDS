@@ -28,7 +28,7 @@
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
 extern template class autopas::AutoPas<LADDS::Particle>;
-extern template bool autopas::AutoPas<LADDS::Particle>::iteratePairwise(LADDS::CollisionFunctor *);
+extern template bool autopas::AutoPas<LADDS::Particle>::computeInteractions(LADDS::CollisionFunctor *);
 
 namespace LADDS {
 
@@ -218,7 +218,7 @@ Simulation::collisionDetection(AutoPas_t &autopas,
   // pairwise interaction
   CollisionFunctor collisionFunctor(
       autopas.getCutoff(), deltaT, collisionDistanceFactor, minDetectionRadius, evasionTrackingCutoffInKM);
-  bool stillTuning = autopas.iteratePairwise(&collisionFunctor);
+  bool stillTuning = autopas.computeInteractions(&collisionFunctor);
   return {collisionFunctor.getCollisions(), collisionFunctor.getEvadedCollisions(), stillTuning};
 }
 
@@ -456,7 +456,8 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       }
 
       vtuWriter.writeVTU(autopas);
-      decompositionLogger->writePayload(iteration, autopas.getCurrentConfig());
+      decompositionLogger->writePayload(iteration,
+                                        autopas.getCurrentConfigs().at(autopas::InteractionTypeOption::pairwise).get());
     }
     if (hdf5WriteFrequency and (iteration % hdf5WriteFrequency == 0 or iteration == lastIteration)) {
       hdf5Writer->writeParticles(iteration, autopas);
@@ -550,7 +551,7 @@ void Simulation::run(ConfigReader &config) {
 }
 
 void Simulation::dumpCalibratedConfig(ConfigReader &config, const AutoPas_t &autopas) const {
-  auto autopasConfig = autopas.getCurrentConfig();
+  const auto autopasConfig = autopas.getCurrentConfigs().at(autopas::InteractionTypeOption::pairwise).get();
   config.setValue("autopas/Newton3", autopasConfig.newton3.to_string());
   config.setValue("autopas/DataLayout", autopasConfig.dataLayout.to_string());
   config.setValue("autopas/Container", autopasConfig.container.to_string());

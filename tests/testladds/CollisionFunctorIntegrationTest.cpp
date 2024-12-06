@@ -13,7 +13,7 @@
 #include <ladds/CollisionFunctor.h>
 
 extern template class autopas::AutoPas<LADDS::Particle>;
-extern template bool autopas::AutoPas<LADDS::Particle>::iteratePairwise(LADDS::CollisionFunctor *);
+extern template bool autopas::AutoPas<LADDS::Particle>::computeInteractions(LADDS::CollisionFunctor *);
 
 void CollisionFunctorIntegrationTest::SetUpTestSuite() {
   constexpr size_t numDebris = 15;
@@ -107,7 +107,7 @@ TEST_P(CollisionFunctorIntegrationTest, testAutoPasAlgorithm) {
   }
 
   try {
-    autopas.iteratePairwise(&functor);
+    autopas.computeInteractions(&functor);
   } catch (const autopas::utils::ExceptionHandler::AutoPasException &e) {
     // There will be some tests generated that are invalid configurations but that is ok.
     GTEST_SKIP_(e.what());
