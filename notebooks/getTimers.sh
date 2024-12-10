@@ -57,6 +57,7 @@ paste -d ','                                \
     <(get MPI Ranks)                        \
     <(get OpenMP Threads per Rank)          \
     <(get Container)                        \
+    <(get Traversal)                        \
     <(get desiredCellsPerDimension)         \
     <(get 'Total (ranks accumulated)')      \
     <(get Initialization)                   \
@@ -67,7 +68,7 @@ paste -d ','                                \
     <(get Communication)                    \
     <(get Collision detection)              \
     <(get Collision detection immigrants)   \
-    <(get Collision detection emmigrants)   \
+    <(get Collision detection emigrants)    \
     <(get Collision writer)                 \
     <(get Evasion writer)                   \
     <(get Container update)                 \
