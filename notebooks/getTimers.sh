@@ -1,3 +1,4 @@
+#!/bin/bash
 # This script parses an arbitrary number of files each containing the CLI output of LADDS,
 # extracts the timer information and merges it into one CSV for further processing.
 
@@ -59,6 +60,7 @@ paste -d ','                                \
     <(get Container)                        \
     <(get Traversal)                        \
     <(get desiredCellsPerDimension)         \
+    <(get timestepsPerCollisionDetection)   \
     <(get 'Total (ranks accumulated)')      \
     <(get Initialization)                   \
     <(get Simulation)                       \
