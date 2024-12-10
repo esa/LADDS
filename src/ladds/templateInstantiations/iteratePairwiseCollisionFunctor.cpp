@@ -14,5 +14,5 @@
 #include "ladds/particle/Particle.h"
 
 //! @cond Doxygen_Suppress
-template bool autopas::AutoPas<LADDS::Particle>::iteratePairwise(LADDS::CollisionFunctor *);
+template bool autopas::AutoPas<LADDS::Particle>::computeInteractions(LADDS::CollisionFunctor *);
 //! @endcond

@@ -1,3 +1,4 @@
+#!/bin/bash
 # This script parses an arbitrary number of files each containing the CLI output of LADDS,
 # extracts the timer information and merges it into one CSV for further processing.
 
@@ -57,7 +58,9 @@ paste -d ','                                \
     <(get MPI Ranks)                        \
     <(get OpenMP Threads per Rank)          \
     <(get Container)                        \
+    <(get Traversal)                        \
     <(get desiredCellsPerDimension)         \
+    <(get timestepsPerCollisionDetection)   \
     <(get 'Total (ranks accumulated)')      \
     <(get Initialization)                   \
     <(get Simulation)                       \
@@ -67,7 +70,7 @@ paste -d ','                                \
     <(get Communication)                    \
     <(get Collision detection)              \
     <(get Collision detection immigrants)   \
-    <(get Collision detection emmigrants)   \
+    <(get Collision detection emigrants)    \
     <(get Collision writer)                 \
     <(get Evasion writer)                   \
     <(get Container update)                 \

@@ -10,12 +10,16 @@ if (GIT_SUBMODULES_SSH)
     set(autopasRepoPath git@github.com:AutoPas/AutoPas.git)
 endif ()
 
+# TODO: fix this as soon as that branch is merged
+set(AUTOPAS_TAG AoSRemainderTraversal CACHE STRING "AutoPas Git tag or commit id to use.")
+
+# Download and install autopas
 FetchContent_Declare(
-        autopasfetch
-        GIT_REPOSITORY ${autopasRepoPath}
-        # merge of md-flex/diffuse-loadbalancing 12.07.22
-        GIT_TAG 71fa505172bce4ee422556018f2dc444e04fca12
+    autopasfetch
+    GIT_REPOSITORY ${autopasRepoPath}
+    GIT_TAG ${AUTOPAS_TAG}
 )
+
 # Populate dependency
 FetchContent_MakeAvailable(autopasfetch)
 

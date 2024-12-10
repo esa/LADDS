@@ -28,7 +28,7 @@
 
 // Declare the main AutoPas class as extern template instantiation. It is instantiated in AutoPasClass.cpp.
 extern template class autopas::AutoPas<LADDS::Particle>;
-extern template bool autopas::AutoPas<LADDS::Particle>::iteratePairwise(LADDS::CollisionFunctor *);
+extern template bool autopas::AutoPas<LADDS::Particle>::computeInteractions(LADDS::CollisionFunctor *);
 
 namespace LADDS {
 
@@ -77,7 +77,7 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config, DomainD
   autopas->setBoxMin(domainDecomp.getLocalBoxMin());
   autopas->setBoxMax(domainDecomp.getLocalBoxMax());
   autopas->setCutoff(cutoff);
-  autopas->setVerletSkin(verletSkin);
+  autopas->setVerletSkinPerTimestep(verletSkin / verletRebuildFrequency);
   autopas->setVerletRebuildFrequency(verletRebuildFrequency);
   // Scale Cell size so that we get the desired number of cells
   // -2 because internally there will be two halo cells added on top of maxAltitude
@@ -109,7 +109,8 @@ std::unique_ptr<AutoPas_t> Simulation::initAutoPas(ConfigReader &config, DomainD
   // arbitrary number. Can be changed to whatever makes sense.
   autopas->setTuningInterval(std::numeric_limits<unsigned int>::max());
   autopas->setSelectorStrategy(autopas::SelectorStrategyOption::fastestMean);
-  autopas->setNumSamples(verletRebuildFrequency);
+  const auto tuningSamples = config.get<unsigned int>("autopas/tuningSamples", 3);
+  autopas->setNumSamples(tuningSamples);
   autopas::Logger::get()->set_level(spdlog::level::from_str(config.get<std::string>("autopas/logLevel", "error")));
   int rank{};
   autopas::AutoPas_MPI_Comm_rank(AUTOPAS_MPI_COMM_WORLD, &rank);
@@ -217,7 +218,7 @@ Simulation::collisionDetection(AutoPas_t &autopas,
   // pairwise interaction
   CollisionFunctor collisionFunctor(
       autopas.getCutoff(), deltaT, collisionDistanceFactor, minDetectionRadius, evasionTrackingCutoffInKM);
-  bool stillTuning = autopas.iteratePairwise(&collisionFunctor);
+  bool stillTuning = autopas.computeInteractions(&collisionFunctor);
   return {collisionFunctor.getCollisions(), collisionFunctor.getEvadedCollisions(), stillTuning};
 }
 
@@ -455,7 +456,8 @@ size_t Simulation::simulationLoop(AutoPas_t &autopas,
       }
 
       vtuWriter.writeVTU(autopas);
-      decompositionLogger->writePayload(iteration, autopas.getCurrentConfig());
+      decompositionLogger->writePayload(iteration,
+                                        autopas.getCurrentConfigs().at(autopas::InteractionTypeOption::pairwise).get());
     }
     if (hdf5WriteFrequency and (iteration % hdf5WriteFrequency == 0 or iteration == lastIteration)) {
       hdf5Writer->writeParticles(iteration, autopas);
@@ -549,7 +551,7 @@ void Simulation::run(ConfigReader &config) {
 }
 
 void Simulation::dumpCalibratedConfig(ConfigReader &config, const AutoPas_t &autopas) const {
-  auto autopasConfig = autopas.getCurrentConfig();
+  const auto autopasConfig = autopas.getCurrentConfigs().at(autopas::InteractionTypeOption::pairwise).get();
   config.setValue("autopas/Newton3", autopasConfig.newton3.to_string());
   config.setValue("autopas/DataLayout", autopasConfig.dataLayout.to_string());
   config.setValue("autopas/Container", autopasConfig.container.to_string());
@@ -612,13 +614,14 @@ void Simulation::processCollisions(size_t iteration,
                                    ConjuctionWriterInterface &conjunctionWriter,
                                    BreakupWrapper *breakupWrapper) {
   if (not collisions.empty()) {
-    SPDLOG_LOGGER_DEBUG(logger.get(), "The following particles collided between ranks:");
-    for (const auto &[p1, p2, _, __] : collisions) {
-      SPDLOG_LOGGER_DEBUG(logger.get(),
-                          "({}, {})",
-                          autopas::utils::ArrayUtils::to_string(p1->getPosition()),
-                          autopas::utils::ArrayUtils::to_string(p2->getPosition()));
-    }
+    SPDLOG_LOGGER_DEBUG(logger.get(), "The following particles collided between ranks:{}", [&]() {
+      std::stringstream ss;
+      for (const auto &[p1, p2, _, __] : collisions) {
+        ss << "\n    (" << autopas::utils::ArrayUtils::to_string(p1->getPosition()) << ", "
+           << autopas::utils::ArrayUtils::to_string(p2->getPosition()) << ")";
+      }
+      return ss.str();
+    }());
     iterationsSinceLastCollision = 0;
   }
   timers.collisionWriting.start();

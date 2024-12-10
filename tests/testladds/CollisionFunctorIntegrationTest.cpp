@@ -7,16 +7,15 @@
 #include "CollisionFunctorIntegrationTest.h"
 
 #include <autopas/AutoPasDecl.h>
-#include <autopasTools/generators/RandomGenerator.h>
+#include <autopasTools/generators/UniformGenerator.h>
 #include <gmock/gmock-matchers.h>
 #include <gmock/gmock-more-matchers.h>
 #include <ladds/CollisionFunctor.h>
 
 extern template class autopas::AutoPas<LADDS::Particle>;
-extern template bool autopas::AutoPas<LADDS::Particle>::iteratePairwise(LADDS::CollisionFunctor *);
+extern template bool autopas::AutoPas<LADDS::Particle>::computeInteractions(LADDS::CollisionFunctor *);
 
 void CollisionFunctorIntegrationTest::SetUpTestSuite() {
-  using autopasTools::generators::RandomGenerator;
   constexpr size_t numDebris = 15;
   LADDS::Particle defaultParticle{{
                                       0.,
@@ -38,10 +37,10 @@ void CollisionFunctorIntegrationTest::SetUpTestSuite() {
   _debris.reserve(numDebris);
 
   // fix seed for randomPosition()
-  srand(42);
+  std::mt19937 generator(42);
 
   for (int i = 0; i < numDebris; ++i) {
-    defaultParticle.setR(autopasTools::generators::RandomGenerator::randomPosition(_boxMin, _boxMax));
+    defaultParticle.setR(autopasTools::generators::UniformGenerator::randomPosition(generator, _boxMin, _boxMax));
     defaultParticle.setID(i);
     defaultParticle.setParentIdentifier(i);
     _debris.push_back(defaultParticle);
@@ -108,7 +107,7 @@ TEST_P(CollisionFunctorIntegrationTest, testAutoPasAlgorithm) {
   }
 
   try {
-    autopas.iteratePairwise(&functor);
+    autopas.computeInteractions(&functor);
   } catch (const autopas::utils::ExceptionHandler::AutoPasException &e) {
     // There will be some tests generated that are invalid configurations but that is ok.
     GTEST_SKIP_(e.what());
